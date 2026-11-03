@@ -1,0 +1,92 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Bảng phân vùng địa lý (Zones)
+model Zone {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique // Ví dụ: Z1, Z2, Z3, Z4, Z5
+  name        String   // Trung tâm thành phố, Ven biển, Bán đảo Sơn Trà...
+  description String?
+  centerLat   Float?
+  centerLng   Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  places      Place[]
+  distancesFrom ZoneDistance[] @relation("FromZone")
+  distancesTo   ZoneDistance[] @relation("ToZone")
+}
+
+// Bảng các địa điểm du lịch (Places)
+model Place {
+  id            Int      @id @default(autoincrement())
+  name          String
+  city          String   @default("Da Nang")
+  zoneId        Int
+  address       String?
+  estimatedCost Float    @default(0) // Chi phí dự kiến (VNĐ)
+  duration      Int      @default(60) // Thời gian trải nghiệm (phút)
+  openingTime   String?  // Ví dụ: "07:00"
+  closingTime   String?  // Ví dụ: "22:00"
+  latitude      Float?
+  longitude     Float?
+  popularity    Float    @default(0.5) // Điểm độ phổ biến (0.0 -> 1.0)
+  shortDesc     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  zone          Zone       @relation(fields: [zoneId], references: [id])
+  placeTags     PlaceTag[]
+  knowledgeDocs KnowledgeChunk[]
+}
+
+// Bảng danh mục tags / sở thích
+model Tag {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique // "food", "beach", "culture", "nature", "nightlife"...
+  category  String?    // Phân nhóm tag nếu có
+  places    PlaceTag[]
+}
+
+// Bảng liên kết nhiều - nhiều giữa Place và Tag
+model PlaceTag {
+  placeId   Int
+  tagId     Int
+
+  place     Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  tag       Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([placeId, tagId])
+}
+
+// Bảng ma trận khoảng cách / thời gian di chuyển ước tính giữa các Zone
+model ZoneDistance {
+  id                 Int   @id @default(autoincrement())
+  fromZoneId         Int
+  toZoneId           Int
+  estimatedTravelMin Int   @default(15) // Thời gian di chuyển trung bình (phút)
+  distanceKm         Float?
+
+  fromZone           Zone  @relation("FromZone", fields: [fromZoneId], references: [id])
+  toZone             Zone  @relation("ToZone", fields: [toZoneId], references: [id])
+
+  @@unique([fromZoneId, toZoneId])
+}
+
+// Bảng phục vụ Phương án CÓ RAG: Lưu trữ tri thức du lịch bổ trợ (tips, lưu ý, lịch sử văn hóa)
+model KnowledgeChunk {
+  id        Int      @id @default(autoincrement())
+  placeId   Int?     // Có thể liên kết trực tiếp với Place hoặc là kiến thức chung
+  title     String   // Ví dụ: "Kinh nghiệm thưởng thức ốc hút Chợ Cồn"
+  content   String   // Đoạn văn bản chi tiết
+  category  String?  // "food_tip", "cultural_rule", "timing_advice"
+  createdAt DateTime @default(now())
+
+  place     Place?   @relation(fields: [placeId], references: [id], onDelete: SetNull)
+}

@@ -107,3 +107,6 @@ npm run dev
 - **Thành viên 4:** Frontend UI/UX Lead (Giao diện React, Timeline tương tác, Map & Swap UI).
 
 Xem chi tiết bảng phân công tại: [docs/project_plan_breakdown.md](file:///c:/Users/Admin/Desktop/GEO_ZONE/docs/project_plan_breakdown.md).
+=======
+# GEOZONE
+>>>>>>> 254d5dad6b2642c9e0e4c4982b286557d8992531

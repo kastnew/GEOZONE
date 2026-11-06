@@ -7,6 +7,37 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Bảng người dùng (Users) - Hỗ trợ Register / Login / Phân quyền
+model User {
+  id        Int         @id @default(autoincrement())
+  email     String      @unique
+  password  String      // Mật khẩu đã băm (bcrypt)
+  name      String
+  avatar    String?
+  role      String      @default("USER") // USER, ADMIN
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  savedPlans SavedPlan[]
+}
+
+// Bảng lưu trữ lịch trình chuyến đi của người dùng (SavedPlans / Itineraries)
+model SavedPlan {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  planTitle     String   // Ví dụ: "Chuyến đi Đà Nẵng 3 ngày 2 đêm cùng bạn bè"
+  city          String   @default("Da Nang")
+  totalDays     Int
+  totalBudget   Float
+  actualCost    Float
+  strategyUsed  String   @default("DIRECT_JSON") // DIRECT_JSON hoặc RAG_AUGMENTED
+  planData      Json     // Lưu trữ toàn bộ JSON chi tiết của lịch trình (các ngày, địa điểm, timeline)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 // Bảng phân vùng địa lý (Zones)
 model Zone {
   id          Int      @id @default(autoincrement())

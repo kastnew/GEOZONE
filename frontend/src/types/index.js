@@ -3,6 +3,30 @@
  */
 
 /**
+ * @typedef {Object} UserProfile
+ * @property {number} id
+ * @property {string} email
+ * @property {string} name
+ * @property {string} [avatar]
+ * @property {'USER' | 'ADMIN'} role
+ * @property {string} createdAt
+ */
+
+/**
+ * @typedef {Object} SavedPlanItem
+ * @property {number} id
+ * @property {string} planTitle
+ * @property {string} city
+ * @property {number} totalDays
+ * @property {number} totalBudget
+ * @property {number} actualCost
+ * @property {'DIRECT_JSON' | 'RAG_AUGMENTED'} strategyUsed
+ * @property {string} createdAt
+ * @property {string} updatedAt
+ * @property {GeneratedPlanResponse} [planData]
+ */
+
+/**
  * @typedef {Object} TripInputState
  * @property {string} city
  * @property {number} days

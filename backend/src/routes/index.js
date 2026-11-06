@@ -1,9 +1,11 @@
 import { Router } from 'express';
+import authRoutes from './auth.routes.js';
 import placeRoutes from './place.routes.js';
 import planRoutes from './plan.routes.js';
 
 const apiRouter = Router();
 
+apiRouter.use('/auth', authRoutes);
 apiRouter.use('/places', placeRoutes);
 apiRouter.use('/plans', planRoutes);
 

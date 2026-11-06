@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 
@@ -7,7 +8,37 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Bắt đầu nạp dữ liệu mẫu cho GeoZone AI...');
 
-  // 1. Tạo các Zone cố định
+  // 1. Tạo người dùng mẫu (Demo Users)
+  const salt = await bcrypt.genSalt(10);
+  const demoPassword = await bcrypt.hash('password123', salt);
+  const adminPassword = await bcrypt.hash('admin123', salt);
+
+  const demoUser = await prisma.user.upsert({
+    where: { email: 'demo@geozone.vn' },
+    update: {},
+    create: {
+      email: 'demo@geozone.vn',
+      password: demoPassword,
+      name: 'Khách du lịch Demo',
+      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=DemoUser',
+      role: 'USER'
+    }
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'admin@geozone.vn' },
+    update: {},
+    create: {
+      email: 'admin@geozone.vn',
+      password: adminPassword,
+      name: 'Quản trị viên GeoZone',
+      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=AdminUser',
+      role: 'ADMIN'
+    }
+  });
+  console.log('✅ Đã tạo tài khoản demo (demo@geozone.vn / password123) và admin.');
+
+  // 2. Tạo các Zone cố định
   const zonesData = [
     { code: 'Z1', name: 'Trung tâm Hải Châu', description: 'Khu vực trung tâm thương mại, bảo tàng, chợ truyền thống', centerLat: 16.0678, centerLng: 108.2208 },
     { code: 'Z2', name: 'Ven biển Mỹ Khê - Sơn Trà', description: 'Dải bờ biển du lịch, công viên ven biển, nhà hàng hải sản', centerLat: 16.0590, centerLng: 108.2450 },
@@ -25,7 +56,7 @@ async function main() {
   }
   console.log('✅ Đã tạo 5 Zone địa lý mẫu.');
 
-  // 2. Tạo các Tags
+  // 3. Tạo các Tags
   const defaultTags = ['food', 'beach', 'culture', 'nature', 'adventure', 'nightlife', 'sightseeing'];
   for (const tagName of defaultTags) {
     await prisma.tag.upsert({
@@ -36,7 +67,7 @@ async function main() {
   }
   console.log('✅ Đã nạp danh sách Tags.');
 
-  // 3. Đọc dữ liệu địa điểm từ danang_places.json
+  // 4. Đọc dữ liệu địa điểm từ danang_places.json
   const rawPath = path.resolve('..', 'data', 'raw', 'danang_places.json');
   if (fs.existsSync(rawPath)) {
     const rawContent = fs.readFileSync(rawPath, 'utf-8');

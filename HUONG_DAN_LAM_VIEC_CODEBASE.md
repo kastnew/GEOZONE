@@ -1,55 +1,90 @@
 # Sổ Tay Kỹ Thuật: Hướng Dẫn Làm Việc Với Codebase GeoZone AI 📘
 
-Tài liệu này được biên soạn dành cho cả 4 thành viên trong nhóm, giúp mọi người hiểu sâu sắc **dòng chảy dữ liệu (Data Flow)**, **nhiệm vụ của từng file code** và **cách chạy, sửa đổi, kiểm thử mã nguồn bằng JavaScript thuần**.
+Tài liệu này được biên soạn dành cho cả 4 thành viên trong nhóm, giúp mọi người hiểu sâu sắc **dòng chảy dữ liệu (Data Flow)**, **nhiệm vụ của từng file code**, **hệ thống xác thực User/Auth** và **cách lưu trữ & quản lý chuyến đi (Saved Plans)**.
 
 ---
 
 ## 1. Bản Đồ Dòng Chảy Dữ Liệu (Architecture & Data Flow)
 
-Hệ thống hoạt động theo nguyên tắc: **Backend tính toán logic và tiền bạc $\to$ LLM chỉ hỗ trợ diễn đạt $\to$ RAG bổ sung mẹo bản địa**.
+Hệ thống hoạt động theo nguyên tắc: **Backend tính toán logic và tiền bạc $\to$ LLM chỉ hỗ trợ diễn đạt $\to$ RAG bổ sung mẹo bản địa $\to$ Quản lý lưu trữ chuyến đi theo từng User**.
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User as Người dùng
     participant FE as Frontend (React App)
-    participant API as Express Router & Controller
+    participant Auth as Auth Controller & Middleware
+    participant API as Plan Controller
     participant Planner as 5 Bước Thuật toán Planner
     participant DB as PostgreSQL (Prisma)
-    participant RAG as Knowledge Retriever
-    participant LLM as Google Gemini API
+    participant LLM as Google Gemini + RAG
 
-    User->>FE: Nhập (Ngân sách, Số ngày, Sở thích, Toggle RAG)
+    %% Đăng nhập / Đăng ký
+    User->>FE: Đăng nhập (Email + Password)
+    FE->>Auth: POST /api/v1/auth/login
+    Auth->>DB: Kiểm tra tài khoản & bcrypt compare
+    DB-->>Auth: Khớp thông tin
+    Auth-->>FE: Trả về JWT Token + User Profile
+
+    %% Tạo lịch trình
+    User->>FE: Bấm "Tạo lịch trình"
     FE->>API: POST /api/v1/plans/generate
-    API->>Planner: Gọi candidateFilter(request)
-    Planner->>DB: Truy vấn Places có tags phù hợp
-    DB-->>Planner: Danh sách ứng viên
-    Planner->>Planner: B2: Chấm điểm (placeScorer)
-    Planner->>Planner: B3: Gom nhóm theo zone_id (zoneGrouper)
-    Planner->>Planner: B4: Phân bổ ngày theo ngân sách (dayAllocator)
-    Planner->>Planner: B5: Xếp khung giờ & di chuyển (timeSlotScheduler)
-    
-    alt Không kích hoạt RAG (Phương án 1)
-        API->>LLM: Gửi Draft JSON + Prompt chống ảo giác
-        LLM-->>API: Trả về tiêu đề & mô tả địa điểm
-    else Có kích hoạt RAG (Phương án 2)
-        API->>RAG: Truy xuất cẩm nang văn hóa/ẩm thực của các địa điểm
-        RAG-->>API: Trả về các đoạn cẩm nang liên quan (chunks)
-        API->>LLM: Gửi Draft JSON + Retrieved Chunks
-        LLM-->>API: Trả về tiêu đề + mô tả + Mẹo bản địa (aiTravelTip)
-    end
+    API->>Planner: 5 Bước (Lọc -> Chấm điểm -> Gom Zone -> Knapsack -> Timeline)
+    Planner->>LLM: Gửi Draft JSON (+ RAG Context nếu bật)
+    LLM-->>Planner: Tiêu đề & mô tả địa điểm
+    Planner->>API: Output Validator: Khóa cứng ID, Giá, Giờ gốc
+    API-->>FE: Hiển thị Timeline Lịch trình
 
-    API->>API: Output Validator: Khóa cứng ID, Giá, Giờ gốc từ DB
-    API-->>FE: Trả về JSON lịch trình hoàn chỉnh
-    FE-->>User: Hiển thị Timeline, Bản đồ Zone & Thẻ Ngân sách
+    %% Lưu lịch trình
+    User->>FE: Bấm "💾 Lưu lịch trình này"
+    FE->>API: POST /api/v1/plans/save (Bearer Token)
+    API->>DB: Lưu vào bảng SavedPlan (gắn với userId)
+    DB-->>API: Thành công
+    API-->>FE: Cập nhật trạng thái "Đã lưu"
+
+    %% Xem chuyến đi của tôi
+    User->>FE: Chuyển sang Tab "Chuyến đi của tôi"
+    FE->>API: GET /api/v1/plans/my-plans (Bearer Token)
+    API->>DB: Lấy danh sách lịch trình của userId
+    DB-->>API: Danh sách chuyến đi
+    API-->>FE: Hiển thị danh sách card chuyến đi
 ```
 
 ---
 
 ## 2. Giải Thích Chi Tiết Nhiệm Vụ Của Từng File Code
 
-### 2.1. Thư mục `backend/src/services/planner/` (Thuật toán cốt lõi)
-Đây là phần quan trọng nhất quyết định điểm số chuyên môn của đồ án:
+### 2.1. Phân Hệ Người Dùng & Xác Thực (User / Auth Module)
+- [backend/src/middlewares/authMiddleware.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/middlewares/authMiddleware.js):
+  - `requireAuth`: Kiểm tra token `Bearer <token>` trong header `Authorization`. Nếu hợp lệ, giải mã JWT và gán user vào `req.user`. Nếu không, trả về lỗi `401 Unauthorized`.
+  - `optionalAuth`: Nếu có token thì lấy thông tin user, không có thì vẫn cho đi tiếp.
+- [backend/src/controllers/auth.controller.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/controllers/auth.controller.js):
+  - `register`: Xác thực email, password (tối thiểu 6 ký tự), băm mật khẩu bằng `bcryptjs`, sinh avatar mặc định và phát sinh JWT Token.
+  - `login`: Kiểm tra email, so khớp hash mật khẩu bằng `bcrypt.compare`, phát sinh JWT Token.
+  - `getMe`: Trả về thông tin profile của `req.user`.
+- [backend/src/routes/auth.routes.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/routes/auth.routes.js): Cung cấp các endpoint:
+  - `POST /api/v1/auth/register`
+  - `POST /api/v1/auth/login`
+  - `GET /api/v1/auth/me`
+- [frontend/src/components/auth/AuthModal.jsx](file:///c:/Users/Admin/Desktop/GEO_ZONE/frontend/src/components/auth/AuthModal.jsx): Hộp thoại Modal đăng nhập / đăng ký trên giao diện, có sẵn nút tiện ích **"Điền tài khoản Demo"** (`demo@geozone.vn` / `password123`) để test nhanh.
+
+---
+
+### 2.2. Phân Hệ Lưu & Quản Lý Lịch Trình (Saved Plans / My Trips)
+- [backend/prisma/schema.prisma](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/prisma/schema.prisma):
+  - Bảng `User`: Lưu trữ `id, email, password, name, avatar, role (USER/ADMIN), createdAt`.
+  - Bảng `SavedPlan`: Lưu trữ `id, userId, planTitle, city, totalDays, totalBudget, actualCost, strategyUsed, planData (JSON), createdAt`.
+- [backend/src/controllers/plan.controller.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/controllers/plan.controller.js):
+  - `savePlan`: `POST /api/v1/plans/save` — Lưu toàn bộ object JSON lịch trình gắn với `req.user.id`.
+  - `getMyPlans`: `GET /api/v1/plans/my-plans` — Lấy danh sách các chuyến đi đã lưu của user hiện tại, sắp xếp theo thời gian mới nhất.
+  - `getPlanById`: `GET /api/v1/plans/:id` — Xem lại chi tiết 1 lịch trình cũ (có kiểm tra quyền sở hữu).
+  - `deletePlan`: `DELETE /api/v1/plans/:id` — Xóa 1 chuyến đi đã lưu khỏi tài khoản.
+- [frontend/src/components/saved/SavePlanModal.jsx](file:///c:/Users/Admin/Desktop/GEO_ZONE/frontend/src/components/saved/SavePlanModal.jsx): Popup cho phép người dùng đặt tên cho chuyến đi trước khi lưu.
+- [frontend/src/components/saved/MyTripsView.jsx](file:///c:/Users/Admin/Desktop/GEO_ZONE/frontend/src/components/saved/MyTripsView.jsx): Màn hình "Chuyến đi của tôi" liệt kê các chuyến đi, hỗ trợ bấm **"👁️ Xem chi tiết"** để mở lại lịch trình trên Timeline hoặc **"Xóa"**.
+
+---
+
+### 2.3. Thư mục `backend/src/services/planner/` (Thuật toán cốt lõi)
 
 | File | Nhiệm vụ kỹ thuật | Hàm chính | Khi nào cần sửa file này? |
 |---|---|---|---|
@@ -62,7 +97,7 @@ sequenceDiagram
 
 ---
 
-### 2.2. Thư mục `backend/src/services/ai/` (Tầng LLM & RAG)
+### 2.4. Thư mục `backend/src/services/ai/` (Tầng LLM & RAG)
 
 | File | Nhiệm vụ kỹ thuật |
 |---|---|
@@ -77,87 +112,55 @@ sequenceDiagram
 
 ---
 
-### 2.3. Thư mục `backend/src/controllers/` & `routes/` (Tầng Giao Tiếp Web)
-- `controllers/plan.controller.js`: Tiếp nhận request từ client, điều phối 5 bước của Planner, chọn chiến lược AI (RAG hay Không RAG) và trả response.
-- `controllers/swap.controller.js`: Tiếp nhận yêu cầu đổi 1 địa điểm từ timeline, gọi Swap Engine và trả về địa điểm mới.
-- `controllers/place.controller.js`: Cung cấp API lấy danh sách các Zone và tìm kiếm địa điểm để hiển thị lên bản đồ.
-- `routes/index.js`: Gắn tiền tố `/api/v1` cho các route.
-
----
-
-### 2.4. Thư mục `frontend/src/` (Giao Diện Người Dùng React)
-- `components/form/TripInputForm.jsx`: Biểu mẫu thu thập 4 tham số: Thành phố, Số ngày (1-4), Ngân sách (Slider), Sở thích (Tags), và **Nút bật/tắt RAG**.
-- `components/timeline/TimelineView.jsx` & `DayCard.jsx`: Trình bày lịch trình dạng timeline trục dọc theo từng ngày, hiển thị rõ Zone trọng tâm.
-- `components/timeline/PlaceItem.jsx`: Từng thẻ địa điểm, hiển thị giờ đến, giá vé, lời văn của AI, mẹo bản địa (badge vàng của RAG), và nút bấm "🔄 Đổi địa điểm".
-- `components/timeline/SwapModal.jsx`: Popup xác nhận khi người dùng muốn đổi một địa điểm sang điểm khác cùng Zone.
-- `components/summary/BudgetSummaryCard.jsx`: Tính toán tự động tổng tiền thực tế vs ngân sách dự chi, cảnh báo màu đỏ nếu vượt ngân sách hoặc màu xanh nếu tiết kiệm.
-- `components/map/ZoneMapView.jsx`: Khung bản đồ hiển thị trực quan các cụm khu vực.
-
----
-
-## 3. Hướng Dẫn Cài Đặt & Chạy Dự Án Bằng JavaScript
+## 3. Hướng Dẫn Cài Đặt & Chạy Thử Hệ Thống
 
 ### Bước 1: Khởi động Backend
-1. Mở một cửa sổ Terminal trong VS Code:
+1. Mở cửa sổ Terminal trong VS Code:
    ```bash
    cd backend
    npm install
    ```
-2. Tạo file cấu hình môi trường `.env`:
+2. Cấu hình file `.env`:
    ```bash
    cp .env.example .env
    ```
-   Mở file `.env` và điền:
-   - `DATABASE_URL`: Đường dẫn PostgreSQL của bạn (ví dụ: `postgresql://postgres:123456@localhost:5432/geozone_db?schema=public`)
-   - `GEMINI_API_KEY`: API Key lấy từ Google AI Studio (miễn phí).
-3. Nạp dữ liệu vào cơ sở dữ liệu:
+   Điền thông số `DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`.
+3. Đồng bộ CSDL và nạp dữ liệu:
    ```bash
    npm run prisma:generate
    npm run prisma:migrate
    npm run db:seed
    ```
-4. Chạy Backend với chế độ tự động reload khi sửa code:
+   *Lưu ý: Lệnh seed sẽ tự động tạo sẵn 2 tài khoản test:*
+   - **Tài khoản Demo:** `demo@geozone.vn` / Mật khẩu: `password123`
+   - **Tài khoản Admin:** `admin@geozone.vn` / Mật khẩu: `admin123`
+4. Chạy Backend:
    ```bash
    npm run dev
    ```
-   *Terminal sẽ thông báo: `🚀 GeoZone AI Server đang chạy tại http://localhost:5000`*
 
 ### Bước 2: Khởi động Frontend
-1. Mở cửa sổ Terminal thứ 2:
+1. Mở Terminal thứ hai:
    ```bash
    cd frontend
    npm install
    npm run dev
    ```
-2. Mở trình duyệt tại: `http://localhost:3000`.
+2. Truy cập `http://localhost:3000` trên trình duyệt.
 
 ---
 
-## 4. Hướng Dẫn Cách Code & Kiểm Thử Từng Tính Năng
+## 4. Kịch Bản Kiểm Thử Toàn Diện Tính Năng Mới
 
-### 4.1. Thử nghiệm Thay Đổi Thuật Toán Chấm Điểm
-- Mở file [backend/src/services/planner/placeScorer.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/services/planner/placeScorer.js).
-- Tìm dòng `weights = { wPreference: 0.5, wPopularity: 0.3, wCost: 0.2 }`.
-- Thay đổi trọng số: ví dụ muốn ưu tiên tuyệt đối cho địa điểm tiết kiệm chi phí, sửa thành:
-  `weights = { wPreference: 0.3, wPopularity: 0.2, wCost: 0.5 }`.
-- Bấm tạo lại lịch trình trên Web để thấy các địa điểm giá 0đ (Biển Mỹ Khê, Cầu Rồng) được đẩy lên đầu.
-
-### 4.2. Thử nghiệm Bật / Tắt RAG
-- **Khi tắt RAG:** Nhấn nút Tạo lịch trình $\to$ Kết quả trả về sau 1 giây. Các thẻ địa điểm chỉ có mô tả ngắn gọn.
-- **Khi bật RAG:** Nhấn nút Tạo lịch trình $\to$ Kết quả trả về sau 2–3 giây. Dưới mỗi địa điểm xuất hiện thêm khung màu vàng **💡 Mẹo bản địa** (ví dụ: Chùa Linh Ứng nhắc nhở trang phục, Chợ Cồn nhắc mang tiền mặt...).
-
-### 4.3. Bổ Sung Dữ Liệu Địa Điểm Mới
-- Mở file [data/raw/danang_places.json](file:///c:/Users/Admin/Desktop/GEO_ZONE/data/raw/danang_places.json).
-- Thêm một đối tượng mới theo đúng cấu trúc (chú ý gán đúng `zoneCode` từ Z1 đến Z5 và mảng `tags`).
-- Chạy lại lệnh: `npm run db:seed` ở thư mục `backend`.
-
----
-
-## 5. Quy Tắc Phối Hợp Git Để Không Bị Xung Đột (Conflict)
-1. **Mỗi thành viên làm việc trên một nhánh riêng:**
-   - Thành viên 1: `feature/database-and-data`
-   - Thành viên 2: `feature/planner-algorithms`
-   - Thành viên 3: `feature/ai-and-rag`
-   - Thành viên 4: `feature/frontend-ui`
-2. **Không sửa chéo file:** Thành viên nào làm nhiệm vụ của thành viên đó theo bảng phân công.
-3. **Trước khi commit code:** Luôn chạy thử `npm run dev` để đảm bảo code không có lỗi cú pháp.
+1. **Thử nghiệm Đăng ký & Đăng nhập:**
+   - Bấm nút **"👤 Đăng nhập / Đăng ký"** góc trên bên phải.
+   - Nhấn nút "Điền tài khoản Demo" $\to$ Bấm Đăng nhập $\to$ Header hiển thị avatar, tên người dùng và badge `USER`.
+2. **Thử nghiệm Tạo & Lưu Lịch Trình:**
+   - Điền Form: 2 ngày Đà Nẵng, 1.500.000đ $\to$ Bấm "Tạo lịch trình tối ưu".
+   - Khi timeline hiển thị, bấm nút **"💾 Lưu lịch trình này"**.
+   - Nhập tên chuyến đi (hoặc dùng tên mặc định) $\to$ Bấm "Xác nhận lưu" $\to$ Nút chuyển sang trạng thái "✅ Đã lưu vào Chuyến đi".
+3. **Thử nghiệm Quản lý Chuyến đi (My Trips):**
+   - Bấm vào tab **"🧳 Chuyến đi của tôi"** trên thanh Header.
+   - Lịch trình vừa lưu sẽ hiển thị dưới dạng Card với đầy đủ thông tin: Tiêu đề, số ngày, chi phí dự toán vs thực tế, ngày tạo.
+   - Bấm **"👁️ Xem chi tiết"** $\to$ Hệ thống tự động chuyển về màn hình Timeline với đầy đủ dữ liệu, bản đồ Zone và cho phép hoán đổi địa điểm.
+   - Thử bấm nút **"Xóa"** một chuyến đi $\to$ Hệ thống xác nhận và xóa khỏi CSDL ngay lập tức.

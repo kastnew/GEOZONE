@@ -3,6 +3,31 @@
  */
 
 /**
+ * @typedef {Object} UserProfile
+ * @property {number} id - ID người dùng
+ * @property {string} email - Email người dùng
+ * @property {string} name - Họ tên người dùng
+ * @property {string} [avatar] - Đường dẫn avatar
+ * @property {'USER' | 'ADMIN'} role - Vai trò tài khoản
+ * @property {string} createdAt - Ngày tạo
+ */
+
+/**
+ * @typedef {Object} SavedPlanItem
+ * @property {number} id - ID lịch trình đã lưu
+ * @property {number} userId - ID người dùng sở hữu
+ * @property {string} planTitle - Tiêu đề lịch trình
+ * @property {string} city - Thành phố
+ * @property {number} totalDays - Tổng số ngày
+ * @property {number} totalBudget - Ngân sách dự chi
+ * @property {number} actualCost - Chi phí thực tế
+ * @property {'DIRECT_JSON' | 'RAG_AUGMENTED'} strategyUsed - Chế độ AI
+ * @property {GeneratedPlan} [planData] - Dữ liệu chi tiết của lịch trình
+ * @property {string} createdAt - Ngày lưu
+ * @property {string} updatedAt - Ngày cập nhật
+ */
+
+/**
  * @typedef {Object} UserTripRequest
  * @property {string} city - Tên thành phố (ví dụ: "Da Nang")
  * @property {number} days - Số ngày lưu trú (ví dụ: 2)

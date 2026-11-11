@@ -71,26 +71,35 @@ GEO_ZONE/
 
 ## 🚀 Hướng Dẫn Cài Đặt & Chạy Thử
 
-### 1. Khởi động Backend
+### 1. Cài đặt toàn bộ dự án
+```bash
+# Chạy tại thư mục gốc GEOZONE
+npm install
+```
+
+Lệnh trên cài dependency cho cả `backend` và `frontend` nhờ npm workspaces.
+
+### 2. Cấu hình Backend và cơ sở dữ liệu
 ```bash
 cd backend
-npm install
-cp .env.example .env
+copy .env.example .env
 # Điền DATABASE_URL, JWT_SECRET và GEMINI_API_KEY vào .env
 npm run prisma:generate
 npm run prisma:migrate
 npm run db:seed
-npm run dev
-# Server chạy tại: http://localhost:5000
 ```
 *Tài khoản test mặc định đã được tạo sẵn:*
 - **User Demo:** `demo@geozone.vn` / Mật khẩu: `password123`
 - **Admin Demo:** `admin@geozone.vn` / Mật khẩu: `admin123`
 
-### 2. Khởi động Frontend
+### 3. Khởi động cả Backend và Frontend
 ```bash
-cd frontend
-npm install
+# Chạy tại thư mục gốc GEOZONE
 npm run dev
-# Mở trình duyệt tại: http://localhost:3000
 ```
+
+Lệnh này chạy đồng thời:
+- Backend API: `http://localhost:5000`
+- Frontend: `http://localhost:3000`
+
+Frontend đã được cấu hình proxy `/api` tới backend nên không cần chạy thêm terminal thứ hai.

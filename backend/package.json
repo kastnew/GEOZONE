@@ -12,7 +12,7 @@
     "db:seed": "node ../data/seed/seed.js"
   },
   "dependencies": {
-    "@google/genai": "^0.1.1",
+    "@google/genai": "^3.1.0",
     "@prisma/client": "^5.19.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

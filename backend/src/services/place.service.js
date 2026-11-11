@@ -1,5 +1,36 @@
 import { prisma } from '../config/database.js';
 
+function formatTime(val) {
+  if (!val) return null;
+  if (val instanceof Date) {
+    return val.toISOString().substring(11, 16);
+  }
+  return String(val);
+}
+
+function mapPlace(p) {
+  return {
+    id: p.id,
+    name: p.name,
+    city: p.city,
+    zoneId: p.zoneId,
+    zoneCode: p.zone?.code || `Z${p.zoneId}`,
+    zoneName: p.zone?.name || `Zone ${p.zoneId}`,
+    address: p.address,
+    estimatedCost: Number(p.estimatedCost) || 0,
+    duration: p.duration,
+    openingTime: formatTime(p.openingTime),
+    closingTime: formatTime(p.closingTime),
+    latitude: p.latitude ? Number(p.latitude) : null,
+    longitude: p.longitude ? Number(p.longitude) : null,
+    popularity: p.popularity ? Number(p.popularity) : 0.5,
+    imageUrl: p.imageUrl,
+    rating: p.rating ? Number(p.rating) : 4.5,
+    shortDesc: p.shortDesc,
+    tags: p.placeTags ? p.placeTags.map(pt => pt.tag.name) : []
+  };
+}
+
 export class PlaceService {
   /**
    * Lấy danh sách toàn bộ các Zone
@@ -42,23 +73,7 @@ export class PlaceService {
       }
     });
 
-    return places.map(p => ({
-      id: p.id,
-      name: p.name,
-      city: p.city,
-      zoneId: p.zoneId,
-      zoneCode: p.zone.code,
-      zoneName: p.zone.name,
-      address: p.address,
-      estimatedCost: p.estimatedCost,
-      duration: p.duration,
-      openingTime: p.openingTime,
-      closingTime: p.closingTime,
-      latitude: p.latitude,
-      longitude: p.longitude,
-      popularity: p.popularity,
-      tags: p.placeTags.map(pt => pt.tag.name)
-    }));
+    return places.map(mapPlace);
   }
 
   /**
@@ -83,23 +98,7 @@ export class PlaceService {
       }
     });
 
-    return candidates.map(p => ({
-      id: p.id,
-      name: p.name,
-      city: p.city,
-      zoneId: p.zoneId,
-      zoneCode: p.zone.code,
-      zoneName: p.zone.name,
-      address: p.address,
-      estimatedCost: p.estimatedCost,
-      duration: p.duration,
-      openingTime: p.openingTime,
-      closingTime: p.closingTime,
-      latitude: p.latitude,
-      longitude: p.longitude,
-      popularity: p.popularity,
-      tags: p.placeTags.map(pt => pt.tag.name)
-    }));
+    return candidates.map(mapPlace);
   }
 }
 

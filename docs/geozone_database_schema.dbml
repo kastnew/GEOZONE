@@ -1,0 +1,235 @@
+// ====================================================================
+// GeoZone AI - Official Database Architecture (DBML for dbdiagram.io)
+// ====================================================================
+
+Project GeoZone_AI {
+  database_type: 'PostgreSQL'
+  Note: '''
+    # GeoZone AI Database Schema
+    Nền tảng tự động lập lịch trình du lịch cá nhân hóa dựa trên phân vùng địa lý và LLM.
+    Tích hợp hệ thống Authentication & Session Management chuẩn Velora.
+  '''
+}
+
+// ==========================================
+// 1. ENUMS
+// ==========================================
+
+Enum user_role {
+  ADMIN 
+  USER  
+  CUSTOMER 
+}
+
+Enum plan_status {
+  DRAFT
+  VALIDATING
+  COMPLETED
+  FAILED
+}
+
+// ==========================================
+// 2. AUTHENTICATION & USERS 
+// ==========================================
+
+Table users {
+  id                  uuid          [pk, default: `gen_random_uuid()`, note: 'Khóa chính UUID']
+  email               varchar(255)  [unique, not null, note: 'Email chuẩn hóa (lowercase, trimmed)']
+  name                varchar(120)  [note: 'Tên hiển thị người dùng']
+  password_hash       varchar(255)  [not null, note: 'Bcrypt hash mật khẩu (salt rounds = 10)']
+  role                user_role     [default: 'USER', not null, note: 'Phân quyền']
+  is_active           boolean       [default: true, not null, note: 'Trạng thái hoạt động']
+  is_verified         boolean       [default: false, not null, note: 'Trạng thái kích hoạt qua email']
+  avatar_url          varchar(255)  
+  verification_token  varchar(255)  
+  created_at          timestamptz   [default: `now()`, not null]
+  updated_at          timestamptz   [default: `now()`, not null]
+
+  Note: 'Bảng quản lý người dùng với các cờ bảo mật chống timing-attack và session hijacking'
+}
+
+Table refresh_tokens {
+  id          uuid          [pk, default: `gen_random_uuid()`]
+  user_id     uuid          [not null]
+  token_hash  varchar(255)  [not null, note: 'SHA-256 hash của Refresh Token']
+  expires_at  timestamptz   [not null]
+  revoked     boolean       [default: false, not null]
+  created_at  timestamptz   [default: `now()`, not null]
+
+  indexes {
+    user_id     [name: 'idx_refresh_tokens_user_id']
+    token_hash  [name: 'idx_refresh_tokens_token_hash']
+  }
+}
+
+// ==========================================
+// 3. SAVED ITINERARIES & FAVORITES
+// ==========================================
+
+Table saved_plans {
+  id              uuid          [pk, default: `gen_random_uuid()`]
+  user_id         uuid          [not null]
+  title           varchar(255)  [not null]
+  city            varchar(100)  [default: 'Da Nang', not null]
+  total_days      int           [not null]
+  total_budget    decimal(12,2) [not null, note: 'Ngân sách ban đầu yêu cầu (VNĐ)']
+  actual_cost     decimal(12,2) [not null, note: 'Chi phí thực tế (VNĐ)']
+  status          plan_status   [default: 'DRAFT', not null, note: 'Trạng thái xử lý của LLM & Backend']
+  strategy_used   varchar(50)   [default: 'DIRECT_JSON', not null]
+  plan_data       jsonb         [not null, note: 'Toàn bộ dữ liệu JSON chi tiết của lịch trình']
+  share_token     varchar(100)  [unique]
+  is_public       boolean       [default: false, not null]
+  created_at      timestamptz   [default: `now()`, not null]
+  updated_at      timestamptz   [default: `now()`, not null]
+
+  indexes {
+    user_id     [name: 'idx_saved_plans_user_id']
+    share_token [name: 'idx_saved_plans_share_token']
+  }
+}
+
+Table user_favorites {
+  id          uuid          [pk, default: `gen_random_uuid()`]
+  user_id     uuid          [not null]
+  place_id    int           [not null]
+  created_at  timestamptz   [default: `now()`, not null]
+
+  indexes {
+    (user_id, place_id) [unique, name: 'unique_user_favorite_place']
+    user_id             [name: 'idx_user_favorites_user_id']
+  }
+}
+
+// ==========================================
+// 4. GEOGRAPHIC ZONES & DISTANCES
+// ==========================================
+
+Table zones {
+  id          int           [pk, increment]
+  code        varchar(20)   [unique, not null]
+  name        varchar(150)  [not null]
+  description text          
+  center_lat  decimal(10,7) 
+  center_lng  decimal(10,7) 
+  created_at  timestamptz   [default: `now()`, not null]
+  updated_at  timestamptz   [default: `now()`, not null]
+}
+
+Table zone_distances {
+  id                    int             [pk, increment]
+  from_zone_id          int             [not null]
+  to_zone_id            int             [not null]
+  estimated_travel_min  int             [default: 15, not null]
+  distance_km           decimal(10,2)   
+
+  indexes {
+    (from_zone_id, to_zone_id) [unique, name: 'unique_zone_distance_pair']
+  }
+}
+
+// ==========================================
+// 5. PLACES & TAXONOMY (TAGS)
+// ==========================================
+
+Table places {
+  id              int           [pk, increment]
+  name            varchar(255)  [not null]
+  city            varchar(100)  [default: 'Da Nang', not null]
+  zone_id         int           [not null]
+  address         varchar(255)  
+  estimated_cost  decimal(12,2) [default: 0, not null]
+  duration        int           [default: 60, not null, note: 'Thời lượng trải nghiệm (phút)']
+  opening_time    time          [note: 'Giờ mở cửa (HH:mm:ss)']
+  closing_time    time          [note: 'Giờ đóng cửa (HH:mm:ss)']
+  latitude        decimal(10,7) 
+  longitude       decimal(10,7) 
+  popularity      decimal(3,2)  [default: 0.5, not null]
+  image_url       varchar(255)  
+  rating          decimal(2,1)  [default: 4.5]
+  short_desc      text          
+  created_at      timestamptz   [default: `now()`, not null]
+  updated_at      timestamptz   [default: `now()`, not null]
+
+  indexes {
+    zone_id [name: 'idx_places_zone_id']
+    city    [name: 'idx_places_city']
+  }
+}
+
+Table tags {
+  id        int           [pk, increment]
+  name      varchar(50)   [unique, not null]
+  category  varchar(100)  
+}
+
+Table place_tags {
+  place_id  int [not null]
+  tag_id    int [not null]
+
+  indexes {
+    (place_id, tag_id) [pk]
+    tag_id             [name: 'idx_place_tags_tag_id']
+  }
+}
+
+// ==========================================
+// 6. RAG KNOWLEDGE BASE
+// ==========================================
+
+Table knowledge_chunks {
+  id          int           [pk, increment]
+  place_id    int           
+  title       varchar(255)  [not null]
+  content     text          [not null]
+  category    varchar(100)  
+  embedding   vector(1536)  [note: 'Vector nhúng dùng cho pgvector similarity search']
+  created_at  timestamptz   [default: `now()`, not null]
+
+  indexes {
+    place_id [name: 'idx_knowledge_chunks_place_id']
+  }
+}
+
+// ==========================================
+// 7. RELATIONSHIPS (FOREIGN KEYS)
+// ==========================================
+
+Ref: refresh_tokens.user_id > users.id [delete: cascade]
+Ref: saved_plans.user_id > users.id [delete: cascade]
+Ref: user_favorites.user_id > users.id [delete: cascade]
+Ref: user_favorites.place_id > places.id [delete: cascade]
+Ref: places.zone_id > zones.id
+Ref: zone_distances.from_zone_id > zones.id
+Ref: zone_distances.to_zone_id > zones.id
+Ref: place_tags.place_id > places.id [delete: cascade]
+Ref: place_tags.tag_id > tags.id [delete: cascade]
+Ref: knowledge_chunks.place_id > places.id [delete: set null]
+
+// ==========================================
+// 8. TABLE GROUPS 
+// ==========================================
+
+TableGroup Authentication { 
+  users
+  refresh_tokens 
+}
+
+TableGroup User_Personalization { 
+  saved_plans
+  user_favorites 
+}
+
+TableGroup Geography_Core { 
+  zones
+  zone_distances 
+}
+
+TableGroup Tourism_Catalog { 
+  places
+  tags
+  place_tags 
+}
+
+TableGroup Knowledge_AI { 
+  knowledge_chunks 
+}

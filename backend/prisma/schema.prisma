@@ -7,117 +7,210 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// Bảng người dùng (Users) - Hỗ trợ Register / Login / Phân quyền
+// ==========================================
+// 1. ENUMS
+// ==========================================
+
+enum Role {
+  ADMIN
+  USER
+  CUSTOMER
+
+  @@map("user_role")
+}
+
+enum PlanStatus {
+  DRAFT
+  VALIDATING
+  COMPLETED
+  FAILED
+
+  @@map("plan_status")
+}
+
+// ==========================================
+// 2. AUTHENTICATION & USERS (VELORA PATTERN)
+// ==========================================
+
 model User {
-  id        Int         @id @default(autoincrement())
-  email     String      @unique
-  password  String      // Mật khẩu đã băm (bcrypt)
-  name      String
-  avatar    String?
-  role      String      @default("USER") // USER, ADMIN
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email              String         @unique @db.VarChar(255)
+  name               String?        @db.VarChar(120)
+  password_hash      String         @db.VarChar(255)
+  role               Role           @default(USER)
+  is_active          Boolean        @default(true)
+  is_verified        Boolean        @default(false)
+  avatar_url         String?        @db.VarChar(255)
+  verification_token String?        @db.VarChar(255)
+  created_at         DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime       @default(now()) @updatedAt @db.Timestamptz(6)
 
-  savedPlans SavedPlan[]
+  refresh_tokens     RefreshToken[]
+  saved_plans        SavedPlan[]
+  favorites          UserFavorite[]
+
+  @@map("users")
 }
 
-// Bảng lưu trữ lịch trình chuyến đi của người dùng (SavedPlans / Itineraries)
+model RefreshToken {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @db.Uuid
+  token_hash String   @db.VarChar(255)
+  expires_at DateTime @db.Timestamptz(6)
+  revoked    Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id], map: "idx_refresh_tokens_user_id")
+  @@index([token_hash], map: "idx_refresh_tokens_token_hash")
+  @@map("refresh_tokens")
+}
+
+// ==========================================
+// 3. SAVED ITINERARIES & FAVORITES
+// ==========================================
+
 model SavedPlan {
-  id            Int      @id @default(autoincrement())
-  userId        Int
-  planTitle     String   // Ví dụ: "Chuyến đi Đà Nẵng 3 ngày 2 đêm cùng bạn bè"
-  city          String   @default("Da Nang")
-  totalDays     Int
-  totalBudget   Float
-  actualCost    Float
-  strategyUsed  String   @default("DIRECT_JSON") // DIRECT_JSON hoặc RAG_AUGMENTED
-  planData      Json     // Lưu trữ toàn bộ JSON chi tiết của lịch trình (các ngày, địa điểm, timeline)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id       String      @db.Uuid
+  title         String      @db.VarChar(255)
+  city          String      @default("Da Nang") @db.VarChar(100)
+  total_days    Int
+  total_budget  Decimal     @db.Decimal(12, 2)
+  actual_cost   Decimal     @db.Decimal(12, 2)
+  status        PlanStatus  @default(DRAFT)
+  strategy_used String      @default("DIRECT_JSON") @db.VarChar(50)
+  plan_data     Json        @db.JsonB
+  share_token   String?     @unique @db.VarChar(100)
+  is_public     Boolean     @default(false)
+  created_at    DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime    @default(now()) @updatedAt @db.Timestamptz(6)
 
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id], map: "idx_saved_plans_user_id")
+  @@index([share_token], map: "idx_saved_plans_share_token")
+  @@map("saved_plans")
 }
 
-// Bảng phân vùng địa lý (Zones)
-model Zone {
-  id          Int      @id @default(autoincrement())
-  code        String   @unique // Ví dụ: Z1, Z2, Z3, Z4, Z5
-  name        String   // Trung tâm thành phố, Ven biển, Bán đảo Sơn Trà...
-  description String?
-  centerLat   Float?
-  centerLng   Float?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model UserFavorite {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @db.Uuid
+  place_id   Int
+  created_at DateTime @default(now()) @db.Timestamptz(6)
 
-  places      Place[]
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  place      Place    @relation(fields: [place_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, place_id], map: "unique_user_favorite_place")
+  @@index([user_id], map: "idx_user_favorites_user_id")
+  @@map("user_favorites")
+}
+
+// ==========================================
+// 4. GEOGRAPHIC ZONES & DISTANCES
+// ==========================================
+
+model Zone {
+  id            Int            @id @default(autoincrement())
+  code          String         @unique @db.VarChar(20)
+  name          String         @db.VarChar(150)
+  description   String?        @db.Text
+  centerLat     Decimal?       @map("center_lat") @db.Decimal(10, 7)
+  centerLng     Decimal?       @map("center_lng") @db.Decimal(10, 7)
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  places        Place[]
   distancesFrom ZoneDistance[] @relation("FromZone")
   distancesTo   ZoneDistance[] @relation("ToZone")
+
+  @@map("zones")
 }
 
-// Bảng các địa điểm du lịch (Places)
-model Place {
-  id            Int      @id @default(autoincrement())
-  name          String
-  city          String   @default("Da Nang")
-  zoneId        Int
-  address       String?
-  estimatedCost Float    @default(0) // Chi phí dự kiến (VNĐ)
-  duration      Int      @default(60) // Thời gian trải nghiệm (phút)
-  openingTime   String?  // Ví dụ: "07:00"
-  closingTime   String?  // Ví dụ: "22:00"
-  latitude      Float?
-  longitude     Float?
-  popularity    Float    @default(0.5) // Điểm độ phổ biến (0.0 -> 1.0)
-  shortDesc     String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+model ZoneDistance {
+  id                 Int      @id @default(autoincrement())
+  fromZoneId         Int      @map("from_zone_id")
+  toZoneId           Int      @map("to_zone_id")
+  estimatedTravelMin Int      @default(15) @map("estimated_travel_min")
+  distanceKm         Decimal? @map("distance_km") @db.Decimal(10, 2)
 
-  zone          Zone       @relation(fields: [zoneId], references: [id])
+  fromZone           Zone     @relation("FromZone", fields: [fromZoneId], references: [id])
+  toZone             Zone     @relation("ToZone", fields: [toZoneId], references: [id])
+
+  @@unique([fromZoneId, toZoneId], map: "unique_zone_distance_pair")
+  @@map("zone_distances")
+}
+
+// ==========================================
+// 5. PLACES & TAXONOMY (TAGS)
+// ==========================================
+
+model Place {
+  id            Int              @id @default(autoincrement())
+  name          String           @db.VarChar(255)
+  city          String           @default("Da Nang") @db.VarChar(100)
+  zoneId        Int              @map("zone_id")
+  address       String?          @db.VarChar(255)
+  estimatedCost Decimal          @default(0) @map("estimated_cost") @db.Decimal(12, 2)
+  duration      Int              @default(60)
+  openingTime   DateTime?        @map("opening_time") @db.Time
+  closingTime   DateTime?        @map("closing_time") @db.Time
+  latitude      Decimal?         @db.Decimal(10, 7)
+  longitude     Decimal?         @db.Decimal(10, 7)
+  popularity    Decimal          @default(0.5) @db.Decimal(3, 2)
+  imageUrl      String?          @map("image_url") @db.VarChar(255)
+  rating        Decimal?         @default(4.5) @db.Decimal(2, 1)
+  shortDesc     String?          @map("short_desc") @db.Text
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  zone          Zone             @relation(fields: [zoneId], references: [id])
   placeTags     PlaceTag[]
   knowledgeDocs KnowledgeChunk[]
+  favorites     UserFavorite[]
+
+  @@index([zoneId], map: "idx_places_zone_id")
+  @@index([city], map: "idx_places_city")
+  @@map("places")
 }
 
-// Bảng danh mục tags / sở thích
 model Tag {
   id        Int        @id @default(autoincrement())
-  name      String     @unique // "food", "beach", "culture", "nature", "nightlife"...
-  category  String?    // Phân nhóm tag nếu có
+  name      String     @unique @db.VarChar(50)
+  category  String?    @db.VarChar(100)
   places    PlaceTag[]
+
+  @@map("tags")
 }
 
-// Bảng liên kết nhiều - nhiều giữa Place và Tag
 model PlaceTag {
-  placeId   Int
-  tagId     Int
+  placeId   Int   @map("place_id")
+  tagId     Int   @map("tag_id")
 
   place     Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
   tag       Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([placeId, tagId])
+  @@index([tagId], map: "idx_place_tags_tag_id")
+  @@map("place_tags")
 }
 
-// Bảng ma trận khoảng cách / thời gian di chuyển ước tính giữa các Zone
-model ZoneDistance {
-  id                 Int   @id @default(autoincrement())
-  fromZoneId         Int
-  toZoneId           Int
-  estimatedTravelMin Int   @default(15) // Thời gian di chuyển trung bình (phút)
-  distanceKm         Float?
+// ==========================================
+// 6. RAG KNOWLEDGE BASE
+// ==========================================
 
-  fromZone           Zone  @relation("FromZone", fields: [fromZoneId], references: [id])
-  toZone             Zone  @relation("ToZone", fields: [toZoneId], references: [id])
-
-  @@unique([fromZoneId, toZoneId])
-}
-
-// Bảng phục vụ Phương án CÓ RAG: Lưu trữ tri thức du lịch bổ trợ (tips, lưu ý, lịch sử văn hóa)
 model KnowledgeChunk {
-  id        Int      @id @default(autoincrement())
-  placeId   Int?     // Có thể liên kết trực tiếp với Place hoặc là kiến thức chung
-  title     String   // Ví dụ: "Kinh nghiệm thưởng thức ốc hút Chợ Cồn"
-  content   String   // Đoạn văn bản chi tiết
-  category  String?  // "food_tip", "cultural_rule", "timing_advice"
-  createdAt DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  placeId     Int?     @map("place_id")
+  title       String   @db.VarChar(255)
+  content     String   @db.Text
+  category    String?  @db.VarChar(100)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  place     Place?   @relation(fields: [placeId], references: [id], onDelete: SetNull)
+  place       Place?   @relation(fields: [placeId], references: [id], onDelete: SetNull)
+
+  @@index([placeId], map: "idx_knowledge_chunks_place_id")
+  @@map("knowledge_chunks")
 }

@@ -5,38 +5,60 @@ import path from 'path';
 
 const prisma = new PrismaClient();
 
+// Helper chuyển chuỗi "HH:mm" thành Date object cho kiểu PostgreSQL TIME
+function parseTimeToDate(timeStr) {
+  if (!timeStr) return null;
+  const parts = timeStr.trim().split(':');
+  if (parts.length < 2) return null;
+  const hh = parts[0].padStart(2, '0');
+  const mm = parts[1].padStart(2, '0');
+  return new Date(`1970-01-01T${hh}:${mm}:00.000Z`);
+}
+
 async function main() {
   console.log('🌱 Bắt đầu nạp dữ liệu mẫu cho GeoZone AI...');
 
-  // 1. Tạo người dùng mẫu (Demo Users)
+  // 1. Tạo người dùng mẫu (Demo Users theo chuẩn Velora)
   const salt = await bcrypt.genSalt(10);
   const demoPassword = await bcrypt.hash('password123', salt);
   const adminPassword = await bcrypt.hash('admin123', salt);
 
-  const demoUser = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: 'demo@geozone.vn' },
-    update: {},
+    update: {
+      password_hash: demoPassword,
+      is_active: true,
+      is_verified: true
+    },
     create: {
       email: 'demo@geozone.vn',
-      password: demoPassword,
+      password_hash: demoPassword,
       name: 'Khách du lịch Demo',
-      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=DemoUser',
-      role: 'USER'
+      avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=DemoUser',
+      role: 'USER',
+      is_active: true,
+      is_verified: true
     }
   });
 
   await prisma.user.upsert({
     where: { email: 'admin@geozone.vn' },
-    update: {},
+    update: {
+      password_hash: adminPassword,
+      is_active: true,
+      is_verified: true
+    },
     create: {
       email: 'admin@geozone.vn',
-      password: adminPassword,
+      password_hash: adminPassword,
       name: 'Quản trị viên GeoZone',
-      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=AdminUser',
-      role: 'ADMIN'
+      avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=AdminUser',
+      role: 'ADMIN',
+      is_active: true,
+      is_verified: true
     }
   });
-  console.log('✅ Đã tạo tài khoản demo (demo@geozone.vn / password123) và admin.');
+  console.log('✅ Đã tạo tài khoản demo (demo@geozone.vn / password123) và admin (admin@geozone.vn / admin123).');
 
   // 2. Tạo các Zone cố định
   const zonesData = [
@@ -73,23 +95,29 @@ async function main() {
     const rawContent = fs.readFileSync(rawPath, 'utf-8');
     const places = JSON.parse(rawContent);
 
+    // Xóa place_tags và places cũ để seed sạch không bị trùng ID
+    await prisma.placeTag.deleteMany();
+    await prisma.place.deleteMany();
+
     for (const p of places) {
       const zone = await prisma.zone.findUnique({ where: { code: p.zoneCode } });
       if (!zone) continue;
 
       const createdPlace = await prisma.place.create({
         data: {
+          id: p.id,
           name: p.name,
           city: p.city,
           zoneId: zone.id,
           address: p.address,
           estimatedCost: p.estimatedCost,
           duration: p.duration,
-          openingTime: p.openingTime,
-          closingTime: p.closingTime,
+          openingTime: parseTimeToDate(p.openingTime),
+          closingTime: parseTimeToDate(p.closingTime),
           latitude: p.latitude,
           longitude: p.longitude,
-          popularity: p.popularity
+          popularity: p.popularity,
+          rating: 4.5
         }
       });
 

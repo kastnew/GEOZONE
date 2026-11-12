@@ -5,6 +5,12 @@ Tài liệu đặc tả hợp đồng giao tiếp API (API Contract Documentatio
 - **Base URL:** `http://localhost:5000`
 - **Prefix:** Toàn bộ API được mount dưới tiền tố `/api/v1`.
 - **Định dạng dữ liệu:** Request body gửi JSON cần có header `Content-Type: application/json`.
+- **Nguyên tắc thiết kế chuẩn RESTful:**
+  - **Tài nguyên danh từ số nhiều:** `/zones`, `/places`, `/tags`, `/plans`, `/users`.
+  - **HTTP Methods ngữ nghĩa:** `GET` (đọc dữ liệu), `POST` (tạo mới/lưu trữ), `PATCH` (cập nhật từng phần), `DELETE` (xóa). Không đưa động từ (`save`, `search`, `my-plans`) vào URL collection.
+  - **Phân quyền bằng Middleware:** Không sinh namespace dư thừa `/admin/` cho cùng một thực thể; quyền hạn `ADMIN` được bảo vệ bằng middleware `verifyToken` và `verifyAdmin`.
+  - **Định danh chủ thể rõ ràng:** Các tài nguyên thuộc về người dùng đang đăng nhập sử dụng tiền tố `/users/me/...` (ví dụ: `/users/me/favorites`).
+  - **Phân tách thao tác AI (RPC-style):** Các tác vụ xử lý tính toán thuật toán / LLM không lưu trực tiếp vào CSDL được gom nhóm rõ ràng dưới namespace `/ai/...` (`/ai/generate-plan`, `/ai/swap-place`).
 - **Xác thực (Authentication):** Sử dụng chuẩn **Dual-Token** (Access Token 15m dạng Bearer Header + Refresh Token 7d dạng HttpOnly Cookie).
 - **Credentials:** Các API làm việc với Cookie (Auth refresh, login, logout) bắt buộc bật `credentials: 'include'` (hoặc `withCredentials: true` trên Axios).
 - **Phân quyền (Authorization):** Gồm 3 quyền chính trong hệ thống: `USER` (Khách du lịch), `ADMIN` (Quản trị viên), `CUSTOMER` (Tương thích ngược).
@@ -29,33 +35,37 @@ Tài liệu đặc tả hợp đồng giao tiếp API (API Contract Documentatio
   - [`PATCH /api/v1/users/:userId`](#patch-apiv1usersuserid)
   - [`PATCH /api/v1/users/:userId/status`](#patch-apiv1usersuseridstatus)
 - [4. Authentication & Security Middlewares](#4-authentication--security-middlewares)
-- [5. Places & Zones Catalog (Danh mục Địa lý & Địa điểm)](#5-places--zones-catalog)
-  - [`GET /api/v1/places/zones`](#get-apiv1placeszones)
-  - [`GET /api/v1/places/search`](#get-apiv1placessearch)
-- [6. AI Travel Planner & Dynamic Swap (Lập Lịch Trình Tự Động)](#6-ai-travel-planner--dynamic-swap)
-  - [`POST /api/v1/plans/generate`](#post-apiv1plansgenerate)
-  - [`POST /api/v1/plans/swap`](#post-apiv1plansswap)
-- [7. Saved Itineraries Management (Lưu Trữ & Chia Sẻ Lịch Trình) [Kế hoạch]](#7-saved-itineraries-management-kế-hoạch)
-  - [`POST /api/v1/plans/save`](#post-apiv1planssave-kế-hoạch)
-  - [`GET /api/v1/plans/my-plans`](#get-apiv1plansmy-plans-kế-hoạch)
+- [5. Geographic Zones & Places Catalog (Khu Vực & Địa Điểm Du Lịch)](#5-geographic-zones--places-catalog)
+  - [`GET /api/v1/zones`](#get-apiv1zones)
+  - [`GET /api/v1/places`](#get-apiv1places)
+  - [`GET /api/v1/places/:placeId`](#get-apiv1placesplaceid)
+- [6. Taxonomy & Tags Catalog (Danh Mục Thẻ & Sở Thích)](#6-taxonomy--tags-catalog)
+  - [`GET /api/v1/tags`](#get-apiv1tags)
+- [7. AI Travel Engine (Sinh & Hoán Đổi Lịch Trình Tự Động)](#7-ai-travel-engine)
+  - [`POST /api/v1/ai/generate-plan`](#post-apiv1aigenerate-plan)
+  - [`POST /api/v1/ai/swap-place`](#post-apiv1aiswap-place)
+- [8. Itineraries Management (Quản Lý Lịch Trình Đã Lưu) [Kế hoạch]](#8-itineraries-management-kế-hoạch)
+  - [`POST /api/v1/plans`](#post-apiv1plans-kế-hoạch)
+  - [`GET /api/v1/plans`](#get-apiv1plans-kế-hoạch)
   - [`GET /api/v1/plans/:planId`](#get-apiv1plansplanid-kế-hoạch)
   - [`DELETE /api/v1/plans/:planId`](#delete-apiv1plansplanid-kế-hoạch)
   - [`GET /api/v1/plans/share/:shareToken`](#get-apiv1planssharesharetoken-kế-hoạch)
-- [8. User Favorites (Địa Điểm Yêu Thích) [Kế hoạch]](#8-user-favorites-kế-hoạch)
-  - [`POST /api/v1/users/favorites/:placeId`](#post-apiv1usersfavoritesplaceid-kế-hoạch)
-  - [`DELETE /api/v1/users/favorites/:placeId`](#delete-apiv1usersfavoritesplaceid-kế-hoạch)
-  - [`GET /api/v1/users/favorites`](#get-apiv1usersfavorites-kế-hoạch)
-- [9. Admin Catalog Management (Quản Lý Địa Danh & Vùng) [Kế hoạch]](#9-admin-catalog-management-kế-hoạch)
-  - [`POST /api/v1/admin/places`](#post-apiv1adminplaces-kế-hoạch)
-  - [`PATCH /api/v1/admin/places/:placeId`](#patch-apiv1adminplacesplaceid-kế-hoạch)
-  - [`DELETE /api/v1/admin/places/:placeId`](#delete-apiv1adminplacesplaceid-kế-hoạch)
-  - [`POST /api/v1/admin/zones`](#post-apiv1adminzones-kế-hoạch)
-  - [`PATCH /api/v1/admin/zones/:zoneId`](#patch-apiv1adminzoneszoneid-kế-hoạch)
-- [10. RAG Knowledge Base Management [Kế hoạch]](#10-rag-knowledge-base-management-kế-hoạch)
+- [9. User Favorites (Địa Điểm Yêu Thích) [Kế hoạch]](#9-user-favorites-kế-hoạch)
+  - [`GET /api/v1/users/me/favorites`](#get-apiv1usersmefavorites-kế-hoạch)
+  - [`POST /api/v1/users/me/favorites`](#post-apiv1usersmefavorites-kế-hoạch)
+  - [`DELETE /api/v1/users/me/favorites/:placeId`](#delete-apiv1usersmefavoritesplaceid-kế-hoạch)
+- [10. Catalog Administration (Quản Trị Danh Mục Địa Điểm & Vùng) [Kế hoạch]](#10-catalog-administration-kế-hoạch)
+  - [`POST /api/v1/places`](#post-apiv1places-kế-hoạch)
+  - [`PATCH /api/v1/places/:placeId`](#patch-apiv1placesplaceid-kế-hoạch)
+  - [`DELETE /api/v1/places/:placeId`](#delete-apiv1placesplaceid-kế-hoạch)
+  - [`POST /api/v1/zones`](#post-apiv1zones-kế-hoạch)
+  - [`PATCH /api/v1/zones/:zoneId`](#patch-apiv1zoneszoneid-kế-hoạch)
+  - [`DELETE /api/v1/zones/:zoneId`](#delete-apiv1zoneszoneid-kế-hoạch)
+- [11. RAG Knowledge Base Management [Kế hoạch]](#11-rag-knowledge-base-management-kế-hoạch)
   - [`GET /api/v1/knowledge`](#get-apiv1knowledge-kế-hoạch)
   - [`POST /api/v1/knowledge`](#post-apiv1knowledge-kế-hoạch)
   - [`DELETE /api/v1/knowledge/:id`](#delete-apiv1knowledgeid-kế-hoạch)
-- [11. Tổng Hợp Trạng Thái Triển Khai API](#11-tổng-hợp-trạng-thái-triển-khai-api)
+- [12. Tổng Hợp Trạng Thái Triển Khai API](#12-tổng-hợp-trạng-thái-triển-khai-api)
 
 ---
 
@@ -83,7 +93,7 @@ HTTP status: `200 OK`
 
 # 2. Authentication
 
-Hệ thống xác thực áp dụng mô hình **Dual-Token** kế thừa trực tiếp từ dự án **Velora E-Commerce**, đảm bảo khả năng chống Timing-Attack, lưu trữ Refresh Token dưới dạng băm SHA-256 và thu hồi phiên toàn diện.
+Nhóm API quản lý phiên đăng nhập và bảo mật người dùng, kế thừa tiêu chuẩn bảo mật của dự án **Velora**.
 
 # POST /api/v1/auth/register
 
@@ -172,35 +182,30 @@ Response thành công:
 HTTP status: `200 OK`
 
 Các trường hợp lỗi:
-- `400`: Thiếu hoặc sai định dạng email/mật khẩu.
-- `401`: Email hoặc mật khẩu không chính xác (`"Email hoặc mật khẩu không đúng!"`).
-- `403`: Tài khoản đã bị quản trị viên khóa (`"Tài khoản của bạn đã bị vô hiệu hóa!"`).
-- `500`: Lỗi hệ thống.
+- `400`: Thiếu email hoặc mật khẩu.
+- `401`: Sai email hoặc sai mật khẩu (`"Email hoặc mật khẩu không đúng!"`).
+- `403`: Tài khoản đã bị khóa bởi Admin (`"Tài khoản của bạn đã bị vô hiệu hóa!"`).
+- `500`: Lỗi máy chủ nội bộ.
 
 # PATCH /api/v1/auth/change-password
 
-Đổi mật khẩu người dùng đang đăng nhập.
+Đổi mật khẩu tài khoản người dùng đang đăng nhập.
 
-Request headers:
-
-```http
-Authorization: Bearer <access_token>
-Content-Type: application/json
-```
+Yêu cầu xác thực: Bearer Access Token trong header `Authorization`.
 
 Request body:
 
 ```json
 {
   "currentPassword": "OldPassword123!",
-  "newPassword": "NewStrongPassword456!"
+  "newPassword": "BrandNewPassword456!"
 }
 ```
 
-**Cơ chế an ninh:** Khi đổi mật khẩu thành công, hệ thống sử dụng Database Transaction để:
-1. Cập nhật `password_hash` mới.
-2. Thu hồi toàn bộ Refresh Token (`revoked = true`) của tài khoản trên tất cả các thiết bị.
-3. Xóa cookie `refreshToken` trên trình duyệt hiện tại.
+Khi đổi mật khẩu thành công:
+- Mật khẩu mới được băm và cập nhật vào CSDL.
+- Toàn bộ `refreshToken` cũ của user trong bảng `refresh_tokens` đều bị đánh dấu `revoked: true` (đăng xuất khỏi tất cả thiết bị khác).
+- Cookie `refreshToken` của phiên hiện tại được xóa sạch (`clearCookie`).
 
 Response thành công:
 
@@ -214,19 +219,26 @@ Response thành công:
 HTTP status: `200 OK`
 
 Các trường hợp lỗi:
-- `400`: Thiếu trường mật khẩu hoặc độ dài mật khẩu mới không hợp lệ (8 - 72 ký tự).
-- `401`: Mật khẩu hiện tại không đúng (`"Mật khẩu hiện tại không đúng!"`).
-- `401`: Thiếu hoặc sai Access Token.
-- `403`: Tài khoản đã bị vô hiệu hóa.
+- `400`: Thiếu thông tin mật khẩu hiện tại hoặc mật khẩu mới.
+- `400`: Mật khẩu mới không đạt độ dài quy định (8–72 ký tự).
+- `401`: Chưa cung cấp Bearer Token hoặc token không hợp lệ / hết hạn.
+- `401`: Mật khẩu hiện tại không chính xác (`"Mật khẩu hiện tại không đúng!"`).
+- `403`: Tài khoản bị vô hiệu hóa.
+- `404`: Không tìm thấy thông tin người dùng trong CSDL.
 
 # POST /api/v1/auth/refresh-token
 
-Cấp mới Access Token (Silent Refresh) bằng Refresh Token được gửi tự động trong HttpOnly Cookie.
+Cấp mới Access Token thông qua `refreshToken` lưu trong HttpOnly Cookie mà không yêu cầu người dùng nhập lại mật khẩu (Silent Refresh).
 
 Request:
-- Không gửi token qua header hay body.
-- Trình duyệt tự gửi cookie `refreshToken`.
-- Frontend bắt buộc bật cấu hình: `credentials: 'include'` (Fetch API) hoặc `withCredentials: true` (Axios).
+- Header bắt buộc: Không yêu cầu Bearer token.
+- Cookie bắt buộc: `refreshToken=<token>` (tự động đính kèm khi gọi từ trình duyệt có bật `credentials: 'include'`).
+
+Quy trình xác thực:
+1. Kiểm tra chữ ký JWT và thời hạn còn hiệu lực của `refreshToken` trong cookie.
+2. Băm SHA-256 chuỗi token và đối chiếu với bản ghi trong bảng `refresh_tokens`.
+3. Kiểm tra cờ `revoked == false` và tài khoản `user.is_active == true`.
+4. Nếu hợp lệ, cấp phát Access Token mới (thời hạn 15 phút).
 
 Response thành công:
 
@@ -241,21 +253,21 @@ HTTP status: `200 OK`
 
 Các trường hợp lỗi:
 - `401`: Không tìm thấy cookie `refreshToken`.
-- `401`: Refresh token hết hạn hoặc sai chữ ký (Tự động xóa cookie).
-- `403`: Token đã bị thu hồi (`revoked: true`) hoặc tài khoản người dùng bị khóa (`is_active: false`).
+- `401`: Token trong cookie hết hạn hoặc chữ ký không hợp lệ.
+- `403`: Phiên làm việc đã bị thu hồi (`revoked == true`) hoặc tài khoản bị vô hiệu hóa.
+- `500`: Lỗi máy chủ.
 
 # POST /api/v1/auth/logout
 
-Đăng xuất khỏi hệ thống.
+Đăng xuất người dùng hiện tại khỏi phiên làm việc.
 
-Request:
-- Gửi kèm HttpOnly cookie `refreshToken` (có thể kèm Access Token).
+Request: Gửi cookie `refreshToken` lên backend.
 
-Khi gọi API, backend:
-1. Tính băm SHA-256 của token trong cookie và xóa bản ghi trong bảng `refresh_tokens`.
-2. Xóa sạch cookie `refreshToken` trên client bằng `res.clearCookie()`.
+Backend xử lý:
+1. Xóa bản ghi Refresh Token tương ứng trong bảng `refresh_tokens` (hoặc đánh dấu `revoked: true`).
+2. Gửi chỉ thị `res.clearCookie('refreshToken')` về client để xóa cookie trên trình duyệt.
 
-Response thành công:
+Response:
 
 ```json
 {
@@ -270,136 +282,13 @@ HTTP status: `200 OK`
 
 # 3. User Management
 
+Nhóm API quản lý hồ sơ cá nhân và quản trị người dùng dành cho Admin.
+
 # GET /api/v1/users/me
 
-Lấy thông tin hồ sơ của tài khoản đang đăng nhập.
+Lấy thông tin tài khoản của chính người dùng đang đăng nhập.
 
-Request headers:
-
-```http
-Authorization: Bearer <access_token>
-```
-
-Response thành công:
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "email": "tourist@example.com",
-    "name": "Nguyễn Văn Du Khách",
-    "avatar_url": "https://example.com/avatar.jpg",
-    "role": "USER",
-    "is_active": true,
-    "is_verified": false,
-    "created_at": "2026-11-12T00:00:00.000Z"
-  }
-}
-```
-
-HTTP status: `200 OK`
-
-# PATCH /api/v1/users/me
-
-Cập nhật thông tin hồ sơ cá nhân (Tên hiển thị, Ảnh đại diện).
-
-Request headers:
-
-```http
-Authorization: Bearer <access_token>
-Content-Type: application/json
-```
-
-Request body:
-
-```json
-{
-  "name": "Tên Hiển Thị Mới",
-  "avatar_url": "https://example.com/new-avatar.png"
-}
-```
-
-- `name`: string, tối đa 120 ký tự.
-- `avatar_url`: string, tối đa 255 ký tự.
-
-Response thành công:
-
-```json
-{
-  "success": true,
-  "message": "Cập nhật hồ sơ thành công!",
-  "data": {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "email": "tourist@example.com",
-    "name": "Tên Hiển Thị Mới",
-    "avatar_url": "https://example.com/new-avatar.png",
-    "role": "USER",
-    "is_active": true,
-    "is_verified": false,
-    "created_at": "2026-11-12T00:00:00.000Z"
-  }
-}
-```
-
-HTTP status: `200 OK`
-
-# GET /api/v1/users
-
-Dành riêng cho **`ADMIN`**. Lấy danh sách toàn bộ người dùng trong hệ thống với các bộ lọc phân trang, tìm kiếm và sắp xếp.
-
-Request headers:
-
-```http
-Authorization: Bearer <admin_access_token>
-```
-
-Query parameters:
-- `page`: số trang, mặc định `1`.
-- `limit`: số bản ghi mỗi trang, mặc định `10` (tối đa `100`).
-- `search`: từ khóa tìm kiếm (hỗ trợ tìm theo email, tên, hoặc chính xác mã UUID).
-- `role`: lọc theo vai trò (`USER`, `ADMIN`, `CUSTOMER`).
-- `status`: lọc theo trạng thái (`active`, `inactive`).
-- `sortBy`: sắp xếp (`oldest`, `email_asc`, `name_asc`, mặc định: `created_at` mới nhất).
-
-Ví dụ: `GET /api/v1/users?page=1&limit=10&role=USER&status=active`
-
-Response thành công:
-
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "550e8400-e29b-41d4-a716-446655440000",
-      "email": "tourist@example.com",
-      "name": "Nguyễn Văn Du Khách",
-      "avatar_url": null,
-      "role": "USER",
-      "is_active": true,
-      "is_verified": false,
-      "created_at": "2026-11-12T00:00:00.000Z"
-    }
-  ],
-  "meta": {
-    "total": 1,
-    "page": 1,
-    "limit": 10,
-    "totalPages": 1
-  }
-}
-```
-
-HTTP status: `200 OK`. Lỗi `403` nếu không có quyền `ADMIN`.
-
-# GET /api/v1/users/:userId
-
-Lấy thông tin chi tiết của một người dùng theo UUID. 
-- Người dùng chỉ được xem thông tin của chính mình (`checkOwner`).
-- Tài khoản `ADMIN` có quyền xem thông tin của mọi người dùng.
-
-Request headers: `Authorization: Bearer <access_token>`  
-Path parameter: `userId` (UUID v4)
+Yêu cầu xác thực: Bearer Access Token.
 
 Response:
 
@@ -410,46 +299,114 @@ Response:
     "id": "550e8400-e29b-41d4-a716-446655440000",
     "email": "tourist@example.com",
     "name": "Nguyễn Văn Du Khách",
-    "avatar_url": null,
     "role": "USER",
+    "avatar_url": null,
     "is_active": true,
     "is_verified": false,
-    "created_at": "2026-11-12T00:00:00.000Z"
+    "created_at": "2026-11-12T00:00:00.000Z",
+    "updated_at": "2026-11-12T00:00:00.000Z"
   }
 }
 ```
 
-HTTP status: `200 OK`. Lỗi `400` nếu sai UUID, `403` nếu không phải chính chủ/admin, `404` nếu không tìm thấy.
+HTTP status: `200 OK`
 
-# PATCH /api/v1/users/:userId
+# PATCH /api/v1/users/me
 
-Cập nhật thông tin người dùng theo UUID (Chính chủ hoặc `ADMIN`). `ADMIN` có thể cập nhật thêm `role`.
+Cập nhật thông tin hồ sơ của chính người dùng đang đăng nhập (họ tên, ảnh đại diện). Không cho phép tự đổi email hoặc role qua endpoint này.
 
-Request headers: `Authorization: Bearer <access_token>`  
-Path parameter: `userId` (UUID v4)  
+Yêu cầu xác thực: Bearer Access Token.
+
 Request body:
 
 ```json
 {
-  "name": "Nguyễn Văn Cập Nhật",
-  "email": "newemail@example.com",
-  "role": "ADMIN"
+  "name": "Nguyễn Văn Du Khách (Đã cập nhật)",
+  "avatar_url": "https://example.com/avatar.png"
 }
 ```
 
-Response thành công:
+Response:
 
 ```json
 {
   "success": true,
-  "message": "Cập nhật người dùng thành công!",
+  "message": "Cập nhật hồ sơ thành công!",
   "data": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
-    "email": "newemail@example.com",
-    "name": "Nguyễn Văn Cập Nhật",
-    "role": "ADMIN",
-    "is_active": true
+    "email": "tourist@example.com",
+    "name": "Nguyễn Văn Du Khách (Đã cập nhật)",
+    "role": "USER",
+    "avatar_url": "https://example.com/avatar.png",
+    "is_active": true,
+    "updated_at": "2026-11-12T00:05:00.000Z"
   }
+}
+```
+
+HTTP status: `200 OK`
+
+# GET /api/v1/users
+
+Dành riêng cho `ADMIN`: Lấy danh sách toàn bộ người dùng trong hệ thống (có hỗ trợ phân trang, tìm kiếm email/tên và lọc theo trạng thái).
+
+Yêu cầu xác thực: Bearer Access Token của tài khoản có `role: "ADMIN"`.
+
+Query parameters:
+- `page`: number, mặc định 1.
+- `limit`: number, mặc định 10.
+- `search`: string, tìm kiếm mờ theo email hoặc name.
+- `is_active`: boolean (`true` / `false`).
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "email": "tourist@example.com",
+      "name": "Nguyễn Văn Du Khách",
+      "role": "USER",
+      "is_active": true,
+      "created_at": "2026-11-12T00:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 1,
+    "totalPages": 1
+  }
+}
+```
+
+HTTP status: `200 OK`. Trả về `403 Forbidden` nếu không phải Admin.
+
+# GET /api/v1/users/:userId
+
+Xem thông tin chi tiết một người dùng cụ thể.
+
+Yêu cầu xác thực:
+- Người dùng chỉ được xem chính hồ sơ của mình (`id == userId`).
+- Tài khoản `ADMIN` được quyền xem hồ sơ của bất kỳ ai.
+
+HTTP status: `200 OK`. `403` nếu không có quyền sở hữu, `404` nếu không tìm thấy.
+
+# PATCH /api/v1/users/:userId
+
+Dành riêng cho `ADMIN`: Cập nhật thông tin chi tiết của người dùng khác (bao gồm cả phân quyền `role` và cờ kích hoạt `is_active`).
+
+Yêu cầu xác thực: `ADMIN`.
+
+Request body:
+
+```json
+{
+  "name": "Tên mới",
+  "role": "ADMIN",
+  "is_active": true
 }
 ```
 
@@ -457,27 +414,15 @@ HTTP status: `200 OK`
 
 # PATCH /api/v1/users/:userId/status
 
-Dành riêng cho **`ADMIN`**. Dùng để khóa (Vô hiệu hóa) hoặc mở khóa tài khoản người dùng.
+Dành riêng cho `ADMIN`: Khóa hoặc mở khóa tài khoản người dùng nhanh chóng. Khi tài khoản bị khóa (`is_active: false`), toàn bộ Refresh Token của tài khoản đó lập tức bị thu hồi.
 
-Request headers: `Authorization: Bearer <admin_access_token>`  
-Path parameter: `userId` (UUID v4)
+Yêu cầu xác thực: `ADMIN`.
 
-**Cơ chế an toàn:** 
-1. Admin không thể tự khóa tài khoản của chính mình (Trả về `400`).
-2. Khi một tài khoản bị chuyển sang `is_active: false`, hệ thống tự động thu hồi toàn bộ Refresh Token của tài khoản đó để buộc đăng xuất tức thì khỏi mọi thiết bị.
-
-Response thành công:
+Request body:
 
 ```json
 {
-  "success": true,
-  "message": "Vô hiệu hóa tài khoản thành công!",
-  "data": {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "email": "tourist@example.com",
-    "role": "USER",
-    "is_active": false
-  }
+  "is_active": false
 }
 ```
 
@@ -487,21 +432,42 @@ HTTP status: `200 OK`
 
 # 4. Authentication & Security Middlewares
 
-| Tên Middleware | File mã nguồn | Ý nghĩa & Luồng bảo vệ |
-|---|---|---|
-| **`verifyToken`** | `src/middlewares/auth.middleware.js` | Trích xuất chuỗi JWT Bearer từ header `Authorization`, kiểm tra chữ ký và hạn dùng. Giải mã gán thông tin vào `req.user`. |
-| **`verifyActiveUser`** | `src/middlewares/auth.middleware.js` | Chạy ngay sau `verifyToken`, truy vấn trực tiếp DB theo `req.user.sub` để kiểm tra tài khoản có bị khóa (`is_active: false`) không và cập nhật `req.user.role` realtime. |
-| **`verifyAdmin`** | `src/middlewares/auth.middleware.js` | Chặn đứng các request từ người dùng không có vai trò `ADMIN` với mã HTTP `403`. |
-| **`checkOwner`** | `src/middlewares/checkOwner.js` | Kiểm tra quyền: Chỉ cho phép đi tiếp nếu `req.user.role === 'ADMIN'` hoặc `req.user.sub === req.params.userId`. |
-| **`optionalAuth`** | `src/middlewares/optionalAuth.js` | Kiểm tra token tùy chọn. Nếu client gửi token hợp lệ thì gán `req.user`, nếu không gửi vẫn cho request tiếp tục xử lý dưới vai trò khách vãng lai (Guest). |
-| **`validateUuidParam`** | `src/middlewares/validateUuid.js` | Kiểm tra định dạng các tham số params (như `userId`, `planId`) theo đúng chuẩn biểu thức chính quy UUID v4 trước khi thực hiện truy vấn. |
-| **`errorHandler`** | `src/middlewares/errorHandler.js` | Bắt lỗi toàn cục, tự động phân tích các mã lỗi Prisma (`P2002` trùng lặp, `P2025` không tìm thấy, `P2023` sai UUID) thành thông báo tiếng Việt chuẩn mực. |
+Hệ thống bảo vệ các tài nguyên bằng 6 middleware chuẩn hóa:
+
+1. **`verifyToken`**:
+   - Trích xuất token từ header `Authorization: Bearer <token>`.
+   - Xác thực chữ ký bằng `ENV.ACCESS_TOKEN_SECRET`.
+   - Gán payload giải mã vào `req.user` (`{ sub: userId, role: userRole }`).
+   - Trả về `401 Unauthorized` nếu thiếu token, token hết hạn hoặc sai chữ ký.
+
+2. **`verifyActiveUser`**:
+   - Kiểm tra `is_active == true` trong database.
+   - Trả về `403 Forbidden` nếu tài khoản đã bị khóa.
+
+3. **`verifyAdmin`**:
+   - Kiểm tra `req.user.role === 'ADMIN'`.
+   - Trả về `403 Forbidden` nếu là người dùng thông thường (`USER` hoặc `CUSTOMER`).
+
+4. **`checkOwner`**:
+   - Kiểm tra quyền sở hữu tài nguyên (ví dụ: `userId` trên params hoặc `plan.user_id`).
+   - Cho phép nếu `req.user.sub === targetUserId` HOẶC `req.user.role === 'ADMIN'`.
+   - Trả về `403 Forbidden` nếu cố tình truy cập tài nguyên của người khác.
+
+5. **`optionalAuth`**:
+   - Dùng cho các endpoint công khai nhưng có trải nghiệm cá nhân hóa nếu đã đăng nhập (ví dụ: `/ai/generate-plan`).
+   - Nếu có Bearer token hợp lệ thì gán `req.user`; nếu không có token hoặc token hỏng thì bỏ qua mà không chặn request.
+
+6. **`validateUuidParam(paramName)`**:
+   - Kiểm tra định dạng UUID v4 của tham số trên URL (`:userId`, `:planId`).
+   - Ngăn chặn lỗi cú pháp `P2023` từ Prisma nếu truyền chuỗi sai chuẩn. Trả về `400 Bad Request` ngay lập tức.
 
 ---
 
-# 5. Places & Zones Catalog
+# 5. Geographic Zones & Places Catalog
 
-# GET /api/v1/places/zones
+Nhóm API tra cứu danh mục địa lý độc lập và danh sách các địa điểm du lịch Đà Nẵng.
+
+# GET /api/v1/zones
 
 Lấy danh sách toàn bộ các phân vùng địa lý (Zones) tại thành phố thử nghiệm (Đà Nẵng) kèm số lượng địa điểm thuộc mỗi Zone.
 
@@ -541,15 +507,17 @@ Response thành công:
 
 HTTP status: `200 OK`
 
-# GET /api/v1/places/search
+# GET /api/v1/places
 
-Tìm kiếm và lọc danh sách các địa điểm du lịch theo thành phố và các thẻ sở thích (Tags).
+Tra cứu và lọc danh sách các địa điểm du lịch bằng Query Parameters chuẩn RESTful.
 
 Query parameters:
 - `city`: string, mặc định `"Da Nang"`.
-- `tags`: chuỗi các tags phân cách bằng dấu phẩy (ví dụ: `food,beach,culture`).
+- `zoneId`: number, lọc theo ID phân vùng (ví dụ: `1`).
+- `tags`: chuỗi các thẻ sở thích phân cách bằng dấu phẩy (ví dụ: `food,beach,culture`).
+- `maxCost`: number, lọc các địa điểm có chi phí dự tính $\le$ `maxCost`.
 
-Ví dụ: `GET /api/v1/places/search?city=Da%20Nang&tags=food,culture`
+Ví dụ: `GET /api/v1/places?city=Da%20Nang&zoneId=1&tags=food,culture`
 
 Response thành công:
 
@@ -581,11 +549,80 @@ Response thành công:
 
 HTTP status: `200 OK`
 
+# GET /api/v1/places/:placeId
+
+Xem thông tin chi tiết một địa điểm du lịch theo ID.
+
+Response thành công:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "Chợ Cồn",
+    "city": "Da Nang",
+    "zoneId": 1,
+    "address": "290 Hùng Vương, Vĩnh Trung, Hải Châu, Đà Nẵng",
+    "estimatedCost": 100000,
+    "duration": 90,
+    "openingTime": "07:00",
+    "closingTime": "19:00",
+    "latitude": 16.0694,
+    "longitude": 108.2162,
+    "popularity": 0.95,
+    "rating": 4.5,
+    "shortDesc": "Thiên đường ẩm thực địa phương phong phú của Đà Nẵng.",
+    "tags": ["food", "culture"]
+  }
+}
+```
+
+HTTP status: `200 OK`. `404 Not Found` nếu không tìm thấy địa điểm.
+
 ---
 
-# 6. AI Travel Planner & Dynamic Swap
+# 6. Taxonomy & Tags Catalog
 
-# POST /api/v1/plans/generate
+Nhóm API phục vụ vẽ bộ lọc sở thích (Filter/Preferences) cho Frontend.
+
+# GET /api/v1/tags
+
+Lấy toàn bộ danh mục các thẻ sở thích (Tags) đã được định nghĩa trong hệ thống để Frontend hiển thị màn hình onboarding hoặc popup chọn sở thích du lịch.
+
+Request: Không cần xác thực.
+
+Response thành công:
+
+```json
+{
+  "success": true,
+  "data": [
+    { "id": 1, "name": "food", "category": "culinary" },
+    { "id": 2, "name": "beach", "category": "nature" },
+    { "id": 3, "name": "culture", "category": "heritage" },
+    { "id": 4, "name": "nature", "category": "nature" },
+    { "id": 5, "name": "relaxation", "category": "leisure" },
+    { "id": 6, "name": "nightlife", "category": "entertainment" },
+    { "id": 7, "name": "adventure", "category": "activity" }
+  ]
+}
+```
+
+HTTP status: `200 OK`
+
+---
+
+# 7. AI Travel Engine
+
+Các tác vụ xử lý tính toán thuật toán / LLM theo phong cách RPC-style chuyên biệt. 
+
+**Luồng chuẩn:**
+1. Frontend gửi yêu cầu vào `POST /api/v1/ai/generate-plan` $\rightarrow$ Nhận JSON lịch trình nháp (chưa ghi vào CSDL).
+2. Người dùng xem bản nháp trên Timeline, nếu muốn đổi chỗ thì Frontend gọi `POST /api/v1/ai/swap-place`.
+3. Khi người dùng bấm "Lưu chuyến đi", Frontend gửi JSON hoàn thiện vào `POST /api/v1/plans` để lưu chính thức vào bảng `saved_plans`.
+
+# POST /api/v1/ai/generate-plan
 
 API cốt lõi kích hoạt **Thuật toán Planner 5 bước kết hợp LLM (Gemini) và RAG** để sinh lịch trình du lịch cá nhân hóa hoàn chỉnh.
 
@@ -606,11 +643,11 @@ Request body:
 - `city`: string, thành phố du lịch (mặc định `"Da Nang"`).
 - `days`: number, số ngày lưu trú (từ 1 đến 4 ngày).
 - `totalBudget`: number, tổng ngân sách dự kiến (VNĐ).
-- `preferences`: array of string, danh sách sở thích thuộc 7 tags chuẩn: `food`, `beach`, `culture`, `nature`, `adventure`, `nightlife`, `sightseeing`.
+- `preferences`: array of string, danh sách sở thích thuộc 7 tags chuẩn: `food`, `beach`, `culture`, `nature`, `adventure`, `nightlife`, `relaxation`.
 - `startTime`: string, mốc giờ bắt đầu ngày mới (mặc định `"08:00"`).
 - `enableRag`: boolean, cờ lựa chọn chiến lược AI:
-  - `false` (Phương án 1 - Direct JSON): Tốc độ 1-2s, chi phí thấp, tóm tắt trực quan.
-  - `true` (Phương án 2 - Hybrid RAG): Truy xuất cẩm nang văn hóa/ẩm thực bổ trợ trường `aiTravelTip`.
+  - `false` (Direct JSON Strategy): Tốc độ 1-2s, chi phí thấp, tóm tắt trực quan.
+  - `true` (Hybrid RAG Strategy): Truy xuất cẩm nang văn hóa/ẩm thực bổ trợ trường `aiTravelTip`.
 
 Response thành công:
 
@@ -618,7 +655,7 @@ Response thành công:
 {
   "success": true,
   "data": {
-    "planId": "plan_1794416744000",
+    "planId": "draft_plan_1794416744000",
     "city": "Da Nang",
     "totalDays": 2,
     "totalBudget": 1500000,
@@ -659,9 +696,9 @@ Response thành công:
 
 HTTP status: `200 OK`
 
-# POST /api/v1/plans/swap
+# POST /api/v1/ai/swap-place
 
-Tính năng **Hoán đổi động (Dynamic Swap Engine)** cho phép người dùng thay thế 1 địa điểm trong timeline bằng một địa điểm khác:
+Tính năng **Hoán đổi động (Dynamic Swap Engine)** cho phép người dùng thay thế 1 địa điểm trong timeline bản nháp bằng một địa điểm khác:
 - Cùng phân vùng (`targetZoneId`).
 - Chưa xuất hiện trong lịch trình (`excludedPlaceIds`).
 - Chi phí vừa vặn với ngân sách còn lại (`remainingBudget`).
@@ -702,46 +739,108 @@ Response thành công:
 }
 ```
 
-HTTP status: `200 OK`. Trả về `404` nếu không còn địa điểm nào khả dĩ trong cùng Zone.
+HTTP status: `200 OK`. Trả về `404 Not Found` nếu không còn địa điểm nào khả dĩ trong cùng Zone.
 
 ---
 
-# 7. Saved Itineraries Management (Kế hoạch)
+# 8. Itineraries Management [Kế hoạch]
 
-Nhóm API hỗ trợ người dùng lưu lại lịch trình sau khi tạo, xem lại danh sách các chuyến đi và chia sẻ lịch trình với bạn bè qua liên kết công khai.
+Nhóm API quản lý việc lưu trữ, truy xuất và chia sẻ lịch trình chính thức của người dùng trong CSDL PostgreSQL (bảng `saved_plans`).
 
-# POST /api/v1/plans/save [Kế hoạch]
+# POST /api/v1/plans [Kế hoạch]
 
-Lưu lịch trình vừa tạo vào tài khoản người dùng đã đăng nhập.
+Tạo mới / Lưu một lịch trình du lịch vào CSDL. 
 
 - **Phương thức:** `POST`
-- **Quyền yêu cầu:** `USER` (Bắt buộc Access Token)
-- **Database:** Tạo bản ghi trong bảng `saved_plans`.
-- **Trạng thái:** `[Chưa triển khai - Đang trong kế hoạch lộ trình Tuần 3]`
+- **Quyền yêu cầu:** `USER` (Bắt buộc Bearer Access Token).
+- **Cơ chế:** Backend tự động trích xuất `req.user.sub` làm `user_id` sở hữu, không cho phép giả mạo `userId` từ body.
 
-# GET /api/v1/plans/my-plans [Kế hoạch]
+Request body:
 
-Lấy danh sách các lịch trình du lịch đã lưu của người dùng hiện tại (hỗ trợ phân trang).
+```json
+{
+  "title": "Chuyến đi Đà Nẵng 2 ngày cùng bạn thân",
+  "city": "Da Nang",
+  "totalDays": 2,
+  "totalBudget": 1500000,
+  "actualCost": 160000,
+  "strategyUsed": "DIRECT_JSON",
+  "planData": {
+    "days": [...]
+  }
+}
+```
+
+Response thành công:
+
+```json
+{
+  "success": true,
+  "message": "Lưu lịch trình thành công!",
+  "data": {
+    "id": "e9b5f928-860d-4076-a0e2-6323cf106ec3",
+    "userId": "550e8400-e29b-41d4-a716-446655440000",
+    "title": "Chuyến đi Đà Nẵng 2 ngày cùng bạn thân",
+    "city": "Da Nang",
+    "totalDays": 2,
+    "totalBudget": "1500000.00",
+    "actualCost": "160000.00",
+    "status": "COMPLETED",
+    "createdAt": "2026-11-12T00:00:00.000Z"
+  }
+}
+```
+
+HTTP status: `201 Created`
+
+# GET /api/v1/plans [Kế hoạch]
+
+Lấy danh sách các lịch trình du lịch đã lưu của **chính người dùng đang đăng nhập**.
 
 - **Phương thức:** `GET`
-- **Quyền yêu cầu:** `USER` (Bắt buộc Access Token)
-- **Trạng thái:** `[Chưa triển khai - Đang trong kế hoạch lộ trình Tuần 3]`
+- **Quyền yêu cầu:** `USER` (Bắt buộc Bearer Access Token).
+- **Cơ chế:** Backend tự động lọc theo `where: { user_id: req.user.sub }`, sắp xếp theo thời gian tạo mới nhất.
+
+Response thành công:
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "e9b5f928-860d-4076-a0e2-6323cf106ec3",
+      "title": "Chuyến đi Đà Nẵng 2 ngày cùng bạn thân",
+      "city": "Da Nang",
+      "totalDays": 2,
+      "totalBudget": "1500000.00",
+      "actualCost": "160000.00",
+      "createdAt": "2026-11-12T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+HTTP status: `200 OK`
 
 # GET /api/v1/plans/:planId [Kế hoạch]
 
-Lấy dữ liệu chi tiết của 1 lịch trình đã lưu theo mã UUID.
+Xem chi tiết toàn bộ dữ liệu JSON của 1 lịch trình đã lưu.
 
 - **Phương thức:** `GET`
-- **Quyền yêu cầu:** `USER` (Chính chủ hoặc `ADMIN`)
-- **Trạng thái:** `[Chưa triển khai - Đang trong kế hoạch lộ trình Tuần 3]`
+- **Quyền yêu cầu:** `USER` (Người sở hữu lịch trình hoặc `ADMIN`).
+- **Middleware:** `verifyToken`, `validateUuidParam('planId')`, `checkOwner`.
+
+HTTP status: `200 OK`. `403` nếu không có quyền, `404` nếu không tìm thấy.
 
 # DELETE /api/v1/plans/:planId [Kế hoạch]
 
 Xóa 1 lịch trình đã lưu khỏi tài khoản người dùng.
 
 - **Phương thức:** `DELETE`
-- **Quyền yêu cầu:** `USER` (Chính chủ hoặc `ADMIN`)
-- **Trạng thái:** `[Chưa triển khai - Đang trong kế hoạch lộ trình Tuần 3]`
+- **Quyền yêu cầu:** `USER` (Người sở hữu lịch trình hoặc `ADMIN`).
+- **Middleware:** `verifyToken`, `validateUuidParam('planId')`, `checkOwner`.
+
+HTTP status: `200 OK`
 
 # GET /api/v1/plans/share/:shareToken [Kế hoạch]
 
@@ -749,88 +848,164 @@ Xem chi tiết lịch trình công khai thông qua mã token chia sẻ (không y
 
 - **Phương thức:** `GET`
 - **Quyền yêu cầu:** Public
-- **Trạng thái:** `[Chưa triển khai - Đang trong kế hoạch lộ trình Tuần 4]`
+- **Cơ chế:** Lọc theo `where: { share_token: shareToken, is_public: true }`.
+
+HTTP status: `200 OK`. `404` nếu link không tồn tại hoặc đã bị tắt chia sẻ.
 
 ---
 
-# 8. User Favorites (Kế hoạch)
+# 9. User Favorites [Kế hoạch]
 
-Nhóm API cho phép người dùng đánh dấu và quản lý các địa điểm yêu thích (Bookmark) tại Đà Nẵng.
+Nhóm API quản lý các địa điểm du lịch yêu thích của người dùng đang đăng nhập.
 
-# POST /api/v1/users/favorites/:placeId [Kế hoạch]
+# GET /api/v1/users/me/favorites [Kế hoạch]
 
-Thêm địa điểm vào danh sách yêu thích của người dùng.
-
-- **Phương thức:** `POST`
-- **Quyền yêu cầu:** `USER` (Bắt buộc Access Token)
-- **Database:** Bảng `user_favorites` (`@@unique([user_id, place_id])`).
-- **Trạng thái:** `[Chưa triển khai - Đang trong kế hoạch lộ trình Tuần 4]`
-
-# DELETE /api/v1/users/favorites/:placeId [Kế hoạch]
-
-Xóa địa điểm khỏi danh sách yêu thích của người dùng.
-
-- **Phương thức:** `DELETE`
-- **Quyền yêu cầu:** `USER` (Bắt buộc Access Token)
-- **Trạng thái:** `[Chưa triển khai - Đang trong kế hoạch lộ trình Tuần 4]`
-
-# GET /api/v1/users/favorites [Kế hoạch]
-
-Lấy danh sách tất cả địa điểm mà người dùng hiện tại đã đánh dấu yêu thích.
+Lấy danh sách các địa điểm mà người dùng hiện tại đã đánh dấu yêu thích (kèm thông tin chi tiết của địa điểm).
 
 - **Phương thức:** `GET`
-- **Quyền yêu cầu:** `USER` (Bắt buộc Access Token)
-- **Trạng thái:** `[Chưa triển khai - Đang trong kế hoạch lộ trình Tuần 4]`
+- **Quyền yêu cầu:** `USER` (Bắt buộc Bearer Access Token).
+- **Database:** Bảng `user_favorites` JOIN `places`.
+
+Response thành công:
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "favoriteId": "6c361922-a9b8-4c8d-b7eb-d1be8b7762bb",
+      "placeId": 1,
+      "name": "Chợ Cồn",
+      "city": "Da Nang",
+      "zoneId": 1,
+      "estimatedCost": 100000,
+      "rating": 4.5,
+      "createdAt": "2026-11-12T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+HTTP status: `200 OK`
+
+# POST /api/v1/users/me/favorites [Kế hoạch]
+
+Thêm một địa điểm vào danh sách yêu thích của người dùng hiện tại.
+
+- **Phương thức:** `POST`
+- **Quyền yêu cầu:** `USER` (Bắt buộc Bearer Access Token).
+- **Request body:** Gửi `placeId` trong JSON body:
+
+```json
+{
+  "placeId": 1
+}
+```
+
+Response thành công:
+
+```json
+{
+  "success": true,
+  "message": "Đã thêm vào danh sách yêu thích!",
+  "data": {
+    "id": "6c361922-a9b8-4c8d-b7eb-d1be8b7762bb",
+    "userId": "550e8400-e29b-41d4-a716-446655440000",
+    "placeId": 1,
+    "createdAt": "2026-11-12T00:00:00.000Z"
+  }
+}
+```
+
+HTTP status: `201 Created`. Trả về `409 Conflict` nếu địa điểm này đã có trong danh sách yêu thích.
+
+# DELETE /api/v1/users/me/favorites/:placeId [Kế hoạch]
+
+Xóa một địa điểm khỏi danh sách yêu thích của người dùng hiện tại.
+
+- **Phương thức:** `DELETE`
+- **Quyền yêu cầu:** `USER` (Bắt buộc Bearer Access Token).
+- **Cơ chế:** Xóa bản ghi có `user_id = req.user.sub` và `place_id = parseInt(req.params.placeId, 10)`.
+
+Response thành công:
+
+```json
+{
+  "success": true,
+  "message": "Đã xóa khỏi danh sách yêu thích!"
+}
+```
+
+HTTP status: `200 OK`. `404 Not Found` nếu địa điểm chưa từng được yêu thích.
 
 ---
 
-# 9. Admin Catalog Management (Kế hoạch)
+# 10. Catalog Administration [Kế hoạch]
 
-Nhóm API dành riêng cho `ADMIN` để thêm, sửa, xóa các địa điểm du lịch và quản lý thông số phân vùng Zone trên hệ thống.
+Quản trị toàn diện danh mục Địa điểm du lịch và Phân vùng Zone dành riêng cho Quản trị viên (`ADMIN`). 
 
-# POST /api/v1/admin/places [Kế hoạch]
+> [!NOTE]
+> Không sử dụng namespace dư thừa `/admin/`. Các route này dùng chung URL với tài nguyên gốc (`/places`, `/zones`), trong đó phương thức `GET` là công khai cho mọi người, còn các phương thức ghi (`POST`, `PATCH`, `DELETE`) được bảo vệ bằng middleware `verifyToken` + `verifyAdmin`.
 
-Thêm mới một địa điểm du lịch vào cơ sở dữ liệu.
+# POST /api/v1/places [Kế hoạch]
+
+Thêm mới một địa điểm du lịch vào hệ thống.
 
 - **Phương thức:** `POST`
-- **Quyền yêu cầu:** `ADMIN`
-- **Trạng thái:** `[Chưa triển khai - Đang trong kế hoạch lộ trình Tuần 4]`
+- **Quyền yêu cầu:** `ADMIN` (Bearer Token)
+- **Request body:** Thông tin địa điểm (`name`, `city`, `zoneId`, `address`, `estimatedCost`, `duration`, `openingTime`, `closingTime`, `latitude`, `longitude`, `tags`).
 
-# PATCH /api/v1/admin/places/:placeId [Kế hoạch]
+HTTP status: `201 Created`
 
-Cập nhật thông tin địa điểm (giá vé, thời lượng, giờ mở cửa, tọa độ, tags).
+# PATCH /api/v1/places/:placeId [Kế hoạch]
+
+Cập nhật thông tin của một địa điểm du lịch.
 
 - **Phương thức:** `PATCH`
-- **Quyền yêu cầu:** `ADMIN`
-- **Trạng thái:** `[Chưa triển khai - Đang trong kế hoạch lộ trình Tuần 4]`
+- **Quyền yêu cầu:** `ADMIN` (Bearer Token)
 
-# DELETE /api/v1/admin/places/:placeId [Kế hoạch]
+HTTP status: `200 OK`
 
-Xóa một địa điểm khỏi hệ thống.
+# DELETE /api/v1/places/:placeId [Kế hoạch]
+
+Xóa một địa điểm du lịch khỏi hệ thống.
 
 - **Phương thức:** `DELETE`
-- **Quyền yêu cầu:** `ADMIN`
-- **Trạng thái:** `[Chưa triển khai - Đang trong kế hoạch lộ trình Tuần 4]`
+- **Quyền yêu cầu:** `ADMIN` (Bearer Token)
 
-# POST /api/v1/admin/zones [Kế hoạch]
+HTTP status: `200 OK`
 
-Tạo một phân vùng địa lý mới (mã Zone, tên Zone, tọa độ tâm).
+# POST /api/v1/zones [Kế hoạch]
+
+Tạo một phân vùng địa lý mới tại thành phố du lịch.
 
 - **Phương thức:** `POST`
-- **Quyền yêu cầu:** `ADMIN`
-- **Trạng thái:** `[Chưa triển khai - Đang trong kế hoạch lộ trình Tuần 4]`
+- **Quyền yêu cầu:** `ADMIN` (Bearer Token)
+- **Request body:** `{ "code": "Z6", "name": "Bà Nà Hills", "description": "...", "centerLat": 15.998, "centerLng": 107.996 }`
 
-# PATCH /api/v1/admin/zones/:zoneId [Kế hoạch]
+HTTP status: `201 Created`
+
+# PATCH /api/v1/zones/:zoneId [Kế hoạch]
 
 Cập nhật thông tin phân vùng địa lý.
 
 - **Phương thức:** `PATCH`
-- **Quyền yêu cầu:** `ADMIN`
-- **Trạng thái:** `[Chưa triển khai - Đang trong kế hoạch lộ trình Tuần 4]`
+- **Quyền yêu cầu:** `ADMIN` (Bearer Token)
+
+HTTP status: `200 OK`
+
+# DELETE /api/v1/zones/:zoneId [Kế hoạch]
+
+Xóa phân vùng địa lý (chỉ xóa được nếu Zone không còn chứa địa điểm nào).
+
+- **Phương thức:** `DELETE`
+- **Quyền yêu cầu:** `ADMIN` (Bearer Token)
+
+HTTP status: `200 OK`
 
 ---
 
-# 10. RAG Knowledge Base Management (Kế hoạch)
+# 11. RAG Knowledge Base Management [Kế hoạch]
 
 Nhóm API quản trị các mẩu cẩm nang văn hóa, kinh nghiệm ẩm thực phục vụ tầng RAG.
 
@@ -839,8 +1014,10 @@ Nhóm API quản trị các mẩu cẩm nang văn hóa, kinh nghiệm ẩm thự
 Truy vấn danh sách các đoạn tri thức cẩm nang (`knowledge_chunks`) theo địa điểm hoặc chuyên mục.
 
 - **Phương thức:** `GET`
-- **Quyền yêu cầu:** Public / `USER`
-- **Trạng thái:** `[Chưa triển khai - Đang trong kế hoạch lộ trình Tuần 4]`
+- **Quyền yêu cầu:** Public
+- **Query params:** `?placeId=1&category=culinary`
+
+HTTP status: `200 OK`
 
 # POST /api/v1/knowledge [Kế hoạch]
 
@@ -848,7 +1025,9 @@ Thêm mới một mẩu cẩm nang tri thức du lịch vào Database / Vector S
 
 - **Phương thức:** `POST`
 - **Quyền yêu cầu:** `ADMIN`
-- **Trạng thái:** `[Chưa triển khai - Đang trong kế hoạch lộ trình Tuần 4]`
+- **Request body:** `{ "placeId": 1, "title": "Mẹo đi chợ Cồn", "content": "...", "category": "culinary" }`
+
+HTTP status: `201 Created`
 
 # DELETE /api/v1/knowledge/:id [Kế hoạch]
 
@@ -856,43 +1035,47 @@ Xóa một mẩu cẩm nang tri thức.
 
 - **Phương thức:** `DELETE`
 - **Quyền yêu cầu:** `ADMIN`
-- **Trạng thái:** `[Chưa triển khai - Đang trong kế hoạch lộ trình Tuần 4]`
+
+HTTP status: `200 OK`
 
 ---
 
-# 11. Tổng Hợp Trạng Thái Triển Khai API
+# 12. Tổng Hợp Trạng Thái Triển Khai API
 
-| Endpoint | Method | Trạng thái kỹ thuật | Quyền hạn |
-|---|---|:---:|---|
-| `/api/v1/health` | `GET` | ✅ **Đã hoàn thiện** | Public |
-| `/api/v1/auth/register` | `POST` | ✅ **Đã hoàn thiện** | Public |
-| `/api/v1/auth/login` | `POST` | ✅ **Đã hoàn thiện** | Public |
-| `/api/v1/auth/change-password` | `PATCH` | ✅ **Đã hoàn thiện** | Logged-in User |
-| `/api/v1/auth/refresh-token` | `POST` | ✅ **Đã hoàn thiện** | Public (Cookie) |
-| `/api/v1/auth/logout` | `POST` | ✅ **Đã hoàn thiện** | Public (Cookie) |
-| `/api/v1/users/me` | `GET` | ✅ **Đã hoàn thiện** | Logged-in User |
-| `/api/v1/users/me` | `PATCH` | ✅ **Đã hoàn thiện** | Logged-in User |
-| `/api/v1/users` | `GET` | ✅ **Đã hoàn thiện** | `ADMIN` |
-| `/api/v1/users/:userId` | `GET` | ✅ **Đã hoàn thiện** | Owner / `ADMIN` |
-| `/api/v1/users/:userId` | `PATCH` | ✅ **Đã hoàn thiện** | Owner / `ADMIN` |
-| `/api/v1/users/:userId/status` | `PATCH` | ✅ **Đã hoàn thiện** | `ADMIN` |
-| `/api/v1/places/zones` | `GET` | ✅ **Đã hoàn thiện** | Public |
-| `/api/v1/places/search` | `GET` | ✅ **Đã hoàn thiện** | Public |
-| `/api/v1/plans/generate` | `POST` | ✅ **Đã hoàn thiện** | Public / Guest |
-| `/api/v1/plans/swap` | `POST` | ✅ **Đã hoàn thiện** | Public / Guest |
-| `/api/v1/plans/save` | `POST` | ⏳ *Kế hoạch Tuần 3* | Logged-in User |
-| `/api/v1/plans/my-plans` | `GET` | ⏳ *Kế hoạch Tuần 3* | Logged-in User |
-| `/api/v1/plans/:planId` | `GET` | ⏳ *Kế hoạch Tuần 3* | Owner / `ADMIN` |
-| `/api/v1/plans/:planId` | `DELETE` | ⏳ *Kế hoạch Tuần 3* | Owner / `ADMIN` |
-| `/api/v1/plans/share/:shareToken`| `GET` | ⏳ *Kế hoạch Tuần 4* | Public |
-| `/api/v1/users/favorites/:placeId`| `POST`| ⏳ *Kế hoạch Tuần 4* | Logged-in User |
-| `/api/v1/users/favorites/:placeId`| `DELETE`| ⏳ *Kế hoạch Tuần 4* | Logged-in User |
-| `/api/v1/users/favorites` | `GET` | ⏳ *Kế hoạch Tuần 4* | Logged-in User |
-| `/api/v1/admin/places` | `POST` | ⏳ *Kế hoạch Tuần 4* | `ADMIN` |
-| `/api/v1/admin/places/:placeId` | `PATCH`| ⏳ *Kế hoạch Tuần 4* | `ADMIN` |
-| `/api/v1/admin/places/:placeId` | `DELETE`| ⏳ *Kế hoạch Tuần 4* | `ADMIN` |
-| `/api/v1/admin/zones` | `POST` | ⏳ *Kế hoạch Tuần 4* | `ADMIN` |
-| `/api/v1/admin/zones/:zoneId` | `PATCH` | ⏳ *Kế hoạch Tuần 4* | `ADMIN` |
-| `/api/v1/knowledge` | `GET` | ⏳ *Kế hoạch Tuần 4* | Public |
-| `/api/v1/knowledge` | `POST` | ⏳ *Kế hoạch Tuần 4* | `ADMIN` |
-| `/api/v1/knowledge/:id` | `DELETE` | ⏳ *Kế hoạch Tuần 4* | `ADMIN` |
+| Module | Endpoint | Method | Trạng thái kỹ thuật | Quyền hạn |
+|---|---|---|:---:|---|
+| **Health** | `/api/v1/health` | `GET` | ✅ **Đã hoàn thiện** | Public |
+| **Auth** | `/api/v1/auth/register` | `POST` | ✅ **Đã hoàn thiện** | Public |
+| **Auth** | `/api/v1/auth/login` | `POST` | ✅ **Đã hoàn thiện** | Public |
+| **Auth** | `/api/v1/auth/change-password` | `PATCH` | ✅ **Đã hoàn thiện** | Logged-in User |
+| **Auth** | `/api/v1/auth/refresh-token` | `POST` | ✅ **Đã hoàn thiện** | Public (Cookie) |
+| **Auth** | `/api/v1/auth/logout` | `POST` | ✅ **Đã hoàn thiện** | Public (Cookie) |
+| **User** | `/api/v1/users/me` | `GET` | ✅ **Đã hoàn thiện** | Logged-in User |
+| **User** | `/api/v1/users/me` | `PATCH` | ✅ **Đã hoàn thiện** | Logged-in User |
+| **User** | `/api/v1/users` | `GET` | ✅ **Đã hoàn thiện** | `ADMIN` |
+| **User** | `/api/v1/users/:userId` | `GET` | ✅ **Đã hoàn thiện** | Owner / `ADMIN` |
+| **User** | `/api/v1/users/:userId` | `PATCH` | ✅ **Đã hoàn thiện** | Owner / `ADMIN` |
+| **User** | `/api/v1/users/:userId/status` | `PATCH` | ✅ **Đã hoàn thiện** | `ADMIN` |
+| **Zones** | `/api/v1/zones` | `GET` | ✅ **Đã hoàn thiện** | Public |
+| **Places** | `/api/v1/places` | `GET` | ✅ **Đã hoàn thiện** | Public (Filter query) |
+| **Places** | `/api/v1/places/:placeId` | `GET` | ⏳ *Kế hoạch Tuần 3* | Public |
+| **Tags** | `/api/v1/tags` | `GET` | ✅ **Đã hoàn thiện** | Public |
+| **AI Engine** | `/api/v1/ai/generate-plan` | `POST` | ✅ **Đã hoàn thiện** | Public / Guest |
+| **AI Engine** | `/api/v1/ai/swap-place` | `POST` | ✅ **Đã hoàn thiện** | Public / Guest |
+| **Plans** | `/api/v1/plans` | `POST` | ⏳ *Kế hoạch Tuần 3* | Logged-in User |
+| **Plans** | `/api/v1/plans` | `GET` | ⏳ *Kế hoạch Tuần 3* | Logged-in User |
+| **Plans** | `/api/v1/plans/:planId` | `GET` | ⏳ *Kế hoạch Tuần 3* | Owner / `ADMIN` |
+| **Plans** | `/api/v1/plans/:planId` | `DELETE` | ⏳ *Kế hoạch Tuần 3* | Owner / `ADMIN` |
+| **Plans** | `/api/v1/plans/share/:shareToken` | `GET` | ⏳ *Kế hoạch Tuần 4* | Public |
+| **Favorites**| `/api/v1/users/me/favorites` | `GET` | ⏳ *Kế hoạch Tuần 4* | Logged-in User |
+| **Favorites**| `/api/v1/users/me/favorites` | `POST` | ⏳ *Kế hoạch Tuần 4* | Logged-in User |
+| **Favorites**| `/api/v1/users/me/favorites/:placeId` | `DELETE` | ⏳ *Kế hoạch Tuần 4* | Logged-in User |
+| **Admin** | `/api/v1/places` | `POST` | ⏳ *Kế hoạch Tuần 4* | `ADMIN` |
+| **Admin** | `/api/v1/places/:placeId` | `PATCH` | ⏳ *Kế hoạch Tuần 4* | `ADMIN` |
+| **Admin** | `/api/v1/places/:placeId` | `DELETE` | ⏳ *Kế hoạch Tuần 4* | `ADMIN` |
+| **Admin** | `/api/v1/zones` | `POST` | ⏳ *Kế hoạch Tuần 4* | `ADMIN` |
+| **Admin** | `/api/v1/zones/:zoneId` | `PATCH` | ⏳ *Kế hoạch Tuần 4* | `ADMIN` |
+| **Admin** | `/api/v1/zones/:zoneId` | `DELETE` | ⏳ *Kế hoạch Tuần 4* | `ADMIN` |
+| **RAG** | `/api/v1/knowledge` | `GET` | ⏳ *Kế hoạch Tuần 4* | Public |
+| **RAG** | `/api/v1/knowledge` | `POST` | ⏳ *Kế hoạch Tuần 4* | `ADMIN` |
+| **RAG** | `/api/v1/knowledge/:id` | `DELETE` | ⏳ *Kế hoạch Tuần 4* | `ADMIN` |

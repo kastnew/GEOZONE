@@ -274,3 +274,92 @@ export const toggleUserStatus = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * Lấy danh sách địa điểm yêu thích của user hiện tại
+ */
+export const getMyFavorites = async (req, res, next) => {
+  try {
+    const favorites = await prisma.userFavorite.findMany({
+      where: { user_id: req.user.sub },
+      include: {
+        place: {
+          include: {
+            zone: true,
+            placeTags: { include: { tag: true } }
+          }
+        }
+      },
+      orderBy: { created_at: 'desc' }
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: favorites
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Thêm địa điểm vào danh sách yêu thích
+ */
+export const addFavorite = async (req, res, next) => {
+  try {
+    const placeId = parseInt(req.body.placeId, 10);
+    if (isNaN(placeId)) {
+      return res.status(400).json({ success: false, message: 'placeId không hợp lệ!' });
+    }
+
+    const place = await prisma.place.findUnique({ where: { id: placeId } });
+    if (!place) {
+      return res.status(404).json({ success: false, message: 'Địa điểm không tồn tại!' });
+    }
+
+    const favorite = await prisma.userFavorite.create({
+      data: {
+        user_id: req.user.sub,
+        place_id: placeId
+      }
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Đã thêm vào danh sách yêu thích!',
+      data: favorite
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Xóa địa điểm khỏi danh sách yêu thích
+ */
+export const removeFavorite = async (req, res, next) => {
+  try {
+    const placeId = parseInt(req.params.placeId, 10);
+    if (isNaN(placeId)) {
+      return res.status(400).json({ success: false, message: 'placeId không hợp lệ!' });
+    }
+
+    const result = await prisma.userFavorite.deleteMany({
+      where: {
+        user_id: req.user.sub,
+        place_id: placeId
+      }
+    });
+
+    if (result.count === 0) {
+      return res.status(404).json({ success: false, message: 'Địa điểm chưa có trong danh sách yêu thích!' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Đã xóa khỏi danh sách yêu thích!'
+    });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -38,8 +38,8 @@ Tài liệu này xác định chi tiết mục tiêu, công việc từng ngày,
 - [ ] **Ngày 1-2:** Cài đặt Node.js, cấu hình Express app tại [backend/src/app.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/app.js) và [backend/src/server.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/server.js).
 - [ ] **Ngày 3-4:** Viết [backend/src/services/place.service.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/services/place.service.js) để truy vấn địa điểm từ Prisma theo `city` và mảng `tags`.
 - [ ] **Ngày 5-6:** Viết các unit function đầu tiên cho [backend/src/services/planner/candidateFilter.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/services/planner/candidateFilter.js): Lọc địa điểm và xử lý fallback khi người dùng chọn tag hiếm.
-- [ ] **Ngày 7:** Viết API `GET /api/v1/places/zones` và `GET /api/v1/places/search` để kiểm tra trả về dữ liệu chuẩn JSON.
-- **Sản phẩm bàn giao:** Server chạy mượt tại cổng 5000, 2 API kiểm tra dữ liệu hoạt động tốt trên Postman.
+- [ ] **Ngày 7:** Viết API chuẩn RESTful `GET /api/v1/zones` (lấy danh sách phân vùng), `GET /api/v1/places` (tra cứu địa điểm theo query params) và `GET /api/v1/tags` (lấy danh mục sở thích) để kiểm tra trả về dữ liệu chuẩn JSON.
+- **Sản phẩm bàn giao:** Server chạy mượt tại cổng 5000, các API danh mục dữ liệu hoạt động tốt trên Postman.
 
 ### Thành viên 3 (AI, Auth & RAG Engineer)
 - [ ] **Ngày 1-2:** Cài đặt thư viện `bcryptjs` và `jsonwebtoken`, cấu hình `JWT_SECRET` trong [backend/src/config/env.config.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/config/env.config.js).
@@ -109,16 +109,16 @@ Tài liệu này xác định chi tiết mục tiêu, công việc từng ngày,
 - **Sản phẩm bàn giao:** Kho tri thức cẩm nang du lịch được phân đoạn và sẵn sàng cho việc truy xuất.
 
 ### Thành viên 2 (Backend Core & Algorithms)
-- [ ] **Ngày 15-16:** Viết các API Lưu & Quản lý lịch trình trong [backend/src/controllers/plan.controller.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/controllers/plan.controller.js):
-  - `POST /api/v1/plans/save` (Lưu lịch trình vào CSDL, yêu cầu đăng nhập).
-  - `GET /api/v1/plans/my-plans` (Lấy danh sách các chuyến đi đã lưu của user).
-  - `GET /api/v1/plans/:id` (Xem lại chi tiết 1 lịch trình cũ).
+- [ ] **Ngày 15-16:** Viết các API Lưu & Quản lý lịch trình chuẩn RESTful trong [backend/src/controllers/plan.controller.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/controllers/plan.controller.js):
+  - `POST /api/v1/plans` (Tạo mới/Lưu lịch trình vào CSDL, tự động gắn `user_id = req.user.sub`).
+  - `GET /api/v1/plans` (Lấy danh sách các chuyến đi đã lưu của chính user đang đăng nhập).
+  - `GET /api/v1/plans/:id` (Xem lại chi tiết 1 lịch trình cũ theo UUID).
   - `DELETE /api/v1/plans/:id` (Xóa lịch trình).
 - [ ] **Ngày 17-18:** Xây dựng tính năng Hoán đổi động tại [backend/src/services/planner/dynamicSwapEngine.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/services/planner/dynamicSwapEngine.js):
   - Tìm địa điểm thay thế cùng Zone, loại trừ các điểm đã có trong lịch trình, chi phí $\le$ ngân sách còn lại.
-- [ ] **Ngày 19-20:** Viết controller [backend/src/controllers/swap.controller.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/controllers/swap.controller.js) và route `POST /api/v1/plans/swap`.
+- [ ] **Ngày 19-20:** Viết controller [backend/src/controllers/swap.controller.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/controllers/swap.controller.js) và route `POST /api/v1/ai/swap-place` (kèm route `POST /api/v1/ai/generate-plan`).
 - [ ] **Ngày 21:** Kiểm thử Postman các endpoint lưu, xem, xóa lịch trình với Bearer JWT Token.
-- **Sản phẩm bàn giao:** Hệ thống API Quản lý chuyến đi và Dynamic Swap hoàn thiện 100%.
+- **Sản phẩm bàn giao:** Hệ thống API Quản lý chuyến đi (`/plans`) và AI Engine (`/ai/*`) hoàn thiện 100%.
 
 ### Thành viên 3 (AI, Auth & RAG Engineer)
 - [ ] **Ngày 15-16:** Xây dựng module vector hóa tại [backend/src/services/ai/rag/embedder.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/services/ai/rag/embedder.js) và [backend/src/services/ai/rag/vectorStore.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/services/ai/rag/vectorStore.js) (sử dụng Cosine Similarity).

@@ -77,6 +77,26 @@ export class PlaceService {
   }
 
   /**
+   * Lấy chi tiết 1 địa điểm theo ID
+   */
+  async getPlaceById(id) {
+    const numId = parseInt(id, 10);
+    if (isNaN(numId)) return null;
+
+    const place = await prisma.place.findUnique({
+      where: { id: numId },
+      include: {
+        zone: true,
+        placeTags: {
+          include: { tag: true }
+        }
+      }
+    });
+
+    return place ? mapPlace(place) : null;
+  }
+
+  /**
    * Lấy các địa điểm thay thế trong cùng zone để phục vụ Dynamic Swap
    * @param {number} zoneId
    * @param {number[]} excludedPlaceIds

@@ -20,6 +20,18 @@ export class PlaceController {
       next(error);
     }
   }
+
+  async getPlaceById(req, res, next) {
+    try {
+      const place = await placeService.getPlaceById(req.params.placeId);
+      if (!place) {
+        return res.status(404).json({ success: false, message: 'Không tìm thấy địa điểm!' });
+      }
+      return res.json({ success: true, data: place });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const placeController = new PlaceController();

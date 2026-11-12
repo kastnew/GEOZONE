@@ -26,26 +26,26 @@ sequenceDiagram
     DB-->>Auth: Khớp thông tin
     Auth-->>FE: Trả về JWT Token + User Profile
 
-    %% Tạo lịch trình
+    %% Tạo lịch trình (AI Travel Engine)
     User->>FE: Bấm "Tạo lịch trình"
-    FE->>API: POST /api/v1/plans/generate
+    FE->>API: POST /api/v1/ai/generate-plan
     API->>Planner: 5 Bước (Lọc -> Chấm điểm -> Gom Zone -> Knapsack -> Timeline)
     Planner->>LLM: Gửi Draft JSON (+ RAG Context nếu bật)
     LLM-->>Planner: Tiêu đề & mô tả địa điểm
     Planner->>API: Output Validator: Khóa cứng ID, Giá, Giờ gốc
-    API-->>FE: Hiển thị Timeline Lịch trình
+    API-->>FE: Hiển thị Timeline Lịch trình bản nháp
 
-    %% Lưu lịch trình
+    %% Lưu lịch trình (Itineraries Management)
     User->>FE: Bấm "💾 Lưu lịch trình này"
-    FE->>API: POST /api/v1/plans/save (Bearer Token)
-    API->>DB: Lưu vào bảng SavedPlan (gắn với userId)
+    FE->>API: POST /api/v1/plans (Bearer Token)
+    API->>DB: Lưu vào bảng SavedPlan (gắn với req.user.sub)
     DB-->>API: Thành công
     API-->>FE: Cập nhật trạng thái "Đã lưu"
 
     %% Xem chuyến đi của tôi
     User->>FE: Chuyển sang Tab "Chuyến đi của tôi"
-    FE->>API: GET /api/v1/plans/my-plans (Bearer Token)
-    API->>DB: Lấy danh sách lịch trình của userId
+    FE->>API: GET /api/v1/plans (Bearer Token)
+    API->>DB: Lấy danh sách lịch trình của req.user.sub
     DB-->>API: Danh sách chuyến đi
     API-->>FE: Hiển thị danh sách card chuyến đi
 ```
@@ -61,23 +61,26 @@ sequenceDiagram
 - [backend/src/controllers/auth.controller.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/controllers/auth.controller.js):
   - `register`: Xác thực email, password (tối thiểu 6 ký tự), băm mật khẩu bằng `bcryptjs`, sinh avatar mặc định và phát sinh JWT Token.
   - `login`: Kiểm tra email, so khớp hash mật khẩu bằng `bcrypt.compare`, phát sinh JWT Token.
-  - `getMe`: Trả về thông tin profile của `req.user`.
-- [backend/src/routes/auth.routes.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/routes/auth.routes.js): Cung cấp các endpoint:
+  - `getMe`: Trả về thông tin profile của `req.user` (`GET /api/v1/users/me`).
+- [backend/src/routes/auth.routes.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/routes/auth.routes.js) & [backend/src/routes/user.routes.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/routes/user.routes.js): Cung cấp các endpoint:
   - `POST /api/v1/auth/register`
   - `POST /api/v1/auth/login`
-  - `GET /api/v1/auth/me`
+  - `PATCH /api/v1/auth/change-password`
+  - `POST /api/v1/auth/refresh-token`
+  - `POST /api/v1/auth/logout`
+  - `GET /api/v1/users/me`
 - [frontend/src/components/auth/AuthModal.jsx](file:///c:/Users/Admin/Desktop/GEO_ZONE/frontend/src/components/auth/AuthModal.jsx): Hộp thoại Modal đăng nhập / đăng ký trên giao diện, có sẵn nút tiện ích **"Điền tài khoản Demo"** (`demo@geozone.vn` / `password123`) để test nhanh.
 
 ---
 
-### 2.2. Phân Hệ Lưu & Quản Lý Lịch Trình (Saved Plans / My Trips)
+### 2.2. Phân Hệ Lưu & Quản Lý Lịch Trình (Itineraries Management)
 - [backend/prisma/schema.prisma](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/prisma/schema.prisma):
-  - Bảng `User`: Lưu trữ `id, email, password, name, avatar, role (USER/ADMIN), createdAt`.
-  - Bảng `SavedPlan`: Lưu trữ `id, userId, planTitle, city, totalDays, totalBudget, actualCost, strategyUsed, planData (JSON), createdAt`.
+  - Bảng `User`: Lưu trữ `id, email, password_hash, name, avatar_url, role (USER/ADMIN), created_at`.
+  - Bảng `SavedPlan`: Lưu trữ `id, user_id, title, city, total_days, total_budget, actual_cost, strategy_used, plan_data (JSON), created_at`.
 - [backend/src/controllers/plan.controller.js](file:///c:/Users/Admin/Desktop/GEO_ZONE/backend/src/controllers/plan.controller.js):
-  - `savePlan`: `POST /api/v1/plans/save` — Lưu toàn bộ object JSON lịch trình gắn với `req.user.id`.
-  - `getMyPlans`: `GET /api/v1/plans/my-plans` — Lấy danh sách các chuyến đi đã lưu của user hiện tại, sắp xếp theo thời gian mới nhất.
-  - `getPlanById`: `GET /api/v1/plans/:id` — Xem lại chi tiết 1 lịch trình cũ (có kiểm tra quyền sở hữu).
+  - `savePlan`: `POST /api/v1/plans` — Tạo mới / lưu toàn bộ object JSON lịch trình gắn với `req.user.sub`.
+  - `getMyPlans`: `GET /api/v1/plans` — Lấy danh sách các chuyến đi đã lưu của user hiện tại, sắp xếp theo thời gian mới nhất.
+  - `getPlanById`: `GET /api/v1/plans/:id` — Xem lại chi tiết 1 lịch trình cũ theo UUID (có kiểm tra quyền sở hữu).
   - `deletePlan`: `DELETE /api/v1/plans/:id` — Xóa 1 chuyến đi đã lưu khỏi tài khoản.
 - [frontend/src/components/saved/SavePlanModal.jsx](file:///c:/Users/Admin/Desktop/GEO_ZONE/frontend/src/components/saved/SavePlanModal.jsx): Popup cho phép người dùng đặt tên cho chuyến đi trước khi lưu.
 - [frontend/src/components/saved/MyTripsView.jsx](file:///c:/Users/Admin/Desktop/GEO_ZONE/frontend/src/components/saved/MyTripsView.jsx): Màn hình "Chuyến đi của tôi" liệt kê các chuyến đi, hỗ trợ bấm **"👁️ Xem chi tiết"** để mở lại lịch trình trên Timeline hoặc **"Xóa"**.

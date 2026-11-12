@@ -62,31 +62,52 @@ export class PlanController {
    */
   async savePlan(req, res, next) {
     try {
-      const { planTitle, city, totalDays, totalBudget, actualCost, strategyUsed, planData } = req.body;
+      const currentUserId = req.user?.sub || req.user?.id;
+      if (!currentUserId) {
+        return res.status(401).json({ success: false, message: 'Chưa đăng nhập!' });
+      }
 
-      if (!planData) {
+      const {
+        title,
+        planTitle,
+        city,
+        total_days,
+        totalDays,
+        total_budget,
+        totalBudget,
+        actual_cost,
+        actualCost,
+        strategy_used,
+        strategyUsed,
+        plan_data,
+        planData
+      } = req.body;
+
+      const rawPlanData = plan_data || planData;
+      if (!rawPlanData) {
         return res.status(400).json({
           success: false,
           error: { message: 'Dữ liệu lịch trình (planData) không được để trống' }
         });
       }
 
-      const defaultTitle = planTitle?.trim() || `Chuyến du lịch ${city || 'Đà Nẵng'} ${totalDays || 2} ngày`;
+      const defaultTitle = (title || planTitle)?.trim() || `Chuyến du lịch ${city || 'Đà Nẵng'} ${total_days || totalDays || 2} ngày`;
 
       const saved = await prisma.savedPlan.create({
         data: {
-          userId: req.user.id,
-          planTitle: defaultTitle,
+          user_id: currentUserId,
+          title: defaultTitle,
           city: city || 'Da Nang',
-          totalDays: Number(totalDays) || 2,
-          totalBudget: Number(totalBudget) || 0,
-          actualCost: Number(actualCost) || 0,
-          strategyUsed: strategyUsed || 'DIRECT_JSON',
-          planData: planData
+          total_days: Number(total_days || totalDays) || 2,
+          total_budget: Number(total_budget || totalBudget) || 0,
+          actual_cost: Number(actual_cost || actualCost) || 0,
+          status: 'COMPLETED',
+          strategy_used: strategy_used || strategyUsed || 'DIRECT_JSON',
+          plan_data: rawPlanData
         }
       });
 
-      logger.info(`[PlanController] Người dùng ${req.user.id} đã lưu lịch trình #${saved.id}: ${saved.planTitle}`);
+      logger.info(`[PlanController] Người dùng ${currentUserId} đã lưu lịch trình #${saved.id}: ${saved.title}`);
 
       return res.status(201).json({
         success: true,
@@ -103,19 +124,26 @@ export class PlanController {
    */
   async getMyPlans(req, res, next) {
     try {
+      const currentUserId = req.user?.sub || req.user?.id;
+      if (!currentUserId) {
+        return res.status(401).json({ success: false, message: 'Chưa đăng nhập!' });
+      }
+
       const plans = await prisma.savedPlan.findMany({
-        where: { userId: req.user.id },
-        orderBy: { createdAt: 'desc' },
+        where: { user_id: currentUserId },
+        orderBy: { created_at: 'desc' },
         select: {
           id: true,
-          planTitle: true,
+          title: true,
           city: true,
-          totalDays: true,
-          totalBudget: true,
-          actualCost: true,
-          strategyUsed: true,
-          createdAt: true,
-          updatedAt: true
+          total_days: true,
+          total_budget: true,
+          actual_cost: true,
+          status: true,
+          strategy_used: true,
+          is_public: true,
+          created_at: true,
+          updated_at: true
         }
       });
 
@@ -129,12 +157,14 @@ export class PlanController {
   }
 
   /**
-   * Xem lại chi tiết 1 lịch trình cũ theo ID
+   * Xem lại chi tiết 1 lịch trình cũ theo ID (UUID)
    */
   async getPlanById(req, res, next) {
     try {
-      const planId = parseInt(req.params.id, 10);
-      if (isNaN(planId)) {
+      const planId = String(req.params.planId || req.params.id);
+      const currentUserId = req.user?.sub || req.user?.id;
+
+      if (!planId) {
         return res.status(400).json({
           success: false,
           error: { message: 'ID lịch trình không hợp lệ' }
@@ -153,7 +183,7 @@ export class PlanController {
       }
 
       // Kiểm tra quyền sở hữu
-      if (plan.userId !== req.user.id && req.user.role !== 'ADMIN') {
+      if (plan.user_id !== currentUserId && req.user?.role !== 'ADMIN') {
         return res.status(403).json({
           success: false,
           error: { message: 'Bạn không có quyền truy cập lịch trình này' }
@@ -170,12 +200,14 @@ export class PlanController {
   }
 
   /**
-   * Xóa một lịch trình đã lưu
+   * Xóa một lịch trình đã lưu (UUID)
    */
   async deletePlan(req, res, next) {
     try {
-      const planId = parseInt(req.params.id, 10);
-      if (isNaN(planId)) {
+      const planId = String(req.params.planId || req.params.id);
+      const currentUserId = req.user?.sub || req.user?.id;
+
+      if (!planId) {
         return res.status(400).json({
           success: false,
           error: { message: 'ID lịch trình không hợp lệ' }
@@ -193,7 +225,7 @@ export class PlanController {
         });
       }
 
-      if (plan.userId !== req.user.id && req.user.role !== 'ADMIN') {
+      if (plan.user_id !== currentUserId && req.user?.role !== 'ADMIN') {
         return res.status(403).json({
           success: false,
           error: { message: 'Bạn không có quyền xóa lịch trình này' }
@@ -204,7 +236,7 @@ export class PlanController {
         where: { id: planId }
       });
 
-      logger.info(`[PlanController] Đã xóa lịch trình #${planId} của user ${req.user.id}`);
+      logger.info(`[PlanController] Đã xóa lịch trình #${planId} của user ${currentUserId}`);
 
       return res.status(200).json({
         success: true,

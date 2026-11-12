@@ -3,10 +3,14 @@ import { placeController } from '../controllers/place.controller.js';
 
 const router = Router();
 
-// Lấy danh sách các zones
+// GET /api/v1/places - Tìm kiếm và lọc danh sách địa điểm theo query params
+router.get('/', placeController.searchPlaces);
+
+// Backward compatible aliases
+router.get('/search', placeController.searchPlaces);
 router.get('/zones', placeController.getZones);
 
-// Tìm kiếm danh sách địa điểm lọc theo city / tags
-router.get('/search', placeController.searchPlaces);
+// GET /api/v1/places/:placeId - Chi tiết một địa điểm
+router.get('/:placeId', placeController.getPlaceById);
 
 export default router;

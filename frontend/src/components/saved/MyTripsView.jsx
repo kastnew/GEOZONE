@@ -29,8 +29,8 @@ export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
     setActionLoadingId(id);
     try {
       const fullPlan = await getPlanByIdApi(id);
-      if (fullPlan && fullPlan.planData) {
-        onSelectPlan(fullPlan.planData);
+      if (fullPlan && fullPlan.plan_data) {
+        onSelectPlan(fullPlan.plan_data);
       }
     } catch (err) {
       alert(err.message || 'Không thể mở lịch trình');
@@ -118,32 +118,32 @@ export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700">
-                    {trip.city} • {trip.totalDays} Ngày
+                    {trip.city} • {trip.total_days} Ngày
                   </span>
                   <span className="text-[10px] text-slate-400">
-                    {formatDate(trip.createdAt)}
+                    {formatDate(trip.created_at)}
                   </span>
                 </div>
 
                 <h3 className="text-base font-bold text-slate-800 mt-2 line-clamp-1">
-                  {trip.planTitle}
+                  {trip.title}
                 </h3>
 
                 <div className="my-3 grid grid-cols-2 gap-2 text-xs">
                   <div className="bg-slate-50 p-2 rounded-lg border border-slate-100">
                     <span className="text-slate-400 block text-[11px]">Ngân sách:</span>
-                    <strong className="text-slate-700">{formatVnd(trip.totalBudget)}</strong>
+                    <strong className="text-slate-700">{formatVnd(trip.total_budget)}</strong>
                   </div>
                   <div className="bg-slate-50 p-2 rounded-lg border border-slate-100">
                     <span className="text-slate-400 block text-[11px]">Chi phí thực tế:</span>
-                    <strong className="text-blue-600">{formatVnd(trip.actualCost)}</strong>
+                    <strong className="text-blue-600">{formatVnd(trip.actual_cost)}</strong>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-2 text-[11px] text-slate-500">
                   <span>Chế độ AI:</span>
                   <span className="font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                    {trip.strategyUsed === 'RAG_AUGMENTED' ? '✨ CÓ RAG' : '⚡ KHÔNG RAG'}
+                    {trip.strategy_used === 'RAG_AUGMENTED' ? '✨ CÓ RAG' : '⚡ KHÔNG RAG'}
                   </span>
                 </div>
               </div>
@@ -151,7 +151,7 @@ export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
               {/* Action buttons */}
               <div className="flex items-center justify-end space-x-2 pt-4 border-t border-slate-100 mt-4">
                 <button
-                  onClick={() => handleDelete(trip.id, trip.planTitle)}
+                  onClick={() => handleDelete(trip.id, trip.title)}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 border border-red-200 transition cursor-pointer"
                 >
                   Xóa

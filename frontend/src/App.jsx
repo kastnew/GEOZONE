@@ -46,7 +46,12 @@ export const App = () => {
     const token = localStorage.getItem('geozone_token');
     if (token) {
       getMeApi()
-        .then(user => setCurrentUser(user))
+        .then(user => {
+          const userData = user.data; 
+          if (userData) {
+            setCurrentUser(userData);
+          }
+        })
         .catch(() => {
           logout();
           setCurrentUser(null);

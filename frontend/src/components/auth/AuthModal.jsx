@@ -19,12 +19,12 @@ export const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = 'login' })
     try {
       if (mode === 'login') {
         const data = await loginApi({ email, password });
-        onSuccess(data.user);
+		onSuccess(data.user);
       } else {
         const data = await registerApi({ email, password, name });
         onSuccess(data.user);
       }
-      onClose();
+	  onClose();
     } catch (err) {
       setErrorMsg(err.message || 'Thao tác không thành công');
     } finally {

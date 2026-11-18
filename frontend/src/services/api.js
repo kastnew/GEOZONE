@@ -40,12 +40,12 @@ export async function registerApi({ email, password, name }) {
 
   const json = await response.json();
   if (!json.success) {
-    throw new Error(json.error?.message || 'Đăng ký thất bại');
+    throw new Error(json?.message || 'Đăng ký thất bại');
   }
 
-  setToken(json.data.token);
-  setStoredUser(json.data.user);
-  return json.data;
+  setToken(json.accessToken);
+  setStoredUser(json.user);
+  return json;
 }
 
 /**
@@ -60,12 +60,12 @@ export async function loginApi({ email, password }) {
 
   const json = await response.json();
   if (!json.success) {
-    throw new Error(json.error?.message || 'Đăng nhập thất bại');
+    throw new Error(json?.message || 'Đăng nhập thất bại');
   }
 
-  setToken(json.data.token);
-  setStoredUser(json.data.user);
-  return json.data;
+  setToken(json.accessToken);
+  setStoredUser(json.user);
+  return json;
 }
 
 /**
@@ -85,7 +85,7 @@ export async function getMeApi() {
   }
 
   setStoredUser(json.data);
-  return json.data;
+  return json;
 }
 
 export function logout() {

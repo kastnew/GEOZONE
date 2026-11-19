@@ -122,7 +122,7 @@ export const ZoneMapView = ({ plan }) => {
 		: fallbackCenter;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+    <div className="w-full min-w-0 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">
           Bản đồ Phân cụm Zone
@@ -133,7 +133,7 @@ export const ZoneMapView = ({ plan }) => {
       </div>
 
       {/* Bản đồ Leaflet */}
-      <div className="h-64 rounded-xl overflow-hidden border border-slate-200 z-0">
+      <div className="h-[420px] rounded-xl overflow-hidden border border-slate-200 z-0">
         <MapContainer
 		  center={mapCenter}
 		  zoom={13}

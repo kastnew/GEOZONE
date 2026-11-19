@@ -173,40 +173,44 @@ export const App = () => {
 
         {/* Tab 1: Trình lập lịch trình (Planner View) */}
         {activeTab === 'planner' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Cột trái: Form điều khiển & Tổng kết */}
-            <div className="lg:col-span-5 space-y-6">
-              <TripInputForm onSubmit={handleGeneratePlan} isLoading={isLoading} />
-              {currentPlan && (
-                <>
-                  <BudgetSummaryCard plan={currentPlan} />
-                  <ZoneMapView plan={currentPlan} />
-                </>
-              )}
-            </div>
+					<div className="space-y-8">
+						<div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+							{/* Cột trái: Form điều khiển & Tổng kết */}
+							<div className="lg:col-span-5 space-y-6">
+								<TripInputForm onSubmit={handleGeneratePlan} isLoading={isLoading} />
+								{currentPlan && (
+									<BudgetSummaryCard plan={currentPlan} />
+								)}
+							</div>
 
-            {/* Cột phải: Timeline hiển thị */}
-            <div className="lg:col-span-7">
-              {isLoading && <LoadingSpinner />}
-              {!isLoading && currentPlan && (
-                <TimelineView
-                  plan={currentPlan}
-                  onSwapRequest={handleOpenSwapModal}
-                  onSaveRequest={handleSaveClick}
-                  isSaved={isCurrentPlanSaved}
-                />
-              )}
-              {!isLoading && !currentPlan && (
-                <div className="h-full flex flex-col items-center justify-center bg-white border border-dashed border-slate-300 rounded-2xl p-12 text-center text-slate-400">
-                  <span className="text-4xl mb-3">🧭</span>
-                  <h3 className="text-base font-bold text-slate-700">Chưa có lịch trình</h3>
-                  <p className="text-xs text-slate-500 max-w-sm mt-1">
-                    Hãy điền ngân sách, số ngày và sở thích ở cột bên trái để bắt đầu lập kế hoạch thông minh.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
+							{/* Cột phải: Timeline hiển thị */}
+							<div className="lg:col-span-7">
+								{isLoading && <LoadingSpinner />}
+								{!isLoading && currentPlan && (
+									<TimelineView
+										plan={currentPlan}
+										onSwapRequest={handleOpenSwapModal}
+										onSaveRequest={handleSaveClick}
+										isSaved={isCurrentPlanSaved}
+									/>
+								)}
+								{!isLoading && !currentPlan && (
+									<div className="h-full flex flex-col items-center justify-center bg-white border border-dashed border-slate-300 rounded-2xl p-12 text-center text-slate-400">
+										<span className="text-4xl mb-3">🧭</span>
+										<h3 className="text-base font-bold text-slate-700">Chưa có lịch trình</h3>
+										<p className="text-xs text-slate-500 max-w-sm mt-1">
+											Hãy điền ngân sách, số ngày và sở thích ở cột bên trái để bắt đầu lập kế hoạch thông minh.
+										</p>
+									</div>
+								)}
+							</div>
+						</div>
+						{currentPlan && (
+								<div className="w-full">
+									<ZoneMapView plan={currentPlan} />
+								</div>
+						)}
+					</div>
         )}
 
         {/* Tab 2: Chuyến đi của tôi (My Trips View) */}

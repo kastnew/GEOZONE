@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { getMyPlansApi, getPlanByIdApi, deletePlanApi } from '../../services/api.js';
 import { LoadingSpinner } from '../common/LoadingSpinner.jsx';
 
+import viewIcon from '../../assets/view-icon.svg';
+
 export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
   const [trips, setTrips] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -159,9 +161,20 @@ export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
                 <button
                   disabled={actionLoadingId === trip.id}
                   onClick={() => handleOpenPlan(trip.id)}
-                  className="px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-xs cursor-pointer disabled:opacity-50"
+                  className="px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-xs cursor-pointer disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
                 >
-                  {actionLoadingId === trip.id ? 'Đang mở...' : '👁️ Xem chi tiết'}
+                  {actionLoadingId === trip.id ? (
+										'Đang mở...'
+									) : (
+										<>
+											<img
+												src={viewIcon}
+												alt=""
+												className="w-3.5 h-3.5 object-contain shrink-0 brightness-0 invert"
+											/>
+											<span>Xem chi tiết</span>
+										</>
+									)}
                 </button>
               </div>
             </div>

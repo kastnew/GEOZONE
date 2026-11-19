@@ -1,5 +1,8 @@
 import React from 'react';
 
+import refreshIcon from '../../assets/refresh-icon.svg'
+import bulbIcon from '../../assets/bulb-icon.svg'
+
 export const PlaceItem = ({ activity, dayNumber, onSwapRequest }) => {
   const formatVnd = (val) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
@@ -26,9 +29,14 @@ export const PlaceItem = ({ activity, dayNumber, onSwapRequest }) => {
             </span>
             <button
               onClick={() => onSwapRequest(activity, dayNumber)}
-              className="mt-2 text-xs font-semibold px-2.5 py-1 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 transition shadow-2xs cursor-pointer"
+              className="mt-2 text-xs font-semibold px-2.5 py-1 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 transition shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5"
             >
-              🔄 Đổi địa điểm
+							<img
+                src={refreshIcon}
+                alt=""
+                className="w-3 h-3 translate-y-0.3"
+              />
+							<span>Đổi địa điểm</span>
             </button>
           </div>
         </div>
@@ -43,7 +51,11 @@ export const PlaceItem = ({ activity, dayNumber, onSwapRequest }) => {
         {/* Travel tip từ cẩm nang RAG (nếu có) */}
         {activity.aiTravelTip && (
           <div className="mt-2 text-xs text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-200 flex items-start space-x-1.5">
-            <span>💡</span>
+							<img
+                src={bulbIcon}
+                alt=""
+                className="w-3 h-3 translate-y-0.5"
+              />
             <span><strong>Mẹo bản địa:</strong> {activity.aiTravelTip}</span>
           </div>
         )}

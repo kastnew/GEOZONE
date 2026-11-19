@@ -25,7 +25,7 @@ export const TimelineView = ({ plan, onSwapRequest, onSaveRequest, isSaved = fal
                   : 'bg-white text-blue-700 hover:bg-blue-50 active:scale-95'
               }`}
             >
-              <span>{isSaved ? '✅' : '💾'}</span>
+              <span>{isSaved ? '✓' : ''}</span>
               <span>{isSaved ? 'Đã lưu vào Chuyến đi' : 'Lưu lịch trình này'}</span>
             </button>
           )}

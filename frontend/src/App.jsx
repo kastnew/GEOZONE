@@ -18,6 +18,9 @@ import {
   logout
 } from './services/api.js';
 
+import backgroundImg from './assets/background.webp';
+import compassImg from './assets/compass_icon.svg';
+
 export const App = () => {
   // Navigation tab: 'planner' | 'my-trips'
   const [activeTab, setActiveTab] = useState('planner');
@@ -155,7 +158,12 @@ export const App = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+		<div
+			className="min-h-screen flex flex-col bg-cover bg-center bg-fixed bg-no-repeat"
+			style={{
+				backgroundImage: `linear-gradient(rgba(248, 250, 252, 0.55), rgba(248, 250, 252, 0.65)), url(${backgroundImg})`
+			}}
+		>
       <Header
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -196,7 +204,11 @@ export const App = () => {
 								)}
 								{!isLoading && !currentPlan && (
 									<div className="h-full flex flex-col items-center justify-center bg-white border border-dashed border-slate-300 rounded-2xl p-12 text-center text-slate-400">
-										<span className="text-4xl mb-3">🧭</span>
+										<img
+											src={compassImg}
+											alt="🧭"
+											className="w-14 h-14 mb-3 object-contain"
+										/>
 										<h3 className="text-base font-bold text-slate-700">Chưa có lịch trình</h3>
 										<p className="text-xs text-slate-500 max-w-sm mt-1">
 											Hãy điền ngân sách, số ngày và sở thích ở cột bên trái để bắt đầu lập kế hoạch thông minh.

@@ -1,5 +1,9 @@
 import React from 'react';
 
+import appIcon from '../../assets/web-icon.svg'
+import mapIcon from '../../assets/map-icon.svg'
+import tripIcon from '../../assets/trip-icon.svg'
+
 export const Header = ({
   activeTab,
   onTabChange,
@@ -16,9 +20,11 @@ export const Header = ({
             onClick={() => onTabChange('planner')}
             className="flex items-center space-x-3 cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold text-xl shadow-md">
-              GZ
-            </div>
+            <img
+							src={appIcon}
+							alt="Icon"
+							className="w-12 h-12 translate-y-0.5"
+						/>
             <div>
               <span className="text-xl font-bold text-slate-800 tracking-tight">GeoZone AI</span>
               <span className="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 hidden sm:inline">
@@ -37,7 +43,11 @@ export const Header = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
-              <span>🗺️</span>
+              <img
+                src={mapIcon}
+                alt=""
+                className="w-4 h-4 translate-y-0.3"
+              />
               <span>Lập lịch trình</span>
             </button>
 
@@ -55,7 +65,11 @@ export const Header = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
-              <span>🧳</span>
+              <img
+                src={tripIcon}
+                alt=""
+                className="w-3 h-3 translate-y-0.3"
+              />
               <span>Chuyến đi của tôi</span>
             </button>
           </nav>

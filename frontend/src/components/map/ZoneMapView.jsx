@@ -7,6 +7,8 @@ import L from 'leaflet';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
+const mapApiKey = import.meta.env.VITE_MAP_API_KEY || ''
+
 const DefaultIcon = L.icon({
     iconUrl: markerIcon,
     shadowUrl: markerShadow,
@@ -146,11 +148,10 @@ export const ZoneMapView = ({ plan }) => {
 				fallbackCenter={fallbackCenter}
 				zoom={13}
 			/>
-
-		  <TileLayer
-			attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-			url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-		  />
+			<TileLayer
+				attribution='&copy; <a href="https://www.tomtom.com/">TomTom</a>'
+				url={`https://api.tomtom.com/map/1/tile/basic/main/{z}/{x}/{y}.png?key=${mapApiKey}`}
+			/>
 
 		  {visibleEntries.map(({ item, day, idx }) => {
 				const lat = Number(item?.latitude);

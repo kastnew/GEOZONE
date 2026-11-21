@@ -1,0 +1,115 @@
+/* ==========================================================================
+   User Account & Profile Styles
+   ========================================================================== */
+
+.gz-account {
+  background: #f8fafc;
+  min-height: calc(100vh - 64px);
+  padding: 40px 0 80px;
+}
+
+.gz-account .gz-wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.ac-body {
+  margin-top: 32px;
+}
+
+.ac-me {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .04);
+}
+
+.ac-av {
+  width: 64px;
+  height: 64px;
+  font-size: 24px;
+}
+
+.ac-name {
+  font: 800 22px var(--display);
+  color: #0f172a;
+  margin: 0 0 4px;
+}
+
+.ac-mail {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.ac-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+.ac-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .04);
+}
+
+.ac-card h3 {
+  margin: 0 0 16px;
+  font: 700 18px var(--display);
+  color: #0f172a;
+}
+
+.ac-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ac-stats .st {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.ac-stats .st b {
+  display: block;
+  font: 800 24px var(--display);
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.ac-danger {
+  border-color: #fecdd3;
+  background: #fff1f2;
+}
+
+.ac-danger h3 {
+  color: #e11d48;
+}
+
+.ac-danger button {
+  background: #e11d48;
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font: 600 14px var(--body);
+  cursor: pointer;
+}
+
+@media (max-width: 860px) {
+  .ac-grid {
+    grid-template-columns: 1fr;
+  }
+}

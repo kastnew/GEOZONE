@@ -1,0 +1,125 @@
+/* ==========================================================================
+   Admin Management & CRUD Modal Styles
+   ========================================================================== */
+
+.adm-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  align-items: center;
+  padding: 8px 12px;
+  background: #fff7ed;
+  border-bottom: 1px solid #fed7aa;
+  font-size: 13px;
+  color: #9a3412;
+}
+
+.adm-bar button {
+  background: #fff;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font: 600 12.5px var(--body);
+  cursor: pointer;
+}
+
+.adm-bar button:hover {
+  background: #ffedd5;
+}
+
+#admDlg {
+  border: 0;
+  border-radius: 18px;
+  padding: 0;
+  width: min(640px, calc(100vw - 32px));
+  box-shadow: 0 24px 48px rgba(0, 0, 0, .2);
+  background: #fff;
+}
+
+#admDlg::backdrop {
+  background: rgba(15, 23, 42, .6);
+  backdrop-filter: blur(4px);
+}
+
+.adm-grid {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+.adm-grid label {
+  display: grid;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #334155;
+}
+
+.adm-grid input,
+.adm-grid select,
+.adm-grid textarea {
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 13.5px;
+}
+
+.adm-grid .span-2 {
+  grid-column: 1 / -1;
+}
+
+#admTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.adm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.adm-foot {
+  padding: 14px 20px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.adm-foot button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font: 600 13.5px var(--body);
+  cursor: pointer;
+}
+
+.adm-btn.save {
+  background: var(--accent);
+  color: #fff;
+  border: 0;
+}
+
+.adm-btn.delete {
+  background: #fff;
+  color: #e11d48;
+  border: 1px solid #fecdd3;
+  margin-right: auto;
+}
+
+@media (max-width: 520px) {
+  .adm-grid {
+    grid-template-columns: 1fr;
+  }
+}

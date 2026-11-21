@@ -1,0 +1,1116 @@
+[
+    {
+        "id": 1,
+        "name": "Bãi tắm Bãi Cháy",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 40000,
+        "duration": 120,
+        "openingTime": "06:30",
+        "closingTime": "18:00",
+        "latitude": 20.9471,
+        "longitude": 107.0496,
+        "popularity": 0.99,
+        "tags": [
+            "beach",
+            "nature"
+        ],
+        "address": "Đường Hạ Long, Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 2,
+        "name": "Sun World Hạ Long (Dragon Park & Typhoon Water Park)",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 350000,
+        "duration": 240,
+        "openingTime": "09:00",
+        "closingTime": "18:00",
+        "latitude": 20.9521,
+        "longitude": 107.0402,
+        "popularity": 0.98,
+        "tags": [
+            "adventure",
+            "sightseeing"
+        ],
+        "address": "Số 9 đường Hạ Long, Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 3,
+        "name": "Cáp treo Nữ Hoàng & Đồi Mặt Trời (Sun Wheel)",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 350000,
+        "duration": 120,
+        "openingTime": "14:00",
+        "closingTime": "22:00",
+        "latitude": 20.9502,
+        "longitude": 107.0425,
+        "popularity": 0.96,
+        "tags": [
+            "sightseeing",
+            "adventure"
+        ],
+        "address": "Đồi Ba Đèo, Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 4,
+        "name": "Phố cổ Bãi Cháy (Little Vietnam)",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 0,
+        "duration": 90,
+        "openingTime": "08:00",
+        "closingTime": "23:00",
+        "latitude": 20.9554,
+        "longitude": 107.0381,
+        "popularity": 0.9,
+        "tags": [
+            "shopping",
+            "sightseeing"
+        ],
+        "address": "Đường Hạ Long, Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 5,
+        "name": "Chợ đêm Bãi Cháy (Phố đi bộ)",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 100000,
+        "duration": 90,
+        "openingTime": "17:00",
+        "closingTime": "23:30",
+        "latitude": 20.9572,
+        "longitude": 107.0354,
+        "popularity": 0.92,
+        "tags": [
+            "food",
+            "nightlife"
+        ],
+        "address": "Đường Hoàng Quốc Việt, Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 6,
+        "name": "Cảng tàu khách quốc tế Hạ Long",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "06:00",
+        "closingTime": "18:00",
+        "latitude": 20.9542,
+        "longitude": 107.0441,
+        "popularity": 0.95,
+        "tags": [
+            "sightseeing",
+            "adventure"
+        ],
+        "address": "Đường Hạ Long, Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 7,
+        "name": "Quảng trường Sun Carnival Hạ Long",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "00:00",
+        "closingTime": "23:59",
+        "latitude": 20.9475,
+        "longitude": 107.0512,
+        "popularity": 0.85,
+        "tags": [
+            "sightseeing"
+        ],
+        "address": "Đường Hạ Long, Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 8,
+        "name": "Ngọn hải đăng Bãi Cháy",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 0,
+        "duration": 45,
+        "openingTime": "06:00",
+        "closingTime": "21:00",
+        "latitude": 20.9515,
+        "longitude": 107.0305,
+        "popularity": 0.82,
+        "tags": [
+            "sightseeing"
+        ],
+        "address": "Khu vực bãi tắm Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 9,
+        "name": "Khu đô thị Marina Hạ Long",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 50000,
+        "duration": 90,
+        "openingTime": "08:00",
+        "closingTime": "22:00",
+        "latitude": 20.9412,
+        "longitude": 107.0562,
+        "popularity": 0.84,
+        "tags": [
+            "shopping",
+            "food"
+        ],
+        "address": "Đường Hoàng Quốc Việt, Hùng Thắng, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 10,
+        "name": "Chợ đêm Marina Hạ Long",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 100000,
+        "duration": 90,
+        "openingTime": "17:00",
+        "closingTime": "23:00",
+        "latitude": 20.9425,
+        "longitude": 107.0585,
+        "popularity": 0.86,
+        "tags": [
+            "food",
+            "nightlife"
+        ],
+        "address": "Khu đô thị Halong Marina, Hùng Thắng, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 11,
+        "name": "Khu vui chơi quốc tế Tuần Châu",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 250000,
+        "duration": 180,
+        "openingTime": "08:00",
+        "closingTime": "22:00",
+        "latitude": 20.9325,
+        "longitude": 106.9852,
+        "popularity": 0.91,
+        "tags": [
+            "adventure",
+            "sightseeing"
+        ],
+        "address": "Đảo Tuần Châu, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 12,
+        "name": "Bãi tắm Tuần Châu",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 0,
+        "duration": 120,
+        "openingTime": "05:00",
+        "closingTime": "19:00",
+        "latitude": 20.9298,
+        "longitude": 106.9821,
+        "popularity": 0.88,
+        "tags": [
+            "beach",
+            "nature"
+        ],
+        "address": "Đảo Tuần Châu, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 13,
+        "name": "Cảng tàu khách quốc tế Tuần Châu",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "06:00",
+        "closingTime": "18:00",
+        "latitude": 20.9254,
+        "longitude": 106.9795,
+        "popularity": 0.89,
+        "tags": [
+            "sightseeing"
+        ],
+        "address": "Đảo Tuần Châu, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 14,
+        "name": "Bảo tàng sáp Sun World",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 100000,
+        "duration": 60,
+        "openingTime": "14:00",
+        "closingTime": "20:00",
+        "latitude": 20.9508,
+        "longitude": 107.0431,
+        "popularity": 0.78,
+        "tags": [
+            "culture"
+        ],
+        "address": "Đồi Ba Đèo, Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 15,
+        "name": "Khu biệt thự nghỉ dưỡng Sun Feria",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "00:00",
+        "closingTime": "23:59",
+        "latitude": 20.9568,
+        "longitude": 107.0285,
+        "popularity": 0.75,
+        "tags": [
+            "sightseeing"
+        ],
+        "address": "Đường Hạ Long, Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 16,
+        "name": "Nhà hàng hải sản Hồng Hạnh Bãi Cháy",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 300000,
+        "duration": 90,
+        "openingTime": "10:00",
+        "closingTime": "22:00",
+        "latitude": 20.9492,
+        "longitude": 107.0482,
+        "popularity": 0.93,
+        "tags": [
+            "food"
+        ],
+        "address": "Đường Hạ Long, Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 17,
+        "name": "Khu ẩm thực Vườn Đào",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 150000,
+        "duration": 90,
+        "openingTime": "09:00",
+        "closingTime": "23:00",
+        "latitude": 20.9582,
+        "longitude": 107.0371,
+        "popularity": 0.88,
+        "tags": [
+            "food"
+        ],
+        "address": "Phố Vườn Đào, Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 18,
+        "name": "Nhà hàng Cua Vàng Hạ Long",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 350000,
+        "duration": 90,
+        "openingTime": "09:00",
+        "closingTime": "22:00",
+        "latitude": 20.9465,
+        "longitude": 107.0531,
+        "popularity": 0.87,
+        "tags": [
+            "food"
+        ],
+        "address": "Phan Chu Trinh, Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 19,
+        "name": "Quán bar bãi biển Valley Beach Bar",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 200000,
+        "duration": 120,
+        "openingTime": "16:00",
+        "closingTime": "02:00",
+        "latitude": 20.9528,
+        "longitude": 107.0325,
+        "popularity": 0.84,
+        "tags": [
+            "nightlife"
+        ],
+        "address": "Bãi tắm Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 20,
+        "name": "Tuần Châu Park (Công viên khủng long)",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 100000,
+        "duration": 90,
+        "openingTime": "08:00",
+        "closingTime": "18:00",
+        "latitude": 20.9312,
+        "longitude": 106.9835,
+        "popularity": 0.76,
+        "tags": [
+            "adventure",
+            "culture"
+        ],
+        "address": "Đảo Tuần Châu, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 21,
+        "name": "Nhà hát Cá heo Tuần Châu",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 150000,
+        "duration": 60,
+        "openingTime": "09:00",
+        "closingTime": "17:00",
+        "latitude": 20.9335,
+        "longitude": 106.9812,
+        "popularity": 0.8,
+        "tags": [
+            "culture",
+            "sightseeing"
+        ],
+        "address": "Đảo Tuần Châu, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 22,
+        "name": "Chợ Vườn Đào",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 100000,
+        "duration": 60,
+        "openingTime": "06:00",
+        "closingTime": "19:00",
+        "latitude": 20.9592,
+        "longitude": 107.0365,
+        "popularity": 0.77,
+        "tags": [
+            "food",
+            "shopping"
+        ],
+        "address": "Phố Vườn Đào, Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 23,
+        "name": "Công viên hoa Hạ Long (Khu Bãi Cháy)",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 0,
+        "duration": 45,
+        "openingTime": "06:00",
+        "closingTime": "22:00",
+        "latitude": 20.9545,
+        "longitude": 107.0395,
+        "popularity": 0.74,
+        "tags": [
+            "nature",
+            "sightseeing"
+        ],
+        "address": "Đường Hạ Long, Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 24,
+        "name": "Bến phà cũ Bãi Cháy",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 0,
+        "duration": 45,
+        "openingTime": "00:00",
+        "closingTime": "23:59",
+        "latitude": 20.9585,
+        "longitude": 107.0452,
+        "popularity": 0.72,
+        "tags": [
+            "sightseeing",
+            "history"
+        ],
+        "address": "Chân cầu Bãi Cháy (phía Bãi Cháy), Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 25,
+        "name": "Cầu Bãi Cháy",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 0,
+        "duration": 45,
+        "openingTime": "00:00",
+        "closingTime": "23:59",
+        "latitude": 20.9598,
+        "longitude": 107.0485,
+        "popularity": 0.94,
+        "tags": [
+            "sightseeing",
+            "history"
+        ],
+        "address": "Quốc lộ 18, Bãi Cháy - Hòn Gai, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 26,
+        "name": "Khu du lịch sinh thái Ghềnh Ràng Bãi Cháy",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 0,
+        "duration": 90,
+        "openingTime": "06:00",
+        "closingTime": "18:00",
+        "latitude": 20.9482,
+        "longitude": 107.0254,
+        "popularity": 0.7,
+        "tags": [
+            "nature",
+            "sightseeing"
+        ],
+        "address": "Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 27,
+        "name": "Hải sản Thanh Hằng Bãi Cháy",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 250000,
+        "duration": 90,
+        "openingTime": "10:00",
+        "closingTime": "22:00",
+        "latitude": 20.9551,
+        "longitude": 107.0342,
+        "popularity": 0.81,
+        "tags": [
+            "food"
+        ],
+        "address": "Đường Hạ Long, Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 28,
+        "name": "Sữa chua trân châu Hạ Long (Cơ sở gốc Bãi Cháy)",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 30000,
+        "duration": 30,
+        "openingTime": "09:00",
+        "closingTime": "23:00",
+        "latitude": 20.9565,
+        "longitude": 107.0385,
+        "popularity": 0.95,
+        "tags": [
+            "food"
+        ],
+        "address": "Phố Anh Đào, Bãi Cháy, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 29,
+        "name": "Rạp chiếu phim CGV Marine Plaza",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 100000,
+        "duration": 120,
+        "openingTime": "09:00",
+        "closingTime": "23:00",
+        "latitude": 20.9431,
+        "longitude": 107.0571,
+        "popularity": 0.79,
+        "tags": [
+            "nightlife",
+            "shopping"
+        ],
+        "address": "Tòa nhà Halong Marine Plaza, Hùng Thắng, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 30,
+        "name": "Bãi tắm Marina Bay",
+        "city": "Ha Long",
+        "zoneCode": "HL1",
+        "zoneName": "Khu Bãi Cháy",
+        "estimatedCost": 0,
+        "duration": 90,
+        "openingTime": "05:00",
+        "closingTime": "19:00",
+        "latitude": 20.9395,
+        "longitude": 107.0612,
+        "popularity": 0.76,
+        "tags": [
+            "beach",
+            "nature"
+        ],
+        "address": "Khu đô thị Halong Marina, Hùng Thắng, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 31,
+        "name": "Bảo tàng Quảng Ninh",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 40000,
+        "duration": 120,
+        "openingTime": "08:00",
+        "closingTime": "17:00",
+        "latitude": 20.9625,
+        "longitude": 107.0812,
+        "popularity": 0.99,
+        "tags": [
+            "culture",
+            "history"
+        ],
+        "address": "Đường Trần Quốc Nghiễn, Hồng Hải, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 32,
+        "name": "Cung Quy hoạch, Hội chợ và Triển lãm Quảng Ninh (Cung Cá Heo)",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "08:00",
+        "closingTime": "17:00",
+        "latitude": 20.9638,
+        "longitude": 107.0835,
+        "popularity": 0.95,
+        "tags": [
+            "culture",
+            "sightseeing"
+        ],
+        "address": "Đường Trần Quốc Nghiễn, Hồng Hải, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 33,
+        "name": "Bãi tắm Hòn Gai",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 0,
+        "duration": 120,
+        "openingTime": "05:00",
+        "closingTime": "19:00",
+        "latitude": 20.9582,
+        "longitude": 107.0854,
+        "popularity": 0.94,
+        "tags": [
+            "beach",
+            "nature"
+        ],
+        "address": "Đường Trần Quốc Nghiễn, Hồng Gai, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 34,
+        "name": "Chợ Hạ Long 1",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 150000,
+        "duration": 90,
+        "openingTime": "06:00",
+        "closingTime": "18:00",
+        "latitude": 20.9495,
+        "longitude": 107.0782,
+        "popularity": 0.93,
+        "tags": [
+            "food",
+            "shopping"
+        ],
+        "address": "Phường Bạch Đằng, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 35,
+        "name": "Chợ Hạ Long 2",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 100000,
+        "duration": 75,
+        "openingTime": "06:00",
+        "closingTime": "18:00",
+        "latitude": 20.9524,
+        "longitude": 107.0715,
+        "popularity": 0.85,
+        "tags": [
+            "shopping",
+            "food"
+        ],
+        "address": "Phường Yết Kiêu, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 36,
+        "name": "Núi Bài Tơ",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 0,
+        "duration": 150,
+        "openingTime": "05:00",
+        "closingTime": "18:00",
+        "latitude": 20.9532,
+        "longitude": 107.0825,
+        "popularity": 0.97,
+        "tags": [
+            "adventure",
+            "sightseeing",
+            "nature"
+        ],
+        "address": "Phố Hàng Mủng, Bạch Đằng, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 37,
+        "name": "Chùa Long Tiên",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "06:00",
+        "closingTime": "18:00",
+        "latitude": 20.9518,
+        "longitude": 107.0811,
+        "popularity": 0.9,
+        "tags": [
+            "culture"
+        ],
+        "address": "Đường Lê Quý Đôn, Bạch Đằng, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 38,
+        "name": "Đền thờ Đức Ông Trần Quốc Nghiễn",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 0,
+        "duration": 45,
+        "openingTime": "07:00",
+        "closingTime": "17:30",
+        "latitude": 20.9512,
+        "longitude": 107.0818,
+        "popularity": 0.86,
+        "tags": [
+            "culture",
+            "history"
+        ],
+        "address": "Dưới chân núi Bài Tơ, Bạch Đằng, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 39,
+        "name": "Đường bao biển Trần Quốc Nghiễn",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "00:00",
+        "closingTime": "23:59",
+        "latitude": 20.9602,
+        "longitude": 107.0841,
+        "popularity": 0.96,
+        "tags": [
+            "sightseeing",
+            "nature"
+        ],
+        "address": "Đường Trần Quốc Nghiễn, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 40,
+        "name": "Sữa chua trân châu Tuấn Liên",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 35000,
+        "duration": 30,
+        "openingTime": "09:00",
+        "closingTime": "23:00",
+        "latitude": 20.9525,
+        "longitude": 107.0832,
+        "popularity": 0.98,
+        "tags": [
+            "food"
+        ],
+        "address": "Trần Quốc Nghiễn, Bạch Đằng, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 41,
+        "name": "Trung tâm thương mại Vincom Plaza Hạ Long",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 100000,
+        "duration": 90,
+        "openingTime": "09:30",
+        "closingTime": "22:00",
+        "latitude": 20.9472,
+        "longitude": 107.0751,
+        "popularity": 0.91,
+        "tags": [
+            "shopping",
+            "nightlife"
+        ],
+        "address": "Khu Cột Đồng Hồ, Bạch Đằng, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 42,
+        "name": "Nhà hàng Hồng Hạnh 3 (Hòn Gai)",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 300000,
+        "duration": 90,
+        "openingTime": "10:00",
+        "closingTime": "22:00",
+        "latitude": 20.9612,
+        "longitude": 107.0915,
+        "popularity": 0.94,
+        "tags": [
+            "food"
+        ],
+        "address": "Khu cột 5, Đường Trần Quốc Nghiễn, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 43,
+        "name": "Nhà hàng Cẩm Phô / Khải Hương (Hòn Gai)",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 250000,
+        "duration": 90,
+        "openingTime": "10:00",
+        "closingTime": "22:00",
+        "latitude": 20.9485,
+        "longitude": 107.0792,
+        "popularity": 0.88,
+        "tags": [
+            "food"
+        ],
+        "address": "Số 1 Lê Thánh Tông, Hồng Gai, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 44,
+        "name": "Quảng trường 30 tháng 10",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "00:00",
+        "closingTime": "23:59",
+        "latitude": 20.9618,
+        "longitude": 107.0805,
+        "popularity": 0.89,
+        "tags": [
+            "sightseeing"
+        ],
+        "address": "Đường Trần Quốc Nghiễn, Hồng Hải, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 45,
+        "name": "Công viên hoa Hạ Long (Khu Hòn Gai)",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 0,
+        "duration": 45,
+        "openingTime": "06:00",
+        "closingTime": "22:00",
+        "latitude": 20.9615,
+        "longitude": 107.0795,
+        "popularity": 0.82,
+        "tags": [
+            "nature",
+            "sightseeing"
+        ],
+        "address": "Đường Trần Quốc Nghiễn, Hồng Hải, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 46,
+        "name": "Nhà hàng Phương Nam Hạ Long",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 300000,
+        "duration": 90,
+        "openingTime": "10:00",
+        "closingTime": "22:00",
+        "latitude": 20.9632,
+        "longitude": 107.0945,
+        "popularity": 0.87,
+        "tags": [
+            "food"
+        ],
+        "address": "Đường bao biển cột 5, Hồng Hải, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 47,
+        "name": "Pianta Cafe & Bistro",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 70000,
+        "duration": 60,
+        "openingTime": "08:00",
+        "closingTime": "22:30",
+        "latitude": 20.9595,
+        "longitude": 107.0872,
+        "popularity": 0.85,
+        "tags": [
+            "nightlife",
+            "food"
+        ],
+        "address": "Đường Trần Quốc Nghiễn, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 48,
+        "name": "Old Town Café (Café Lâu đài)",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 80000,
+        "duration": 60,
+        "openingTime": "07:00",
+        "closingTime": "23:00",
+        "latitude": 20.9608,
+        "longitude": 107.0885,
+        "popularity": 0.86,
+        "tags": [
+            "sightseeing",
+            "nightlife"
+        ],
+        "address": "Đường Trần Quốc Nghiễn, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 49,
+        "name": "Dupin Coffee & Bar (Tòa nhà Halong DC)",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 100000,
+        "duration": 90,
+        "openingTime": "08:00",
+        "closingTime": "23:30",
+        "latitude": 20.9512,
+        "longitude": 107.0732,
+        "popularity": 0.83,
+        "tags": [
+            "nightlife"
+        ],
+        "address": "Tòa nhà Halong DC, 25 Tháng 4, Bạch Đằng, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 50,
+        "name": "Nhà hàng Cốm (Bánh cuốn chả mực gốc bàng)",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 50000,
+        "duration": 45,
+        "openingTime": "06:00",
+        "closingTime": "13:00",
+        "latitude": 20.9505,
+        "longitude": 107.0789,
+        "popularity": 0.92,
+        "tags": [
+            "food"
+        ],
+        "address": "Ngõ 1 Nhà Hát, Bạch Đằng, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 51,
+        "name": "Bánh cuốn chả mực Gốc Bàng",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 50000,
+        "duration": 45,
+        "openingTime": "06:00",
+        "closingTime": "14:00",
+        "latitude": 20.9511,
+        "longitude": 107.0775,
+        "popularity": 0.94,
+        "tags": [
+            "food"
+        ],
+        "address": "Nhà Thờ, Hòn Gai, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 52,
+        "name": "Nhà hàng Hương Duyên",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 200000,
+        "duration": 90,
+        "openingTime": "09:00",
+        "closingTime": "21:30",
+        "latitude": 20.9482,
+        "longitude": 107.0745,
+        "popularity": 0.89,
+        "tags": [
+            "food"
+        ],
+        "address": "66 Trần Hưng Đạo, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 53,
+        "name": "Nhà bè Hồng Đậm (Đường bao biển cột 5)",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 300000,
+        "duration": 90,
+        "openingTime": "10:00",
+        "closingTime": "22:00",
+        "latitude": 20.9645,
+        "longitude": 107.0962,
+        "popularity": 0.86,
+        "tags": [
+            "food"
+        ],
+        "address": "Đường bao biển cột 5, Hồng Hải, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 54,
+        "name": "Thư viện Quảng Ninh",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "08:00",
+        "closingTime": "17:00",
+        "latitude": 20.9622,
+        "longitude": 107.0815,
+        "popularity": 0.87,
+        "tags": [
+            "culture"
+        ],
+        "address": "Đường Trần Quốc Nghiễn, Hồng Hải, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 55,
+        "name": "Công viên Lán Bè",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "05:00",
+        "closingTime": "22:00",
+        "latitude": 20.9545,
+        "longitude": 107.0842,
+        "popularity": 0.9,
+        "tags": [
+            "nature",
+            "sightseeing"
+        ],
+        "address": "Đường Trần Quốc Nghiễn, Bạch Đằng, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 56,
+        "name": "Đền Cặp Giáp",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 0,
+        "duration": 45,
+        "openingTime": "07:00",
+        "closingTime": "17:30",
+        "latitude": 20.9712,
+        "longitude": 107.1021,
+        "popularity": 0.73,
+        "tags": [
+            "culture"
+        ],
+        "address": "Hà Phong, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 57,
+        "name": "Chợ Cao Xanh",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 50000,
+        "duration": 45,
+        "openingTime": "06:00",
+        "closingTime": "18:00",
+        "latitude": 20.9785,
+        "longitude": 107.0912,
+        "popularity": 0.71,
+        "tags": [
+            "food",
+            "shopping"
+        ],
+        "address": "Cao Xanh, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 58,
+        "name": "Cầu Cửa Lục 1",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 0,
+        "duration": 30,
+        "openingTime": "00:00",
+        "closingTime": "23:59",
+        "latitude": 20.9825,
+        "longitude": 107.0754,
+        "popularity": 0.8,
+        "tags": [
+            "sightseeing"
+        ],
+        "address": "Cầu nối khu vực Cái Lân – Việt Hưng, qua QL279, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 59,
+        "name": "Cầu Bình Minh (Cửa Lục 3)",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 0,
+        "duration": 30,
+        "openingTime": "00:00",
+        "closingTime": "23:59",
+        "latitude": 20.9712,
+        "longitude": 107.0621,
+        "popularity": 0.78,
+        "tags": [
+            "sightseeing"
+        ],
+        "address": "Nối khu vực FLC Hà Khánh với Quốc lộ 279, phường Thống Nhất, Hạ Long, Quảng Ninh"
+    },
+    {
+        "id": 60,
+        "name": "Khu đô thị Ao Cá (Hòn Gai)",
+        "city": "Ha Long",
+        "zoneCode": "HL2",
+        "zoneName": "Khu Hòn Gai",
+        "estimatedCost": 0,
+        "duration": 45,
+        "openingTime": "06:00",
+        "closingTime": "21:00",
+        "latitude": 20.9462,
+        "longitude": 107.0712,
+        "popularity": 0.75,
+        "tags": [
+            "sightseeing"
+        ],
+        "address": "Yết Kiêu, Hạ Long, Quảng Ninh"
+    }
+]

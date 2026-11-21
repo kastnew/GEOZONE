@@ -1,0 +1,107 @@
+/* ==========================================================================
+   Authentication Modal Styles
+   ========================================================================== */
+
+#authDlg {
+  border: 0;
+  border-radius: 20px;
+  padding: 0;
+  width: min(420px, calc(100vw - 32px));
+  box-shadow: 0 24px 48px rgba(0, 0, 0, .2);
+  background: #fff;
+  overflow: hidden;
+}
+
+#authDlg::backdrop {
+  background: rgba(15, 23, 42, .6);
+  backdrop-filter: blur(4px);
+}
+
+.au-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.au-tab {
+  border: 0;
+  background: #f8fafc;
+  padding: 14px;
+  font: 700 15px var(--body);
+  color: #64748b;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.au-tab.on {
+  background: #fff;
+  color: var(--accent);
+  border-bottom: 2px solid var(--accent);
+}
+
+.au-f {
+  padding: 24px;
+  display: grid;
+  gap: 14px;
+}
+
+.au-f label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+}
+
+.au-in {
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.au-in:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.au-btn {
+  background: var(--accent);
+  color: #fff;
+  border: 0;
+  border-radius: 10px;
+  padding: 12px;
+  font: 700 15px var(--body);
+  cursor: pointer;
+  margin-top: 8px;
+  transition: opacity .15s;
+}
+
+.au-btn:hover {
+  opacity: .92;
+}
+
+.au-demo {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed #cbd5e1;
+  display: grid;
+  gap: 6px;
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+.au-demo button {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.au-demo code {
+  font-weight: 700;
+  color: #2563eb;
+}

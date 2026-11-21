@@ -1,0 +1,72 @@
+/* ===== Khám phá / Lập lịch (Zone): gọn, không tràn viền ===== */
+.gz-explore{overflow:hidden;max-width:100vw}
+.gz-explore *{min-width:0}
+.gz-explore .top{flex:none;min-height:0;padding:8px 20px 14px;gap:6px 18px;grid-template-rows:auto auto}
+.gz-explore .top::after{background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.25) 45%,rgba(0,0,0,.62))}
+.gz-explore .info{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:10px 20px;padding-top:clamp(40px,9vh,96px)}
+.gz-explore .title h1{font-size:clamp(26px,3.2vw,36px)}
+.gz-explore .title p{max-width:560px;-webkit-line-clamp:1}
+.gz-explore .infobar{width:min(100%,480px)}
+.gz-explore .cityfield{max-width:none;border-width:2px;border-radius:14px;padding:4px 40px 4px 14px}
+.gz-explore .cityfield select{font-size:16px}
+.gz-explore .tripbtn{border-radius:14px;padding:0 16px}
+.gz-explore .modes button{border-radius:10px 10px 0 0;padding:7px 18px;backdrop-filter:blur(4px)}
+.gz-explore .layout{grid-template-columns:minmax(320px,420px) minmax(0,1fr);overflow:hidden}
+.gz-explore .panel{overflow:hidden}
+.gz-explore .mapwrap{overflow:hidden;min-height:0}
+.gz-explore #map{width:100%;height:100%}
+
+/* chế độ Lập lịch: thu gọn ảnh đầu trang để nhường chỗ cho form + kết quả */
+body.planning .gz-explore .top{padding-bottom:10px}
+body.planning .gz-explore .info{padding-top:clamp(14px,4vh,40px)}
+body.planning .gz-explore .infobar,body.planning .gz-explore .title p{display:none}
+body.planning .gz-explore .title h1{font-size:clamp(22px,2.6vw,28px)}
+
+.gz-explore .planner{grid-template-columns:minmax(300px,340px) minmax(0,1fr);overflow:hidden;background:var(--bg)}
+.gz-explore .pform{min-height:0;padding:20px 20px 24px;gap:16px;overflow-y:auto;overflow-x:hidden}
+.gz-explore .pform h2{font-size:20px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.gz-explore .pform label{width:100%}
+.gz-explore .pform select{width:100%;height:40px;padding:0 10px}
+.gz-explore .pform input[type=range]{width:100%;margin:4px 0 0}
+.gz-explore .pform .chips{gap:6px}
+.gz-explore .pform .chips button{padding:5px 12px;font-size:13px;transition:background .15s,border-color .15s}
+.gz-explore .pform .chips button:hover{border-color:var(--accent)}
+.gz-explore .pform .go{position:sticky;bottom:0;width:100%;padding:13px;border-radius:12px;box-shadow:0 -10px 14px -6px var(--panel);font-size:15px}
+.gz-explore .pform .go:hover{filter:brightness(1.08)}
+.gz-explore .pres{min-height:0;min-width:0;padding:18px 20px 28px;overflow-y:auto;overflow-x:hidden}
+.gz-explore .pres>*{min-width:0;max-width:100%}
+.gz-explore .banner{border-radius:14px;align-items:center}
+.gz-explore .banner .gz-save{width:100%;text-align:center}
+.gz-explore .pgrid{grid-template-columns:minmax(0,1fr) minmax(300px,400px)}
+.gz-explore .day{min-width:0;overflow:hidden}
+.gz-explore .day h3{align-items:baseline}
+.gz-explore .act>div{min-width:0}
+.gz-explore .act b{overflow-wrap:anywhere}
+.gz-explore .zmap{min-width:0;overflow:hidden;top:0;align-self:start}
+.gz-explore #pMap{height:clamp(260px,42vh,420px);width:100%;border-radius:10px;overflow:hidden;position:relative;z-index:0}
+.gz-explore .zchips button{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gz-explore .zchips button[aria-pressed="true"]{background:var(--dc,#2563eb);border-color:var(--dc,#2563eb)}
+.gz-explore .leaflet-container{width:100%;max-width:100%;font-family:var(--body)}
+
+@media (max-width:1100px){
+  .gz-explore .pgrid{grid-template-columns:minmax(0,1fr)}
+  .gz-explore .zmap{position:static}
+}
+@media (max-width:860px){
+  .gz-explore .top{padding:8px 12px 12px;min-height:0}
+  .gz-explore .info{grid-template-columns:minmax(0,1fr);padding-top:clamp(28px,8vh,64px)}
+  .gz-explore .infobar{width:100%}
+  body.planning .gz-explore .info{padding-top:10px}
+  .gz-explore .layout{grid-template-columns:minmax(0,1fr)}
+  .gz-explore .planner{grid-template-columns:minmax(0,1fr);overflow-y:auto;overflow-x:hidden;align-content:start;grid-auto-rows:min-content}
+  .gz-explore .pform{overflow:visible;border-right:0;border-bottom:1px solid var(--line);padding:16px 14px 18px}
+  .gz-explore .pform .go{position:static;box-shadow:none}
+  .gz-explore .pres{overflow:visible;padding:14px 12px 28px}
+  .gz-explore .viewtoggle,.viewtoggle{white-space:nowrap}
+  .viewtoggle button{white-space:nowrap;padding:9px 22px}
+}
+@media (max-width:520px){
+  .gz-explore .row{grid-template-columns:1fr 1fr}
+  .gz-explore .row .tagdd{grid-column:1/-1}
+  .gz-explore .tagmenu{max-width:calc(100vw - 32px)}
+}

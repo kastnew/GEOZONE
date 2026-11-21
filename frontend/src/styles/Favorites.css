@@ -1,0 +1,108 @@
+/* ==========================================================================
+   Saved Favorites (Yêu thích) Styles
+   ========================================================================== */
+
+.gz-favs {
+  background: #f8fafc;
+  min-height: calc(100vh - 64px);
+  padding: 40px 0 80px;
+}
+
+.gz-favs.on {
+  display: block;
+}
+
+.gz-favs .gz-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.fv-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.fv-chips button {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font: 500 13px var(--body);
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.fv-chips button:hover {
+  background: #f1f5f9;
+}
+
+.fv-chips button.active {
+  background: #e11d48;
+  border-color: #e11d48;
+  color: #fff;
+  font-weight: 600;
+}
+
+.fcard {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .04);
+}
+
+.fc-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.fc-name {
+  font: 700 16px var(--display);
+  color: #0f172a;
+  margin: 0;
+}
+
+.fc-city {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.fc-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.fc-act {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.fc-act .del {
+  background: #fff;
+  color: #e11d48;
+  border: 1px solid #dde4f0;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.fc-act .del.sure {
+  background: #e11d48;
+  border-color: #e11d48;
+  color: #fff;
+}

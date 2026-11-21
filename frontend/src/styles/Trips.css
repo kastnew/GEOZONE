@@ -1,0 +1,193 @@
+/* ==========================================================================
+   Saved Trips & Trip Modals Styles
+   ========================================================================== */
+
+.gz-trips {
+  background: #f8fafc;
+  min-height: calc(100vh - 64px);
+  padding: 40px 0 80px;
+}
+
+.gz-trips.on {
+  display: block;
+}
+
+.gz-trips .gz-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.gz-tbody {
+  margin-top: 24px;
+}
+
+.gz-tbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.gz-tbar p {
+  margin: 0;
+  font-size: 15px;
+  color: #475569;
+}
+
+.gz-tbar .gz-link {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.gz-gnote {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.gz-tgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.tcard {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .04);
+  transition: transform .15s, box-shadow .15s;
+}
+
+.tcard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .08);
+}
+
+.tcard-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.tcard-head h3 {
+  margin: 0;
+  font: 700 18px var(--display);
+  color: #0f172a;
+}
+
+.tcard-meta {
+  font-size: 13px;
+  color: #64748b;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tcard-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.gz-tempty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #64748b;
+}
+
+.gz-tempty .ic {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.gz-tempty h3 {
+  font: 700 20px var(--display);
+  color: #0f172a;
+  margin: 0 0 8px;
+}
+
+/* Trip View & Trip Dialogs */
+#tripView,
+#tripDlg {
+  border: 0;
+  border-radius: 18px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, .2);
+  width: min(600px, calc(100vw - 32px));
+  padding: 0;
+  background: #fff;
+}
+
+#tripView::backdrop,
+#tripDlg::backdrop {
+  background: rgba(15, 23, 42, .5);
+  backdrop-filter: blur(4px);
+}
+
+.dhead {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dhead h2,
+.dhead h3 {
+  margin: 0;
+  font: 700 18px var(--display);
+  color: #0f172a;
+}
+
+.dhead button {
+  border: 0;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.dfoot {
+  padding: 14px 20px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+#tvBody {
+  padding: 20px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+#tvDays {
+  display: grid;
+  gap: 14px;
+}
+
+.totals {
+  padding: 12px 20px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #334155;
+}

@@ -1,0 +1,1118 @@
+[
+    {
+        "id": 1,
+        "name": "Hồ Hoàn Kiếm & Đền Ngọc Sơn",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 30000,
+        "duration": 90,
+        "openingTime": "07:00",
+        "closingTime": "18:00",
+        "latitude": 21.0307,
+        "longitude": 105.8524,
+        "popularity": 0.99,
+        "tags": [
+            "culture",
+            "sightseeing"
+        ],
+        "address": "Đinh Tiên Hoàng, Hàng Trống, Hoàn Kiếm, Hà Nội"
+    },
+    {
+        "id": 2,
+        "name": "Chợ Đồng Xuân",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 100000,
+        "duration": 75,
+        "openingTime": "08:00",
+        "closingTime": "18:00",
+        "latitude": 21.0381,
+        "longitude": 105.8495,
+        "popularity": 0.9,
+        "tags": [
+            "food",
+            "culture"
+        ],
+        "address": "Đồng Xuân, Hoàn Kiếm, Hà Nội"
+    },
+    {
+        "id": 3,
+        "name": "Phố đi bộ Hồ Hoàn Kiếm & Phố cổ",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 120,
+        "openingTime": "00:00",
+        "closingTime": "23:59",
+        "latitude": 21.0338,
+        "longitude": 105.8515,
+        "popularity": 0.98,
+        "tags": [
+            "nightlife",
+            "sightseeing"
+        ],
+        "address": "Khu phố cổ, Hoàn Kiếm, Hà Nội"
+    },
+    {
+        "id": 4,
+        "name": "Kem Tràng Tiền",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 15000,
+        "duration": 30,
+        "openingTime": "08:00",
+        "closingTime": "22:00",
+        "latitude": 21.0247,
+        "longitude": 105.8555,
+        "popularity": 0.97,
+        "tags": [
+            "food"
+        ],
+        "address": "35 Tràng Tiền, Hoàn Kiếm, Hà Nội"
+    },
+    {
+        "id": 5,
+        "name": "Lăng Chủ tịch Hồ Chí Minh & Quảng trường Ba Đình",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 120,
+        "openingTime": "07:30",
+        "closingTime": "11:00",
+        "latitude": 21.0368,
+        "longitude": 105.8347,
+        "popularity": 0.99,
+        "tags": [
+            "culture",
+            "sightseeing"
+        ],
+        "address": "02 Hùng Vương, Điện Biên, Ba Đình, Hà Nội"
+    },
+    {
+        "id": 6,
+        "name": "Hoàng thành Thăng Long",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 100000,
+        "duration": 120,
+        "openingTime": "08:00",
+        "closingTime": "17:00",
+        "latitude": 21.0352,
+        "longitude": 105.8402,
+        "popularity": 0.92,
+        "tags": [
+            "culture",
+            "history"
+        ],
+        "address": "19C Hoàng Diệu, Điện Biên, Ba Đình, Hà Nội"
+    },
+    {
+        "id": 7,
+        "name": "Cột cờ Hà Nội",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 20000,
+        "duration": 45,
+        "openingTime": "09:00",
+        "closingTime": "17:00",
+        "latitude": 21.0325,
+        "longitude": 105.8399,
+        "popularity": 0.81,
+        "tags": [
+            "culture",
+            "history"
+        ],
+        "address": "28A Điện Biên Phủ, Điện Biên, Ba Đình, Hà Nội"
+    },
+    {
+        "id": 8,
+        "name": "Phủ Tây Hồ",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 75,
+        "openingTime": "06:00",
+        "closingTime": "19:00",
+        "latitude": 21.0583,
+        "longitude": 105.8183,
+        "popularity": 0.9,
+        "tags": [
+            "culture"
+        ],
+        "address": "52 Đặng Thai Mai, Quảng An, Tây Hồ, Hà Nội"
+    },
+    {
+        "id": 9,
+        "name": "Bánh tôm Hồ Tây",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 100000,
+        "duration": 60,
+        "openingTime": "09:00",
+        "closingTime": "22:00",
+        "latitude": 21.0468,
+        "longitude": 105.8374,
+        "popularity": 0.85,
+        "tags": [
+            "food"
+        ],
+        "address": "01 Thanh Niên, Yên Phụ, Tây Hồ, Hà Nội"
+    },
+    {
+        "id": 10,
+        "name": "Thung lũng hoa Hồ Tây",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 120000,
+        "duration": 90,
+        "openingTime": "07:00",
+        "closingTime": "22:00",
+        "latitude": 21.0734,
+        "longitude": 105.8185,
+        "popularity": 0.82,
+        "tags": [
+            "sightseeing",
+            "nature"
+        ],
+        "address": "Ngã 3 Nhật Chiêu, Nhật Tân, Tây Hồ, Hà Nội"
+    },
+    {
+        "id": 11,
+        "name": "Bãi đá sông Hồng",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 50000,
+        "duration": 90,
+        "openingTime": "06:00",
+        "closingTime": "19:00",
+        "latitude": 21.0772,
+        "longitude": 105.8335,
+        "popularity": 0.84,
+        "tags": [
+            "nature",
+            "sightseeing"
+        ],
+        "address": "Ngõ 264 Âu Cơ, Nhật Tân, Tây Hồ, Hà Nội"
+    },
+    {
+        "id": 12,
+        "name": "Đường ven Hồ Tây (Phố Trích Sài - Vệ Hồ)",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "05:00",
+        "closingTime": "23:00",
+        "latitude": 21.0552,
+        "longitude": 105.8142,
+        "popularity": 0.81,
+        "tags": [
+            "sightseeing"
+        ],
+        "address": "Đường Vệ Hồ, Xuân La, Tây Hồ, Hà Nội"
+    },
+    {
+        "id": 13,
+        "name": "Chùa Láng",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 45,
+        "openingTime": "06:00",
+        "closingTime": "18:00",
+        "latitude": 21.0247,
+        "longitude": 105.8021,
+        "popularity": 0.76,
+        "tags": [
+            "culture"
+        ],
+        "address": "116 Chùa Láng, Láng Thượng, Đống Đa, Hà Nội"
+    },
+    {
+        "id": 14,
+        "name": "Gò Đống Đa",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "07:00",
+        "closingTime": "17:30",
+        "latitude": 21.0124,
+        "longitude": 105.8235,
+        "popularity": 0.72,
+        "tags": [
+            "culture",
+            "history"
+        ],
+        "address": "Phố Tây Sơn, Quang Trung, Đống Đa, Hà Nội"
+    },
+    {
+        "id": 15,
+        "name": "Hồ Ba Mẫu",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 45,
+        "openingTime": "05:00",
+        "closingTime": "22:00",
+        "latitude": 21.0135,
+        "longitude": 105.8406,
+        "popularity": 0.68,
+        "tags": [
+            "nature"
+        ],
+        "address": "Phương Liên, Đống Đa, Hà Nội"
+    },
+    {
+        "id": 16,
+        "name": "Hồ Thiền Quang",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 45,
+        "openingTime": "06:00",
+        "closingTime": "22:00",
+        "latitude": 21.0185,
+        "longitude": 105.8458,
+        "popularity": 0.75,
+        "tags": [
+            "nature",
+            "sightseeing"
+        ],
+        "address": "Nguyễn Du, Hai Bà Trưng, Hà Nội"
+    },
+    {
+        "id": 17,
+        "name": "Hồ Bảy Mẫu",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "06:00",
+        "closingTime": "22:00",
+        "latitude": 21.0138,
+        "longitude": 105.8456,
+        "popularity": 0.78,
+        "tags": [
+            "nature",
+            "sightseeing"
+        ],
+        "address": "Công viên Thống Nhất, Lê Đại Hành, Hai Bà Trưng, Hà Nội"
+    },
+    {
+        "id": 18,
+        "name": "Chùa Quỳnh",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 45,
+        "openingTime": "06:00",
+        "closingTime": "18:00",
+        "latitude": 20.9998,
+        "longitude": 105.8546,
+        "popularity": 0.71,
+        "tags": [
+            "culture"
+        ],
+        "address": "Phố Chùa Quỳnh, Quỳnh Lôi, Hai Bà Trưng, Hà Nội"
+    },
+    {
+        "id": 19,
+        "name": "Bảo tàng Dân tộc học Việt Nam",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 40000,
+        "duration": 150,
+        "openingTime": "08:30",
+        "closingTime": "17:00",
+        "latitude": 21.0403,
+        "longitude": 105.7986,
+        "popularity": 0.88,
+        "tags": [
+            "culture"
+        ],
+        "address": "Đường Nguyễn Văn Huyên, Quan Hoa, Cầu Giấy, Hà Nội"
+    },
+    {
+        "id": 20,
+        "name": "Khu phố ẩm thực Chùa Hà",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 70000,
+        "duration": 60,
+        "openingTime": "10:00",
+        "closingTime": "22:00",
+        "latitude": 21.0365,
+        "longitude": 105.7932,
+        "popularity": 0.82,
+        "tags": [
+            "food"
+        ],
+        "address": "Phố Chùa Hà, Dịch Vọng, Cầu Giấy, Hà Nội"
+    },
+    {
+        "id": 21,
+        "name": "Chùa Hà (Linh Bảo Tự)",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "06:00",
+        "closingTime": "18:00",
+        "latitude": 21.0369,
+        "longitude": 105.7925,
+        "popularity": 0.9,
+        "tags": [
+            "culture"
+        ],
+        "address": "86 Chùa Hà, Dịch Vọng, Cầu Giấy, Hà Nội"
+    },
+    {
+        "id": 22,
+        "name": "Trung tâm thương mại Vincom Mega Mall Royal City",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 150000,
+        "duration": 120,
+        "openingTime": "09:30",
+        "closingTime": "22:00",
+        "latitude": 21.0031,
+        "longitude": 105.8148,
+        "popularity": 0.89,
+        "tags": [
+            "shopping",
+            "nightlife"
+        ],
+        "address": "72A Nguyễn Trãi, Thượng Đình, Thanh Xuân, Hà Nội"
+    },
+    {
+        "id": 23,
+        "name": "Làng lụa Vạn Phúc",
+        "city": "Ha Noi",
+        "zoneCode": "HN6",
+        "zoneName": "Khu vực Hà Đông",
+        "estimatedCost": 0,
+        "duration": 90,
+        "openingTime": "08:00",
+        "closingTime": "18:00",
+        "latitude": 20.9774,
+        "longitude": 105.7745,
+        "popularity": 0.83,
+        "tags": [
+            "culture",
+            "shopping"
+        ],
+        "address": "Phố Lụa, Vạn Phúc, Hà Đông, Hà Nội"
+    },
+    {
+        "id": 24,
+        "name": "Phố ẩm thực Triều Khúc",
+        "city": "Ha Noi",
+        "zoneCode": "HN6",
+        "zoneName": "Khu vực Hà Đông",
+        "estimatedCost": 60000,
+        "duration": 60,
+        "openingTime": "10:00",
+        "closingTime": "21:00",
+        "latitude": 20.9839,
+        "longitude": 105.7975,
+        "popularity": 0.7,
+        "tags": [
+            "food"
+        ],
+        "address": "Đường Triều Khúc, Tân Triều, Thanh Trì, Hà Nội"
+    },
+    {
+        "id": 25,
+        "name": "Chợ đêm Phùng Khoang",
+        "city": "Ha Noi",
+        "zoneCode": "HN6",
+        "zoneName": "Khu vực Hà Đông",
+        "estimatedCost": 50000,
+        "duration": 60,
+        "openingTime": "17:00",
+        "closingTime": "22:30",
+        "latitude": 20.9866,
+        "longitude": 105.7908,
+        "popularity": 0.72,
+        "tags": [
+            "shopping",
+            "food"
+        ],
+        "address": "Phố Phùng Khoang, Trung Văn, Nam Từ Liêm, Hà Nội"
+    },
+    {
+        "id": 26,
+        "name": "Công viên Thanh Xuân",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "05:00",
+        "closingTime": "22:00",
+        "latitude": 21.0029,
+        "longitude": 105.7985,
+        "popularity": 0.75,
+        "tags": [
+            "nature"
+        ],
+        "address": "Hoàng Minh Giám, Nhân Chính, Thanh Xuân, Hà Nội"
+    },
+    {
+        "id": 27,
+        "name": "Ao làng Phùng Khoang",
+        "city": "Ha Noi",
+        "zoneCode": "HN6",
+        "zoneName": "Khu vực Hà Đông",
+        "estimatedCost": 0,
+        "duration": 30,
+        "openingTime": "06:00",
+        "closingTime": "21:00",
+        "latitude": 20.9855,
+        "longitude": 105.7895,
+        "popularity": 0.68,
+        "tags": [
+            "sightseeing"
+        ],
+        "address": "Phùng Khoang, Trung Văn, Nam Từ Liêm, Hà Nội"
+    },
+    {
+        "id": 28,
+        "name": "Sân vận động Quốc gia Mỹ Đình",
+        "city": "Ha Noi",
+        "zoneCode": "HN6",
+        "zoneName": "Khu vực Hà Đông",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "08:00",
+        "closingTime": "21:00",
+        "latitude": 21.0205,
+        "longitude": 105.7636,
+        "popularity": 0.88,
+        "tags": [
+            "sightseeing",
+            "adventure"
+        ],
+        "address": "01 Lê Đức Thọ, Mỹ Đình 1, Nam Từ Liêm, Hà Nội"
+    },
+    {
+        "id": 29,
+        "name": "Cung Triển lãm Kiến trúc Quy hoạch Xây dựng Quốc gia",
+        "city": "Ha Noi",
+        "zoneCode": "HN6",
+        "zoneName": "Khu vực Hà Đông",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "08:00",
+        "closingTime": "17:00",
+        "latitude": 21.0055,
+        "longitude": 105.7848,
+        "popularity": 0.72,
+        "tags": [
+            "sightseeing"
+        ],
+        "address": "01 Đỗ Đức Dục, Mễ Trì, Nam Từ Liêm, Hà Nội"
+    },
+    {
+        "id": 30,
+        "name": "Đền Đại Mỗ",
+        "city": "Ha Noi",
+        "zoneCode": "HN6",
+        "zoneName": "Khu vực Hà Đông",
+        "estimatedCost": 0,
+        "duration": 45,
+        "openingTime": "07:00",
+        "closingTime": "17:30",
+        "latitude": 20.9922,
+        "longitude": 105.7645,
+        "popularity": 0.69,
+        "tags": [
+            "culture"
+        ],
+        "address": "Phường Đại Mỗ, Nam Từ Liêm, Hà Nội"
+    },
+    {
+        "id": 31,
+        "name": "Chợ Cầu Diễn",
+        "city": "Ha Noi",
+        "zoneCode": "HN6",
+        "zoneName": "Khu vực Hà Đông",
+        "estimatedCost": 50000,
+        "duration": 60,
+        "openingTime": "07:00",
+        "closingTime": "18:00",
+        "latitude": 21.0418,
+        "longitude": 105.7628,
+        "popularity": 0.71,
+        "tags": [
+            "food",
+            "shopping"
+        ],
+        "address": "Đường Hồ Tùng Mậu, Cầu Diễn, Nam Từ Liêm, Hà Nội"
+    },
+    {
+        "id": 32,
+        "name": "Làng gốm Bát Tràng",
+        "city": "Ha Noi",
+        "zoneCode": "HN5",
+        "zoneName": "Khu vực Vân Trì - Cổ Loa",
+        "estimatedCost": 50000,
+        "duration": 150,
+        "openingTime": "08:00",
+        "closingTime": "18:00",
+        "latitude": 20.9765,
+        "longitude": 105.9138,
+        "popularity": 0.91,
+        "tags": [
+            "culture",
+            "shopping"
+        ],
+        "address": "Xã Bát Tràng, Gia Lâm, Hà Nội"
+    },
+    {
+        "id": 33,
+        "name": "Công viên Yên Sở",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 150,
+        "openingTime": "06:00",
+        "closingTime": "19:00",
+        "latitude": 20.9648,
+        "longitude": 105.8562,
+        "popularity": 0.77,
+        "tags": [
+            "nature",
+            "sightseeing"
+        ],
+        "address": "Quốc lộ 1A, Yên Sở, Hoàng Mai, Hà Nội"
+    },
+    {
+        "id": 34,
+        "name": "Aeon Mall Long Biên",
+        "city": "Ha Noi",
+        "zoneCode": "HN5",
+        "zoneName": "Khu vực Vân Trì - Cổ Loa",
+        "estimatedCost": 200000,
+        "duration": 120,
+        "openingTime": "10:00",
+        "closingTime": "22:00",
+        "latitude": 21.0274,
+        "longitude": 105.8986,
+        "popularity": 0.92,
+        "tags": [
+            "shopping",
+            "food"
+        ],
+        "address": "27 Cổ Linh, Long Biên, Hà Nội"
+    },
+    {
+        "id": 35,
+        "name": "Khu đô thị Ecopark (giáp ranh Hà Nội)",
+        "city": "Ha Noi",
+        "zoneCode": "HN5",
+        "zoneName": "Khu vực Vân Trì - Cổ Loa",
+        "estimatedCost": 100000,
+        "duration": 180,
+        "openingTime": "07:00",
+        "closingTime": "22:00",
+        "latitude": 20.9602,
+        "longitude": 105.9328,
+        "popularity": 0.86,
+        "tags": [
+            "nature",
+            "sightseeing"
+        ],
+        "address": "Xuân Quan, Văn Giang, Hưng Yên (Giáp Bát Tràng, Gia Lâm, Hà Nội)"
+    },
+    {
+        "id": 36,
+        "name": "Đền Phù Đổng (Đền Gióng Gia Lâm)",
+        "city": "Ha Noi",
+        "zoneCode": "HN5",
+        "zoneName": "Khu vực Vân Trì - Cổ Loa",
+        "estimatedCost": 0,
+        "duration": 90,
+        "openingTime": "07:00",
+        "closingTime": "17:30",
+        "latitude": 21.0722,
+        "longitude": 105.9612,
+        "popularity": 0.75,
+        "tags": [
+            "culture",
+            "history"
+        ],
+        "address": "Xã Phù Đổng, Gia Lâm, Hà Nội"
+    },
+    {
+        "id": 37,
+        "name": "Vườn Quốc gia Ba Vì",
+        "city": "Ha Noi",
+        "zoneCode": "HN2",
+        "zoneName": "Khu vực Sơn Tây - Ba Vì",
+        "estimatedCost": 60000,
+        "duration": 360,
+        "openingTime": "06:00",
+        "closingTime": "18:00",
+        "latitude": 21.0811,
+        "longitude": 105.3675,
+        "popularity": 0.95,
+        "tags": [
+            "nature",
+            "adventure"
+        ],
+        "address": "Xã Tản Lĩnh, Ba Vì, Hà Nội"
+    },
+    {
+        "id": 38,
+        "name": "Làng cổ Đường Lâm",
+        "city": "Ha Noi",
+        "zoneCode": "HN2",
+        "zoneName": "Khu vực Sơn Tây - Ba Vì",
+        "estimatedCost": 20000,
+        "duration": 150,
+        "openingTime": "07:00",
+        "closingTime": "18:00",
+        "latitude": 21.1585,
+        "longitude": 105.4754,
+        "popularity": 0.88,
+        "tags": [
+            "culture",
+            "history"
+        ],
+        "address": "Xã Đường Lâm, Sơn Tây, Hà Nội"
+    },
+    {
+        "id": 39,
+        "name": "Khu di tích Đền Sóc",
+        "city": "Ha Noi",
+        "zoneCode": "HN4",
+        "zoneName": "Khu vực Đền Sóc - Hồ Đồng Quan",
+        "estimatedCost": 0,
+        "duration": 120,
+        "openingTime": "07:00",
+        "closingTime": "18:00",
+        "latitude": 21.2875,
+        "longitude": 105.8165,
+        "popularity": 0.82,
+        "tags": [
+            "culture",
+            "nature"
+        ],
+        "address": "Xã Phù Linh, Sóc Sơn, Hà Nội"
+    },
+    {
+        "id": 40,
+        "name": "Hồ Đồng Quan (Sóc Sơn)",
+        "city": "Ha Noi",
+        "zoneCode": "HN4",
+        "zoneName": "Khu vực Đền Sóc - Hồ Đồng Quan",
+        "estimatedCost": 50000,
+        "duration": 150,
+        "openingTime": "06:00",
+        "closingTime": "18:00",
+        "latitude": 21.2782,
+        "longitude": 105.8085,
+        "popularity": 0.78,
+        "tags": [
+            "nature",
+            "adventure"
+        ],
+        "address": "Xã Quang Tiến, Sóc Sơn, Hà Nội"
+    },
+    {
+        "id": 41,
+        "name": "Quần thể danh thắng Chùa Hương",
+        "city": "Ha Noi",
+        "zoneCode": "HN3",
+        "zoneName": "Khu vực Hương Sơn - Quan Sơn",
+        "estimatedCost": 200000,
+        "duration": 360,
+        "openingTime": "06:00",
+        "closingTime": "17:30",
+        "latitude": 20.6186,
+        "longitude": 105.7445,
+        "popularity": 0.98,
+        "tags": [
+            "culture",
+            "adventure",
+            "nature"
+        ],
+        "address": "Xã Hương Sơn, Mỹ Đức, Hà Nội"
+    },
+    {
+        "id": 42,
+        "name": "Việt Phủ Thành Chương",
+        "city": "Ha Noi",
+        "zoneCode": "HN4",
+        "zoneName": "Khu vực Đền Sóc - Hồ Đồng Quan",
+        "estimatedCost": 150000,
+        "duration": 120,
+        "openingTime": "09:00",
+        "closingTime": "17:00",
+        "latitude": 21.2712,
+        "longitude": 105.7768,
+        "popularity": 0.86,
+        "tags": [
+            "culture",
+            "sightseeing"
+        ],
+        "address": "Xã Hiền Ninh, Sóc Sơn, Hà Nội"
+    },
+    {
+        "id": 43,
+        "name": "Nhà hát Lớn Hà Nội",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 45,
+        "openingTime": "08:00",
+        "closingTime": "22:00",
+        "latitude": 21.0243,
+        "longitude": 105.8576,
+        "popularity": 0.85,
+        "tags": [
+            "culture",
+            "sightseeing"
+        ],
+        "address": "Số 1 Tràng Tiền, Phan Chu Trinh, Hoàn Kiếm, Hà Nội"
+    },
+    {
+        "id": 44,
+        "name": "Nhà thờ Lớn Hà Nội",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 45,
+        "openingTime": "08:00",
+        "closingTime": "21:00",
+        "latitude": 21.0288,
+        "longitude": 105.8489,
+        "popularity": 0.92,
+        "tags": [
+            "culture",
+            "sightseeing"
+        ],
+        "address": "Số 40 Nhà Chung, Hàng Trống, Hoàn Kiếm, Hà Nội"
+    },
+    {
+        "id": 45,
+        "name": "Vườn Bách Thảo Hà Nội",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 10000,
+        "duration": 60,
+        "openingTime": "05:00",
+        "closingTime": "22:00",
+        "latitude": 21.0412,
+        "longitude": 105.8315,
+        "popularity": 0.78,
+        "tags": [
+            "nature",
+            "sightseeing"
+        ],
+        "address": "Số 3 Hoàng Hoa Thám, Ngọc Hà, Ba Đình, Hà Nội"
+    },
+    {
+        "id": 46,
+        "name": "Đền Quán Thánh",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 10000,
+        "duration": 45,
+        "openingTime": "08:00",
+        "closingTime": "17:00",
+        "latitude": 21.0431,
+        "longitude": 105.8365,
+        "popularity": 0.8,
+        "tags": [
+            "culture"
+        ],
+        "address": "Đường Thanh Niên, Quán Thánh, Ba Đình, Hà Nội"
+    },
+    {
+        "id": 47,
+        "name": "Bảo tàng Mỹ thuật Việt Nam",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 40000,
+        "duration": 90,
+        "openingTime": "08:30",
+        "closingTime": "17:00",
+        "latitude": 21.0306,
+        "longitude": 105.8371,
+        "popularity": 0.83,
+        "tags": [
+            "culture"
+        ],
+        "address": "66 Nguyễn Thái Học, Điện Biên, Ba Đình, Hà Nội"
+    },
+    {
+        "id": 48,
+        "name": "Chùa Trấn Quốc",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "08:00",
+        "closingTime": "16:30",
+        "latitude": 21.0479,
+        "longitude": 105.8368,
+        "popularity": 0.94,
+        "tags": [
+            "culture",
+            "sightseeing"
+        ],
+        "address": "Số 46 Thanh Niên, Yên Phụ, Tây Hồ, Hà Nội"
+    },
+    {
+        "id": 49,
+        "name": "Văn Miếu - Quốc Tử Giám",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 70000,
+        "duration": 90,
+        "openingTime": "08:00",
+        "closingTime": "17:00",
+        "latitude": 21.0275,
+        "longitude": 105.8355,
+        "popularity": 0.98,
+        "tags": [
+            "culture",
+            "history"
+        ],
+        "address": "58 Quốc Tử Giám, Văn Miếu, Đống Đa, Hà Nội"
+    },
+    {
+        "id": 50,
+        "name": "Chùa Phúc Khánh",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 45,
+        "openingTime": "06:00",
+        "closingTime": "18:00",
+        "latitude": 21.0039,
+        "longitude": 105.8205,
+        "popularity": 0.85,
+        "tags": [
+            "culture"
+        ],
+        "address": "382 Tây Sơn, Thịnh Quang, Đống Đa, Hà Nội"
+    },
+    {
+        "id": 51,
+        "name": "Phố ẩm thực Tôn Thất Tùng",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 80000,
+        "duration": 60,
+        "openingTime": "15:00",
+        "closingTime": "22:30",
+        "latitude": 21.0052,
+        "longitude": 105.8306,
+        "popularity": 0.8,
+        "tags": [
+            "food"
+        ],
+        "address": "Phố Tôn Thất Tùng, Khương Thượng, Đống Đa, Hà Nội"
+    },
+    {
+        "id": 52,
+        "name": "Công viên Thống Nhất",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "06:00",
+        "closingTime": "22:00",
+        "latitude": 21.0156,
+        "longitude": 105.8442,
+        "popularity": 0.8,
+        "tags": [
+            "nature",
+            "sightseeing"
+        ],
+        "address": "354A Lê Duẩn, Phương Liên, Đống Đa, Hà Nội"
+    },
+    {
+        "id": 53,
+        "name": "Khu phố ăn vặt Ngõ Tự Do",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 70000,
+        "duration": 60,
+        "openingTime": "15:00",
+        "closingTime": "22:00",
+        "latitude": 20.9991,
+        "longitude": 105.8436,
+        "popularity": 0.79,
+        "tags": [
+            "food"
+        ],
+        "address": "Ngõ Tự Do, Đồng Tâm, Hai Bà Trưng, Hà Nội"
+    },
+    {
+        "id": 54,
+        "name": "Đền Hai Bà Trưng (Đồng Nhân)",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 45,
+        "openingTime": "07:00",
+        "closingTime": "17:30",
+        "latitude": 21.0116,
+        "longitude": 105.8576,
+        "popularity": 0.74,
+        "tags": [
+            "culture"
+        ],
+        "address": "12 Hương Viên, Đồng Nhân, Hai Bà Trưng, Hà Nội"
+    },
+    {
+        "id": 55,
+        "name": "Công viên Cầu Giấy",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "05:00",
+        "closingTime": "22:00",
+        "latitude": 21.0285,
+        "longitude": 105.7905,
+        "popularity": 0.78,
+        "tags": [
+            "nature"
+        ],
+        "address": "Phố Thành Thái, Dịch Vọng, Cầu Giấy, Hà Nội"
+    },
+    {
+        "id": 56,
+        "name": "Bảo tàng Thiên nhiên Việt Nam",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 75,
+        "openingTime": "08:30",
+        "closingTime": "16:30",
+        "latitude": 21.0454,
+        "longitude": 105.7995,
+        "popularity": 0.81,
+        "tags": [
+            "culture"
+        ],
+        "address": "18 Hoàng Quốc Việt, Nghĩa Đô, Cầu Giấy, Hà Nội"
+    },
+    {
+        "id": 57,
+        "name": "Công viên Nghĩa Đô",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 60,
+        "openingTime": "05:00",
+        "closingTime": "22:00",
+        "latitude": 21.0416,
+        "longitude": 105.7954,
+        "popularity": 0.76,
+        "tags": [
+            "nature"
+        ],
+        "address": "Đường Nguyễn Văn Huyên, Dịch Vọng, Cầu Giấy, Hà Nội"
+    },
+    {
+        "id": 58,
+        "name": "Bảo tàng Hà Nội",
+        "city": "Ha Noi",
+        "zoneCode": "HN6",
+        "zoneName": "Khu vực Hà Đông",
+        "estimatedCost": 30000,
+        "duration": 120,
+        "openingTime": "08:00",
+        "closingTime": "17:00",
+        "latitude": 21.0068,
+        "longitude": 105.7842,
+        "popularity": 0.8,
+        "tags": [
+            "culture"
+        ],
+        "address": "Đường Phạm Hùng, Mễ Trì, Nam Từ Liêm, Hà Nội"
+    },
+    {
+        "id": 59,
+        "name": "Khu phố Hàn Quốc Mỹ Đình (The Manor / Mễ Trì)",
+        "city": "Ha Noi",
+        "zoneCode": "HN6",
+        "zoneName": "Khu vực Hà Đông",
+        "estimatedCost": 150000,
+        "duration": 90,
+        "openingTime": "10:00",
+        "closingTime": "22:00",
+        "latitude": 21.0145,
+        "longitude": 105.7772,
+        "popularity": 0.85,
+        "tags": [
+            "food",
+            "shopping"
+        ],
+        "address": "Khu đô thị Mỹ Đình - Mễ Trì, Nam Từ Liêm, Hà Nội"
+    },
+    {
+        "id": 60,
+        "name": "Cầu Long Biên & Bãi giữa sông Hồng",
+        "city": "Ha Noi",
+        "zoneCode": "HN1",
+        "zoneName": "Trung tâm Hà Nội",
+        "estimatedCost": 0,
+        "duration": 90,
+        "openingTime": "06:00",
+        "closingTime": "18:00",
+        "latitude": 21.0435,
+        "longitude": 105.8588,
+        "popularity": 0.88,
+        "tags": [
+            "sightseeing",
+            "history"
+        ],
+        "address": "Cầu Long Biên, Phúc Xá, Ba Đình / Ngọc Thụy, Long Biên, Hà Nội"
+    }
+]

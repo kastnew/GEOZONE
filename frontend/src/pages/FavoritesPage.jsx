@@ -2,6 +2,7 @@ import React from 'react';
 import '../styles/Favorites.css';
 import FavoriteCard from '../components/favorites/FavoriteCard';
 import { CITIES } from '../data/mockData';
+import { Heart } from 'lucide-react';
 
 export default function FavoritesPage({
   favorites = [],
@@ -37,7 +38,7 @@ export default function FavoritesPage({
         className="gz-pb"
         id="gzFavHero"
         data-k="hue"
-        style={{ backgroundImage: "url('/images/heroes/hue.jpg')" }}
+        style={{ '--gz-hero-image': "url('/images/heroes/hue.jpg')" }}
       >
         <div className="gz-wrap">
           <h1>Địa điểm đã lưu</h1>
@@ -66,8 +67,8 @@ export default function FavoritesPage({
                 type="button"
                 className="gz-btn ghost"
                 style={{
-                  borderColor: '#93c5fd',
-                  color: '#1e40af',
+                  borderColor: 'var(--gz-color-primary)',
+                  color: 'var(--gz-color-primary-pressed)',
                   padding: '6px 12px',
                   fontSize: '13px',
                   marginTop: '6px'
@@ -138,10 +139,10 @@ export default function FavoritesPage({
           ) : (
             /* Empty State */
             <div className="gz-tempty" id="fvEmpty">
-              <div className="ic">♡</div>
+              <div className="ic"><Heart size={32} strokeWidth={1.75} aria-hidden="true" /></div>
               <h3>Chưa có địa điểm yêu thích</h3>
               <p>
-                Bấm biểu tượng <b>♡</b> trên các thẻ địa điểm ở mục Khám phá để
+                Bấm biểu tượng yêu thích trên các thẻ địa điểm ở mục Khám phá để
                 lưu lại và xem nhanh tại đây.
               </p>
               <a

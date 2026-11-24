@@ -1,4 +1,5 @@
 import React from 'react';
+import { Map, UserRound } from 'lucide-react';
 
 export const Header = ({
   activeTab,
@@ -16,7 +17,7 @@ export const Header = ({
             onClick={() => onTabChange('planner')}
             className="flex items-center space-x-3 cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold text-xl shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-[var(--gz-color-primary)] flex items-center justify-center text-white font-bold text-xl shadow-md">
               GZ
             </div>
             <div>
@@ -37,7 +38,7 @@ export const Header = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
-              <span>🗺️</span>
+              <Map size={15} strokeWidth={1.75} aria-hidden="true" />
               <span>Lập lịch trình</span>
             </button>
 
@@ -55,7 +56,7 @@ export const Header = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
-              <span>🧳</span>
+              <Map size={15} strokeWidth={1.75} aria-hidden="true" />
               <span>Chuyến đi của tôi</span>
             </button>
           </nav>
@@ -94,7 +95,7 @@ export const Header = ({
               onClick={onOpenAuthModal}
               className="px-3.5 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-xs cursor-pointer flex items-center space-x-1"
             >
-              <span>👤</span>
+              <UserRound size={15} strokeWidth={1.75} aria-hidden="true" />
               <span>Đăng nhập / Đăng ký</span>
             </button>
           )}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Map } from 'lucide-react';
 
 export const ZoneMapView = ({ plan }) => {
   return (
@@ -14,7 +15,7 @@ export const ZoneMapView = ({ plan }) => {
 
       {/* Placeholder bản đồ trực quan */}
       <div className="h-64 bg-slate-100 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-slate-400 p-4 text-center">
-        <span className="text-3xl mb-2">🗺️</span>
+        <Map className="text-3xl mb-2" size={30} strokeWidth={1.75} aria-hidden="true" />
         <p className="text-xs font-medium text-slate-600">Bản đồ trực quan hóa các Zone đã phân bổ</p>
         <p className="text-[11px] text-slate-400 mt-1">
           (Tích hợp Leaflet / Mapbox theo tọa độ lat/lng của từng địa điểm trong ngày)

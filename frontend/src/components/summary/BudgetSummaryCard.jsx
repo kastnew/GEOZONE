@@ -1,4 +1,5 @@
 import React from 'react';
+import { Check, TriangleAlert } from 'lucide-react';
 
 export const BudgetSummaryCard = ({ plan }) => {
   const formatVnd = (val) => {
@@ -27,9 +28,9 @@ export const BudgetSummaryCard = ({ plan }) => {
 
       <div className={`p-3 rounded-xl text-xs font-semibold ${isOverBudget ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`}>
         {isOverBudget ? (
-          <span>⚠️ Vượt ngân sách: {formatVnd(Math.abs(remaining))}</span>
+          <span><TriangleAlert size={14} strokeWidth={1.75} aria-hidden="true" /> Vượt ngân sách: {formatVnd(Math.abs(remaining))}</span>
         ) : (
-          <span>✅ Tiết kiệm dự kiến: {formatVnd(remaining)} (Hoàn toàn nằm trong ngân sách)</span>
+          <span><Check size={14} strokeWidth={1.75} aria-hidden="true" /> Tiết kiệm dự kiến: {formatVnd(remaining)} (Hoàn toàn nằm trong ngân sách)</span>
         )}
       </div>
     </div>

@@ -3,6 +3,17 @@ import L from 'leaflet';
 import '../../styles/leaflet.css';
 import { formatVND } from '../../data/mockData';
 
+const hasCoordinates = (place) => (
+  place.latitude !== null
+  && place.latitude !== undefined
+  && place.latitude !== ''
+  && place.longitude !== null
+  && place.longitude !== undefined
+  && place.longitude !== ''
+  && Number.isFinite(Number(place.latitude))
+  && Number.isFinite(Number(place.longitude))
+);
+
 export default function ExploreMap({
   cityConfig,
   places = [],
@@ -19,7 +30,8 @@ export default function ExploreMap({
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-    const center = cityConfig?.center || [16.4637, 107.5909];
+    const center = cityConfig?.center
+      || (cityConfig?.key === 'danang' ? [16.0544, 108.2022] : [16.4637, 107.5909]);
     const map = L.map(mapContainerRef.current, {
       center,
       zoom: 12,
@@ -62,8 +74,10 @@ export default function ExploreMap({
 
   // 2. Fly to city when cityConfig changes
   useEffect(() => {
-    if (!mapInstanceRef.current || !cityConfig?.center) return;
-    mapInstanceRef.current.flyTo(cityConfig.center, 12, { duration: 1.2 });
+    if (!mapInstanceRef.current) return;
+    const center = cityConfig?.center
+      || (cityConfig?.key === 'danang' ? [16.0544, 108.2022] : [16.4637, 107.5909]);
+    mapInstanceRef.current.flyTo(center, 12, { duration: 1.2 });
   }, [cityConfig]);
 
   // 3. Render Place Markers
@@ -72,16 +86,18 @@ export default function ExploreMap({
 
     markersLayerRef.current.clearLayers();
 
-    const accentColor = cityConfig?.accent || '#6a4a9c';
+    const rootStyles = getComputedStyle(document.documentElement);
+    const accentColor = rootStyles.getPropertyValue('--gz-color-primary').trim() || '#0b6e8e';
+    const selectedColor = rootStyles.getPropertyValue('--gz-color-primary-pressed').trim() || accentColor;
 
     places.forEach((place) => {
-      if (!place.latitude || !place.longitude) return;
+      if (!hasCoordinates(place)) return;
 
       const isSelected = selectedPlace && selectedPlace.id === place.id;
       const inCart = cartItems.some((c) => c.id === place.id);
 
       // Custom SVG Pin Icon
-      const pinColor = isSelected ? '#e11d48' : inCart ? '#2563eb' : accentColor;
+      const pinColor = isSelected ? selectedColor : accentColor;
       const pinHtml = `
         <div style="
           width: 28px;
@@ -120,14 +136,14 @@ export default function ExploreMap({
       });
 
       const popupContent = document.createElement('div');
-      popupContent.style.fontFamily = 'system-ui, sans-serif';
+      popupContent.style.fontFamily = getComputedStyle(document.body).fontFamily;
       popupContent.style.padding = '4px';
       popupContent.innerHTML = `
         <strong style="font-size:14px; color:#0f172a; display:block; margin-bottom:4px;">${place.name}</strong>
         <div style="font-size:12px; color:#64748b; margin-bottom:4px;">${place.zoneName || ''}</div>
-        <div style="font-size:12px; font-weight:600; color:#16a34a; margin-bottom:8px;">${formatVND(place.estimatedCost ?? place.cost ?? 0)}</div>
+        <div style="font-size:12px; font-weight:600; color:${accentColor}; margin-bottom:8px;">${formatVND(place.estimatedCost ?? place.cost ?? 0)}</div>
         <button id="pop-add-${place.id}" style="
-          background:#2563eb; color:#fff; border:0; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:600; cursor:pointer; width:100%;
+          background:${accentColor}; color:#fff; border:0; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:600; cursor:pointer; width:100%;
         ">
           ${inCart ? 'Bỏ chọn khỏi lịch trình' : '+ Thêm vào lịch trình'}
         </button>
@@ -152,11 +168,39 @@ export default function ExploreMap({
     });
   }, [places, selectedPlace, cartItems, cityConfig, onSelectPlace, onToggleCart]);
 
+  // Keep the viewport centered on the current city and visible filtered places.
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    const coordinates = places
+      .filter(hasCoordinates)
+      .map((place) => [Number(place.latitude), Number(place.longitude)]);
+
+    if (coordinates.length > 1) {
+      map.fitBounds(L.latLngBounds(coordinates), {
+        padding: [28, 28],
+        maxZoom: 14
+      });
+    } else if (coordinates.length === 1) {
+      map.setView(coordinates[0], 14, { animate: true });
+    } else {
+      const center = cityConfig?.center
+        || (cityConfig?.key === 'danang' ? [16.0544, 108.2022] : [16.4637, 107.5909]);
+      map.setView(center, 12, { animate: true });
+    }
+  }, [places, cityConfig]);
+
   // 4. Focus on selected place
   useEffect(() => {
-    if (!mapInstanceRef.current || !selectedPlace?.latitude || !selectedPlace?.longitude) return;
+    if (
+      !mapInstanceRef.current
+      || !selectedPlace
+      || !places.some((place) => place.id === selectedPlace.id)
+      || !hasCoordinates(selectedPlace)
+    ) return;
     mapInstanceRef.current.setView([selectedPlace.latitude, selectedPlace.longitude], 14, { animate: true });
-  }, [selectedPlace]);
+  }, [selectedPlace, places]);
 
   return (
     <section className="mapwrap" aria-label="Bản đồ tương tác">

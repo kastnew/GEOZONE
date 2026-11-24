@@ -8,9 +8,22 @@ export const TripInputForm = ({ onSubmit, isLoading }) => {
   const [budget, setBudget] = useState(1500000);
   const [tags, setTags] = useState(['food', 'beach', 'culture']);
   const [enableRag, setEnableRag] = useState(false);
+  const [validationError, setValidationError] = useState('');
+  const [isShaking, setIsShaking] = useState(false);
+  const formatVnd = (value) => new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  }).format(value);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (days < 1 || budget < 500000) {
+      setValidationError('Vui lòng chọn số ngày và ngân sách hợp lệ.');
+      setIsShaking(true);
+      window.setTimeout(() => setIsShaking(false), 320);
+      return;
+    }
+    setValidationError('');
     onSubmit({
       city: 'Da Nang',
       days,
@@ -21,7 +34,7 @@ export const TripInputForm = ({ onSubmit, isLoading }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+    <form onSubmit={handleSubmit} className={`gz-trip-form bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6 ${isShaking ? 'is-shaking' : ''}`}>
       <div className="border-b border-slate-100 pb-4">
         <h2 className="text-lg font-bold text-slate-800">Thiết lập chuyến đi</h2>
         <p className="text-xs text-slate-500 mt-1">
@@ -59,7 +72,45 @@ export const TripInputForm = ({ onSubmit, isLoading }) => {
         </div>
       </div>
 
+      <div className="gz-quick-presets" aria-label="Thiết lập nhanh">
+        <div>
+          <span className="gz-preset-label">Ngân sách nhanh</span>
+          <div className="gz-preset-list">
+            {[1500000, 3000000, 5000000].map((value) => (
+              <button
+                type="button"
+                key={value}
+                className={budget === value ? 'is-active' : ''}
+                aria-pressed={budget === value}
+                onClick={() => setBudget(value)}
+              >
+                {formatVnd(value)}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <span className="gz-preset-label">Thời lượng nhanh</span>
+          <div className="gz-preset-list">
+            {[2, 3, 4].map((value) => (
+              <button
+                type="button"
+                key={value}
+                className={days === value ? 'is-active' : ''}
+                aria-pressed={days === value}
+                onClick={() => setDays(value)}
+              >
+                {value} ngày
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <BudgetSlider budget={budget} onChange={setBudget} />
+      <p className="gz-budget-preview" aria-live="polite">
+        Ngân sách hiện tại: <strong>{formatVnd(budget)}</strong>
+      </p>
 
       <TagSelector selectedTags={tags} onChange={setTags} />
 
@@ -97,6 +148,7 @@ export const TripInputForm = ({ onSubmit, isLoading }) => {
       >
         {isLoading ? 'Đang phân tích và lập lịch...' : 'Tạo lịch trình tối ưu'}
       </button>
+      {validationError && <p className="gz-inline-error" role="alert">{validationError}</p>}
     </form>
   );
 };

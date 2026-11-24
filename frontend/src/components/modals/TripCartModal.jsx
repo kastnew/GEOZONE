@@ -1,6 +1,7 @@
 import React from 'react';
 import '../../styles/Trips.css';
 import { formatVND, formatDuration } from '../../data/mockData';
+import { Copy, Trash2, X } from 'lucide-react';
 
 export default function TripCartModal({
   isOpen = false,
@@ -45,7 +46,7 @@ export default function TripCartModal({
             aria-label="Đóng"
             onClick={onClose}
           >
-            ✕
+            <X size={18} strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
 
@@ -113,7 +114,7 @@ export default function TripCartModal({
             onClick={onClearTrip}
             disabled={cartItems.length === 0}
           >
-            Xóa tất cả
+            <><Trash2 size={14} strokeWidth={1.75} aria-hidden="true" /> Xóa tất cả</>
           </button>
           <button
             type="button"
@@ -122,7 +123,7 @@ export default function TripCartModal({
             onClick={onCopyTrip}
             disabled={cartItems.length === 0}
           >
-            Sao chép
+            <><Copy size={14} strokeWidth={1.75} aria-hidden="true" /> Sao chép</>
           </button>
           <button
             type="button"

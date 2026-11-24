@@ -4,7 +4,7 @@
 
 .gz-about {
   background: #fff;
-  padding: 60px 0 100px;
+  padding: 0 0 88px;
 }
 
 .gz-about .gz-wrap {
@@ -13,43 +13,59 @@
   padding: 0 24px;
 }
 
-.gz-pb {
-  padding-bottom: 40px;
-  border-bottom: 1px solid #f1f5f9;
-  margin-bottom: 48px;
+.gz-about .gz-pb {
+  margin: 0;
+  padding-bottom: 28px;
+  border: 0;
 }
 
-.gz-crumb {
+.gz-about .gz-crumb {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 13.5px;
-  color: #64748b;
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
 
-.gz-crumb a {
-  color: #64748b;
+.gz-about .gz-crumb a {
+  color: rgba(255, 255, 255, .85);
   text-decoration: none;
 }
 
-.gz-crumb a:hover {
-  color: var(--accent);
+.gz-about .gz-crumb a:hover {
+  color: #fff;
 }
 
-.gz-intro h1 {
-  font: 800 clamp(28px, 4vw, 42px)/1.2 var(--display);
-  color: #0f172a;
-  margin: 0 0 16px;
+.gz-intro {
+  padding: 52px 0 0;
+}
+
+.gz-intro h2 {
+  color: var(--gz-color-ink);
+  font: 700 clamp(28px, 3vw, 32px)/1.2 var(--gz-font-display);
+  letter-spacing: -.02em;
+  margin: 0 0 20px;
+}
+
+.gz-eyebrow {
+  margin: 0 0 10px !important;
+  color: var(--gz-color-primary) !important;
+  font-size: 12px !important;
+  font-weight: 700;
+  letter-spacing: .12em;
   letter-spacing: -.02em;
 }
 
 .gz-intro p {
-  font-size: 17px;
-  color: #475569;
+  font-size: 16px;
+  color: var(--gz-color-ink-secondary);
   max-width: 720px;
   line-height: 1.65;
   margin: 0;
+}
+
+.gz-intro > .gz-wrap > .gz-split > div:first-child > p:not(.gz-eyebrow) {
+  margin-bottom: 14px;
 }
 
 .gz-split {
@@ -61,30 +77,33 @@
 
 .gz-feats {
   display: grid;
-  gap: 28px;
+  gap: 12px;
 }
 
 .gz-f {
   display: flex;
-  gap: 18px;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--gz-color-line);
+  border-radius: var(--gz-radius-lg);
+  background: var(--gz-color-surface);
 }
 
-.gz-f i {
+.gz-f-icon {
   flex: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: #f1f5f9;
-  color: var(--accent);
+  width: 42px;
+  height: 42px;
+  border-radius: var(--gz-radius-md);
+  background: var(--gz-color-primary-soft);
+  color: var(--gz-color-primary);
   display: grid;
   place-items: center;
-  font-size: 20px;
-  font-style: normal;
 }
 
 .gz-f h3 {
-  font: 700 18px var(--display);
-  color: #0f172a;
+  font: 700 16px var(--gz-font-display);
+  color: var(--gz-color-ink);
   margin: 0 0 6px;
 }
 

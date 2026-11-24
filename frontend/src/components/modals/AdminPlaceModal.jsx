@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../../styles/AdminModal.css';
 import { TAGS } from '../../data/mockData';
+import { X } from 'lucide-react';
 
 export default function AdminPlaceModal({
   isOpen = false,
@@ -122,7 +123,7 @@ export default function AdminPlaceModal({
             aria-label="Đóng"
             onClick={onClose}
           >
-            ✕
+            <X size={18} strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
 

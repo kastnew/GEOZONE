@@ -1,5 +1,6 @@
 import React from 'react';
 import { CITIES } from '../../data/mockData';
+import { CalendarDays, Compass, MapPin } from 'lucide-react';
 
 export default function ExploreTopBar({
   mode = 'explore',
@@ -22,7 +23,11 @@ export default function ExploreTopBar({
           aria-pressed={mode === 'explore'}
           onClick={() => onSelectMode('explore')}
         >
-          Khám phá
+          <Compass size={17} strokeWidth={1.75} aria-hidden="true" />
+          <span className="mode-copy">
+            <strong>Khám phá</strong>
+            <small>Tìm điểm đến</small>
+          </span>
         </button>
         <button
           type="button"
@@ -31,7 +36,11 @@ export default function ExploreTopBar({
           aria-pressed={mode === 'planner'}
           onClick={() => onSelectMode('planner')}
         >
-          Lập lịch
+          <CalendarDays size={17} strokeWidth={1.75} aria-hidden="true" />
+          <span className="mode-copy">
+            <strong>Lập lịch</strong>
+            <small>Tối ưu hành trình</small>
+          </span>
         </button>
       </div>
 
@@ -44,10 +53,14 @@ export default function ExploreTopBar({
 
         <div className="infobar">
           <label className="cityfield">
-            Điểm đến{' '}
+            <span className="cityfield-label">
+              <MapPin size={15} strokeWidth={1.75} aria-hidden="true" />
+              <span>Điểm đến</span>
+            </span>
             <select
               id="citySel"
               value={selectedCity}
+              aria-label="Chọn thành phố"
               onChange={(e) => onSelectCity(e.target.value)}
             >
               {Object.entries(CITIES).map(([key, config]) => (

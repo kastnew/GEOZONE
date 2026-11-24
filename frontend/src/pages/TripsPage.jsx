@@ -6,6 +6,7 @@ import { Compass } from 'lucide-react';
 
 export default function TripsPage({
   trips = [],
+  isLoading = false,
   isLoggedIn = false,
   onOpenAuth = () => {},
   onViewTrip = () => {},
@@ -76,7 +77,11 @@ export default function TripsPage({
           )}
 
           {/* Trips Grid */}
-          {hasTrips ? (
+          {isLoading ? (
+            <div className="gz-tempty" role="status" aria-live="polite">
+              <p>Đang tải chuyến đi của bạn…</p>
+            </div>
+          ) : hasTrips ? (
             <div className="gz-tgrid" id="gzTgrid">
               {trips.map((trip) => (
                 <TripCard

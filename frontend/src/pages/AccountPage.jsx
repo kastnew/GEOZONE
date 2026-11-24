@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/Account.css';
+import AdminConfirmModal from '../components/admin/AdminConfirmModal.jsx';
 
 export default function AccountPage({
   user = null,
@@ -11,9 +12,24 @@ export default function AccountPage({
   onNavigate = () => {},
   onOpenAuth = () => {}
 }) {
+  const [pendingAction, setPendingAction] = useState(null);
+  const [isConfirmBusy, setIsConfirmBusy] = useState(false);
+
   const getInitial = (name) => {
     if (!name) return 'GZ';
     return name.trim().charAt(0).toUpperCase();
+  };
+
+  const confirmPendingAction = async () => {
+    if (!pendingAction || isConfirmBusy) return;
+    setIsConfirmBusy(true);
+    try {
+      const succeeded = await pendingAction.action();
+      if (succeeded !== false) pendingAction.onSuccess?.();
+    } finally {
+      setIsConfirmBusy(false);
+      setPendingAction(null);
+    }
   };
 
   return (
@@ -87,7 +103,16 @@ export default function AccountPage({
                 Xóa toàn bộ dữ liệu lưu trữ cục bộ trên trình duyệt này hoặc xóa
                 tài khoản vĩnh viễn. Hành động này không thể hoàn tác.
               </p>
-              <button type="button" id="acDel" onClick={onDeleteAccount}>
+              <button
+                type="button"
+                id="acDel"
+                onClick={() => setPendingAction({
+                  title: 'Xóa dữ liệu và tài khoản?',
+                  message: 'Thao tác này có thể xóa vĩnh viễn dữ liệu tài khoản và không thể hoàn tác.',
+                  confirmLabel: 'Xóa tài khoản',
+                  action: onDeleteAccount
+                })}
+              >
                 Xóa dữ liệu &amp; Tài khoản
               </button>
             </div>
@@ -101,9 +126,15 @@ export default function AccountPage({
                 onSubmit={(e) => {
                   e.preventDefault();
                   const form = e.target;
-                  onUpdateProfile({
-                    name: form.name.value,
-                    email: form.email.value
+                  const profileData = {
+                    name: form.name.value.trim(),
+                    email: form.email.value.trim()
+                  };
+                  setPendingAction({
+                    title: 'Lưu thay đổi thông tin?',
+                    message: 'Tên và thông tin tài khoản sẽ được cập nhật theo nội dung bạn vừa nhập.',
+                    confirmLabel: 'Lưu thay đổi',
+                    action: () => onUpdateProfile(profileData)
                   });
                 }}
               >
@@ -141,12 +172,18 @@ export default function AccountPage({
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  const form = e.target;
-                  onChangePassword({
+                  const form = e.currentTarget;
+                  const passwordData = {
                     oldPassword: form.oldPassword.value,
                     newPassword: form.newPassword.value
+                  };
+                  setPendingAction({
+                    title: 'Đổi mật khẩu?',
+                    message: 'Bạn sẽ cần sử dụng mật khẩu mới trong những lần đăng nhập tiếp theo.',
+                    confirmLabel: 'Đổi mật khẩu',
+                    action: () => onChangePassword(passwordData),
+                    onSuccess: () => form.reset()
                   });
-                  form.reset();
                 }}
               >
                 <div style={{ display: 'grid', gap: '12px' }}>
@@ -187,6 +224,18 @@ export default function AccountPage({
           </div>
         </div>
       </div>
+      {pendingAction && (
+        <AdminConfirmModal
+          title={pendingAction.title}
+          message={pendingAction.message}
+          confirmLabel={pendingAction.confirmLabel}
+          isBusy={isConfirmBusy}
+          onCancel={() => {
+            if (!isConfirmBusy) setPendingAction(null);
+          }}
+          onConfirm={confirmPendingAction}
+        />
+      )}
     </section>
   );
 }

@@ -8,8 +8,12 @@ import ExploreMap from '../components/explore/ExploreMap';
 import PlannerSidebar from '../components/planner/PlannerSidebar';
 import PlannerResults from '../components/planner/PlannerResults';
 import SwapModal from '../components/planner/SwapModal';
-import { CITIES, getPlacesByCity, getCityZones } from '../data/mockData';
-import { generateItineraryApi, swapPlaceApi } from '../services/api';
+import { CITIES, getCityZones } from '../data/mockData';
+import { generateItineraryApi, getPlacesApi, swapPlaceApi } from '../services/api';
+
+function getDisplayZoneCode(code) {
+  return String(code || '').replace(/^(?:HUE|NINHBINH)-/i, '');
+}
 
 export default function ExplorePage({
   mode = 'explore',
@@ -40,6 +44,10 @@ export default function ExplorePage({
   const [isOpenOnly, setIsOpenOnly] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [mobileView, setMobileView] = useState('list'); // 'list' | 'map'
+  const [cityPlaces, setCityPlaces] = useState([]);
+  const [isLoadingPlaces, setIsLoadingPlaces] = useState(true);
+  const [placesError, setPlacesError] = useState('');
+  const [placesReloadKey, setPlacesReloadKey] = useState(0);
 
   // Planner parameters
   const [daysCount, setDaysCount] = useState(2);
@@ -64,9 +72,40 @@ export default function ExplorePage({
   });
   const [isSwapping, setIsSwapping] = useState(false);
 
-  const cityPlaces = getPlacesByCity(selectedCity);
   const cityZones = getCityZones(selectedCity);
   const cityConfig = CITIES[selectedCity] || CITIES.hue;
+
+  useEffect(() => {
+    let active = true;
+    setIsLoadingPlaces(true);
+    setPlacesError('');
+    setCityPlaces([]);
+    setSelectedPlace(null);
+
+    getPlacesApi({ city: cityConfig.api }).then((places) => {
+      if (!active) return;
+      if (!Array.isArray(places)) throw new Error('Dữ liệu địa điểm từ máy chủ không hợp lệ.');
+      setCityPlaces(places.map((place) => ({
+        ...place,
+        id: Number(place.id),
+        city: selectedCity,
+        zoneDbCode: place.zoneCode,
+        zoneCode: getDisplayZoneCode(place.zoneCode),
+        estimatedCost: Number(place.estimatedCost ?? 0),
+        tags: Array.isArray(place.tags) ? place.tags : []
+      })));
+    }).catch((error) => {
+      if (!active) return;
+      setPlacesError(error.message || 'Không thể tải địa điểm từ máy chủ.');
+      setCityPlaces([]);
+    }).finally(() => {
+      if (active) setIsLoadingPlaces(false);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [selectedCity, cityConfig.api, placesReloadKey]);
 
   // Filter place cards
   const filteredPlaces = useMemo(() => {
@@ -131,6 +170,8 @@ export default function ExplorePage({
 
   const handleCityChange = (cityKey) => {
     setSelectedPlace(null);
+    setSelectedZone('');
+    setSelectedTags([]);
     onSelectCity(cityKey);
   };
 
@@ -188,7 +229,7 @@ export default function ExplorePage({
         currentPlaceId: swapState.place.id,
         newPlaceId: newPlace.id,
         dayNumber: swapState.dayIndex + 1,
-        zoneCode: swapState.place.zoneCode,
+        zoneCode: swapState.place.zoneDbCode || swapState.place.zoneCode,
         city: selectedCity
       });
 
@@ -301,7 +342,18 @@ export default function ExplorePage({
           />
 
           <div className="cards" id="list">
-            {filteredPlaces.length > 0 ? (
+            {isLoadingPlaces ? (
+              <div className="gz-empty-state" role="status" aria-live="polite">
+                <p>Đang tải địa điểm từ cơ sở dữ liệu…</p>
+              </div>
+            ) : placesError ? (
+              <div className="gz-empty-state" role="alert">
+                <p>{placesError}</p>
+                <button type="button" onClick={() => setPlacesReloadKey((value) => value + 1)}>
+                  Thử tải lại
+                </button>
+              </div>
+            ) : filteredPlaces.length > 0 ? (
               filteredPlaces.map((place) => (
                 <PlaceCard
                   key={place.id}

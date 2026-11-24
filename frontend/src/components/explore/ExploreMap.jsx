@@ -35,7 +35,10 @@ export default function ExploreMap({
     const map = L.map(mapContainerRef.current, {
       center,
       zoom: 12,
-      zoomControl: true
+      zoomControl: true,
+      zoomAnimation: false,
+      fadeAnimation: false,
+      markerZoomAnimation: false
     });
 
     // OpenStreetMap Tile Layer
@@ -67,8 +70,12 @@ export default function ExploreMap({
     mapInstanceRef.current = map;
 
     return () => {
+      map.stop();
       map.remove();
-      mapInstanceRef.current = null;
+      if (mapInstanceRef.current === map) {
+        mapInstanceRef.current = null;
+        markersLayerRef.current = null;
+      }
     };
   }, []);
 
@@ -77,7 +84,7 @@ export default function ExploreMap({
     if (!mapInstanceRef.current) return;
     const center = cityConfig?.center
       || (cityConfig?.key === 'danang' ? [16.0544, 108.2022] : [16.4637, 107.5909]);
-    mapInstanceRef.current.flyTo(center, 12, { duration: 1.2 });
+    mapInstanceRef.current.setView(center, 12, { animate: false });
   }, [cityConfig]);
 
   // 3. Render Place Markers
@@ -180,14 +187,15 @@ export default function ExploreMap({
     if (coordinates.length > 1) {
       map.fitBounds(L.latLngBounds(coordinates), {
         padding: [28, 28],
-        maxZoom: 14
+        maxZoom: 14,
+        animate: false
       });
     } else if (coordinates.length === 1) {
-      map.setView(coordinates[0], 14, { animate: true });
+      map.setView(coordinates[0], 14, { animate: false });
     } else {
       const center = cityConfig?.center
         || (cityConfig?.key === 'danang' ? [16.0544, 108.2022] : [16.4637, 107.5909]);
-      map.setView(center, 12, { animate: true });
+      map.setView(center, 12, { animate: false });
     }
   }, [places, cityConfig]);
 
@@ -199,7 +207,7 @@ export default function ExploreMap({
       || !places.some((place) => place.id === selectedPlace.id)
       || !hasCoordinates(selectedPlace)
     ) return;
-    mapInstanceRef.current.setView([selectedPlace.latitude, selectedPlace.longitude], 14, { animate: true });
+    mapInstanceRef.current.setView([selectedPlace.latitude, selectedPlace.longitude], 14, { animate: false });
   }, [selectedPlace, places]);
 
   return (

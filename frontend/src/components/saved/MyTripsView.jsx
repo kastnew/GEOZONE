@@ -3,6 +3,8 @@ import { getMyPlansApi, getPlanByIdApi, deletePlanApi } from '../../services/api
 import { LoadingSpinner } from '../common/LoadingSpinner.jsx';
 import { Eye, Map, Plus, Sparkles } from 'lucide-react';
 import { useToast } from '../../context/ToastContext.jsx';
+import AdminConfirmModal from '../admin/AdminConfirmModal.jsx';
+import '../../styles/Admin.css';
 
 export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
   const { showToast } = useToast();
@@ -10,6 +12,8 @@ export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
   const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchTrips = async () => {
     setIsLoading(true);
@@ -42,16 +46,22 @@ export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
     }
   };
 
-  const handleDelete = async (id, title) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa lịch trình "${title}" không?`)) {
-      return;
-    }
+  const handleDelete = (id, title) => setPendingDelete({ id, title });
 
+  const confirmDelete = async () => {
+    if (!pendingDelete || isDeleting) return;
+    setIsDeleting(true);
     try {
-      await deletePlanApi(id);
-      setTrips(trips.filter(t => t.id !== id));
+      await deletePlanApi(pendingDelete.id);
+      setTrips((currentTrips) =>
+        currentTrips.filter((trip) => String(trip.id) !== String(pendingDelete.id))
+      );
+      showToast('Đã xóa chuyến đi thành công.', 'success');
     } catch (err) {
       showToast(err.message || 'Không thể xóa lịch trình', 'error');
+    } finally {
+      setIsDeleting(false);
+      setPendingDelete(null);
     }
   };
 
@@ -170,6 +180,18 @@ export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
             </div>
           ))}
         </div>
+      )}
+      {pendingDelete && (
+        <AdminConfirmModal
+          title="Xóa lịch trình?"
+          message={`Chuyến đi "${pendingDelete.title}" sẽ bị xóa khỏi tài khoản và không thể khôi phục.`}
+          confirmLabel="Xóa chuyến đi"
+          isBusy={isDeleting}
+          onCancel={() => {
+            if (!isDeleting) setPendingDelete(null);
+          }}
+          onConfirm={confirmDelete}
+        />
       )}
     </div>
   );

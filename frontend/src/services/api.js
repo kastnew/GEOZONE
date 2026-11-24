@@ -7,16 +7,46 @@ import {
   CITIES,
   TAGS,
   PLACES_BY_CITY,
-  MOCK_SAVED_PLANS,
-  MOCK_SAMPLE_FAVORITES,
   getCityZones
 } from '../data/mockData';
 
 const API_BASE = '/api/v1';
+export const AUTH_INVALIDATED_EVENT = 'geozone:auth-invalidated';
+export const AUTH_EXPIRED_EVENT = 'geozone:auth-expired';
+const AUTH_EXPIRED_MESSAGE = 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.';
+
+let refreshPromise = null;
+let authExpiredEventDispatched = false;
+
+function getCityKey(cityValue) {
+  const cityName = String(cityValue || '').trim().toLocaleLowerCase();
+  const match = Object.entries(CITIES).find(([key, city]) =>
+    [key, city.name, city.api].some((value) => String(value).toLocaleLowerCase() === cityName)
+  );
+  return match ? match[0] : cityValue;
+}
+
+function normalizeSavedPlan(plan) {
+  const cityKey = getCityKey(plan.city);
+  const cityConfig = CITIES[cityKey];
+  return {
+    ...plan,
+    name: plan.name || plan.title,
+    city: cityKey,
+    cityName: plan.cityName || cityConfig?.name || plan.city,
+    daysCount: Number(plan.daysCount ?? plan.total_days ?? plan.totalDays ?? 0),
+    totalCost: Number(plan.totalCost ?? plan.actual_cost ?? plan.actualCost ?? plan.total_budget ?? 0),
+    createdAt: plan.createdAt || plan.created_at,
+    shareToken: plan.shareToken || plan.share_token
+  };
+}
 
 // Token & User LocalStorage Helpers
 export const getToken = () => localStorage.getItem('geozone_token');
-export const setToken = (token) => localStorage.setItem('geozone_token', token);
+export const setToken = (token) => {
+  authExpiredEventDispatched = false;
+  localStorage.setItem('geozone_token', token);
+};
 export const removeToken = () => localStorage.removeItem('geozone_token');
 
 export const getRefreshToken = () => localStorage.getItem('geozone_refresh_token');
@@ -34,6 +64,106 @@ export const getStoredUser = () => {
 export const setStoredUser = (user) => localStorage.setItem('geozone_user', JSON.stringify(user));
 export const removeStoredUser = () => localStorage.removeItem('geozone_user');
 
+function handleInactiveAccount(response, payload) {
+  const message = String(payload?.error?.message || payload?.message || '');
+  if (response.status !== 403 || !message.toLocaleLowerCase().includes('vô hiệu hóa')) return;
+
+  removeToken();
+  removeRefreshToken();
+  removeStoredUser();
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(AUTH_INVALIDATED_EVENT, { detail: { message } }));
+  }
+}
+
+function expireAuthSession() {
+  removeToken();
+  removeRefreshToken();
+  removeStoredUser();
+  if (typeof window !== 'undefined' && !authExpiredEventDispatched) {
+    authExpiredEventDispatched = true;
+    window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT));
+  }
+}
+
+function isAuthEndpoint(url) {
+  const path = String(url).split('?')[0].replace(/\/+$/, '');
+  return ['/auth/login', '/auth/register', '/auth/refresh-token', '/auth/logout']
+    .some((endpoint) => path.endsWith(endpoint));
+}
+
+function getAuthorizationToken(options) {
+  const value = new Headers(options.headers || {}).get('Authorization') || '';
+  return value.replace(/^Bearer\s+/i, '');
+}
+
+async function requestNewAccessToken() {
+  const response = await fetch(`${API_BASE}/auth/refresh-token`, {
+    method: 'POST',
+    credentials: 'include'
+  });
+
+  let payload = {};
+  try {
+    payload = await response.json();
+  } catch {
+    if (response.ok) throw new Error('Backend trả về dữ liệu làm mới phiên không hợp lệ.');
+  }
+
+  if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      expireAuthSession();
+      throw new Error(AUTH_EXPIRED_MESSAGE);
+    }
+    throw new Error(payload.error?.message || payload.message || `Lỗi HTTP ${response.status}`);
+  }
+
+  if (!payload.accessToken) {
+    throw new Error('Backend không trả về access token mới.');
+  }
+
+  setToken(payload.accessToken);
+  return payload.accessToken;
+}
+
+async function getNewAccessTokenSingleFlight() {
+  if (!refreshPromise) {
+    refreshPromise = requestNewAccessToken();
+  }
+
+  const currentPromise = refreshPromise;
+  try {
+    return await currentPromise;
+  } finally {
+    if (refreshPromise === currentPromise) refreshPromise = null;
+  }
+}
+
+async function fetchWithAuthRetry(url, options = {}, retried = false) {
+  const requestOptions = { ...options, credentials: 'include' };
+  const response = await fetch(url, requestOptions);
+  if (response.status !== 401 || isAuthEndpoint(url) || !getAuthorizationToken(options)) {
+    return response;
+  }
+
+  if (retried) {
+    expireAuthSession();
+    throw new Error(AUTH_EXPIRED_MESSAGE);
+  }
+
+  const requestToken = getAuthorizationToken(options);
+  const currentToken = getToken();
+  if (!currentToken) return response;
+
+  const accessToken = requestToken !== currentToken
+    ? currentToken
+    : await getNewAccessTokenSingleFlight();
+  const headers = new Headers(options.headers || {});
+  headers.set('Authorization', `Bearer ${accessToken}`);
+
+  return fetchWithAuthRetry(url, { ...options, headers }, true);
+}
+
 // Helper gắn token vào Authorization Header
 function getAuthHeaders() {
   const headers = { 'Content-Type': 'application/json' };
@@ -47,7 +177,7 @@ function getAuthHeaders() {
 // Helper xử lý fetch có fallback mock an toàn khi Backend chưa chạy
 async function safeFetch(url, options = {}, mockFallback = null) {
   try {
-    const res = await fetch(url, options);
+    const res = await fetchWithAuthRetry(url, options);
     if (!res.ok) {
       let errData = {};
       try {
@@ -55,12 +185,15 @@ async function safeFetch(url, options = {}, mockFallback = null) {
       } catch {
         // Response không phải JSON
       }
+      handleInactiveAccount(res, errData);
       throw new Error(errData.error?.message || errData.message || `Lỗi HTTP ${res.status}`);
     }
     const json = await res.json();
     return json.data !== undefined ? json.data : json;
   } catch (err) {
-    if (mockFallback !== null && (err.name === 'TypeError' || err.message.includes('Failed to fetch') || err.message.includes('NetworkError'))) {
+    const isNetworkError = err.name === 'TypeError'
+      || /Failed to fetch|NetworkError/i.test(err.message || '');
+    if (mockFallback !== null && !getAuthorizationToken(options) && !isAuthEndpoint(url) && isNetworkError) {
       console.warn(`[GeoZone API] Backend chưa khả dụng (${url}), sử dụng dữ liệu cục bộ giả lập.`, err.message);
       await new Promise((r) => setTimeout(r, 250)); // Simulating network latency
       return typeof mockFallback === 'function' ? mockFallback() : mockFallback;
@@ -69,9 +202,110 @@ async function safeFetch(url, options = {}, mockFallback = null) {
   }
 }
 
+async function safeFetchEnvelope(url, options = {}) {
+  const res = await fetchWithAuthRetry(url, options);
+  let json = {};
+  try {
+    json = await res.json();
+  } catch {
+    if (res.ok) throw new Error('Backend trả về dữ liệu không hợp lệ.');
+  }
+  if (!res.ok) {
+    handleInactiveAccount(res, json);
+    throw new Error(json.error?.message || json.message || `Lỗi HTTP ${res.status}`);
+  }
+  return json;
+}
+
 /* ==========================================================================
    1. AUTHENTICATION & PROFILE APIS (API_DOCUMENTATION.md #2 & #3)
    ========================================================================== */
+
+export async function getAdminUsersApi({
+  page = 1,
+  limit = 10,
+  search = '',
+  is_active,
+  role
+} = {}) {
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(limit)
+  });
+  if (search.trim()) query.set('search', search.trim());
+  if (is_active !== undefined && is_active !== null) {
+    query.set('is_active', String(is_active));
+    query.set('status', is_active ? 'active' : 'inactive');
+  }
+  if (role) query.set('role', String(role).toUpperCase());
+
+  const response = await safeFetchEnvelope(`${API_BASE}/users?${query}`, {
+    method: 'GET',
+    headers: getAuthHeaders()
+  });
+  const pagination = response.pagination || response.meta || {};
+  return {
+    users: Array.isArray(response.data) ? response.data : [],
+    pagination: {
+      page: Number(pagination.page) || page,
+      limit: Number(pagination.limit) || limit,
+      total: Number(pagination.total) || 0,
+      totalPages: Number(pagination.totalPages) || 0
+    }
+  };
+}
+
+export async function getAdminUserApi(userId) {
+  return safeFetch(`${API_BASE}/users/${encodeURIComponent(userId)}`, {
+    method: 'GET',
+    headers: getAuthHeaders()
+  });
+}
+
+export async function updateAdminUserApi(userId, { name, role, is_active }) {
+  return safeFetch(`${API_BASE}/users/${encodeURIComponent(userId)}`, {
+    method: 'PATCH',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ name, role, is_active })
+  });
+}
+
+export async function setAdminUserStatusApi(userId, is_active) {
+  return safeFetch(`${API_BASE}/users/${encodeURIComponent(userId)}/status`, {
+    method: 'PATCH',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ is_active })
+  });
+}
+
+export async function getAdminHealthApi() {
+  return safeFetch(`${API_BASE}/health`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+export async function getAdminPlacesApi(params = {}) {
+  const query = new URLSearchParams(params);
+  return safeFetch(`${API_BASE}/places?${query}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+export async function getAdminZonesApi() {
+  return safeFetch(`${API_BASE}/zones`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+export async function getAdminTagsApi() {
+  return safeFetch(`${API_BASE}/tags`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
 
 /**
  * Đăng ký tài khoản mới (POST /api/v1/auth/register)
@@ -82,7 +316,7 @@ export async function registerApi({ username, email, password, name }) {
   const targetName = String(name || username || targetEmail.split('@')[0]).trim();
 
   try {
-    const data = await safeFetch(`${API_BASE}/auth/register`, {
+    await safeFetch(`${API_BASE}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -92,32 +326,10 @@ export async function registerApi({ username, email, password, name }) {
       })
     });
 
-    // Sau khi đăng ký thành công, tự động gọi login để lấy accessToken và đồng bộ phiên
-    try {
-      const loggedUser = await loginApi({ email: targetEmail, password });
-      return loggedUser;
-    } catch {
-      const rawUser = data.user || {};
-      const userObj = {
-        id: rawUser.id,
-        name: rawUser.name || targetName,
-        email: rawUser.email || targetEmail,
-        role: (rawUser.role || 'USER').toLowerCase()
-      };
-      setStoredUser(userObj);
-      return userObj;
-    }
+    return await loginApi({ email: targetEmail, password });
   } catch (err) {
-    // Mock fallback nếu backend offline
-    if (err.message && (err.message.includes('Failed to fetch') || err.message.includes('NetworkError'))) {
-      const mockUser = {
-        name: targetName,
-        email: targetEmail,
-        role: 'user'
-      };
-      setToken('mock_jwt_token_' + Date.now());
-      setStoredUser(mockUser);
-      return mockUser;
+    if (err.name === 'TypeError' || /Failed to fetch|NetworkError/i.test(err.message || '')) {
+      throw new Error('Không thể kết nối máy chủ. Vui lòng kiểm tra kết nối và thử lại.');
     }
     throw err;
   }
@@ -151,7 +363,8 @@ export async function loginApi({ username, email, password }) {
 
     // Backend trả về accessToken (JWT 15m)
     const token = data.accessToken || data.token;
-    if (token) setToken(token);
+    if (!token) throw new Error('Backend không trả về access token.');
+    setToken(token);
     if (data.refreshToken) setRefreshToken(data.refreshToken);
 
     const rawUser = data.user || {};
@@ -165,16 +378,8 @@ export async function loginApi({ username, email, password }) {
     setStoredUser(userObj);
     return userObj;
   } catch (err) {
-    // Mock fallback khi backend chưa chạy
-    if (err.message && (err.message.includes('Failed to fetch') || err.message.includes('NetworkError'))) {
-      const mockUser = {
-        name: targetEmail.includes('admin') ? 'Quản trị viên GeoZone' : (targetEmail.split('@')[0] || 'Người dùng'),
-        email: targetEmail.includes('@') ? targetEmail : `${targetEmail}@geozone.vn`,
-        role: targetEmail.includes('admin') ? 'admin' : 'user'
-      };
-      setToken('mock_jwt_token_' + Date.now());
-      setStoredUser(mockUser);
-      return mockUser;
+    if (err.name === 'TypeError' || /Failed to fetch|NetworkError/i.test(err.message || '')) {
+      throw new Error('Không thể kết nối máy chủ. Vui lòng kiểm tra kết nối và thử lại.');
     }
     throw err;
   }
@@ -189,8 +394,7 @@ export async function getMeApi() {
     {
       method: 'GET',
       headers: getAuthHeaders()
-    },
-    () => getStoredUser()
+    }
   );
 
   if (data) {
@@ -243,15 +447,11 @@ export async function changePasswordApi({ oldPassword, newPassword }) {
  * Đăng xuất tài khoản (POST /api/v1/auth/logout)
  */
 export async function logoutApi() {
-  const rt = getRefreshToken();
   try {
-    if (rt) {
-      await fetch(`${API_BASE}/auth/logout`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ refreshToken: rt })
-      });
-    }
+    await fetchWithAuthRetry(`${API_BASE}/auth/logout`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
   } catch {
     // Bỏ qua lỗi mạng khi logout
   } finally {
@@ -283,11 +483,10 @@ export async function getZonesApi(cityKey) {
 export async function getPlacesApi(params = {}) {
   const q = new URLSearchParams(params).toString();
   const url = q ? `${API_BASE}/places?${q}` : `${API_BASE}/places`;
-  return safeFetch(
-    url,
-    { method: 'GET', headers: { 'Content-Type': 'application/json' } },
-    () => PLACES_BY_CITY[params.city || 'hue'] || []
-  );
+  return safeFetch(url, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  });
 }
 
 /**
@@ -391,19 +590,28 @@ export async function generateItineraryApi(payload) {
  * Body: { currentPlaceId, zoneId, dayNumber, itinerary }
  */
 export async function swapPlaceApi(payload) {
+  const cityKey = getCityKey(payload.city || 'hue');
+  const cityConfig = CITIES[cityKey] || CITIES.hue;
+  const backendPayload = {
+    ...payload,
+    city: cityConfig.api || payload.city,
+    zoneCode: payload.zoneDbCode || payload.zoneCode
+  };
+
   return safeFetch(
     `${API_BASE}/ai/swap-place`,
     {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify(payload)
+      body: JSON.stringify(backendPayload)
     },
     () => {
       // Local smart alternative: chọn địa điểm khác trong cùng zone
-      const cityKey = payload.city || 'hue';
-      const allCityPlaces = PLACES_BY_CITY[cityKey] || [];
+      const localCityKey = getCityKey(payload.city || 'hue');
+      const allCityPlaces = PLACES_BY_CITY[localCityKey] || [];
+      const localZoneCode = String(payload.zoneCode || '').replace(/^(?:HUE|NINHBINH)-/i, '');
       const alternatives = allCityPlaces.filter(
-        (p) => p.id !== payload.currentPlaceId && (p.zoneCode === payload.zoneCode || !payload.zoneCode)
+        (p) => p.id !== payload.currentPlaceId && (p.zoneCode === localZoneCode || !localZoneCode)
       );
       const replacement = alternatives[Math.floor(Math.random() * alternatives.length)] || allCityPlaces[0];
       return {
@@ -422,37 +630,85 @@ export async function swapPlaceApi(payload) {
  * Lưu lịch trình chính thức vào saved_plans (POST /api/v1/plans)
  */
 export async function savePlanApi(planPayload) {
-  return safeFetch(
+  if (!planPayload || typeof planPayload !== 'object' || Array.isArray(planPayload)) {
+    throw new Error('Dữ liệu lịch trình (planData) không được để trống');
+  }
+
+  const hasPlanData = Object.prototype.hasOwnProperty.call(planPayload, 'planData');
+  const hasSnakePlanData = Object.prototype.hasOwnProperty.call(planPayload, 'plan_data');
+  const planData = hasPlanData
+    ? planPayload.planData
+    : hasSnakePlanData
+      ? planPayload.plan_data
+      : planPayload;
+  if (!planData || typeof planData !== 'object' || Array.isArray(planData)) {
+    throw new Error('Dữ liệu lịch trình (planData) không được để trống');
+  }
+
+  const planTitle = planPayload.title || planPayload.planTitle || planPayload.name
+    || planData.title || planData.name;
+  const days = Array.isArray(planData.days) ? planData.days : [];
+  const cityValue = planPayload.city ?? planData.city;
+  const city = CITIES[cityValue]?.api || cityValue || 'Da Nang';
+  const totalDays = planPayload.totalDays
+    ?? planPayload.total_days
+    ?? planData.totalDays
+    ?? planData.total_days
+    ?? planData.daysCount
+    ?? (days.length || 2);
+  const totalBudget = planPayload.totalBudget
+    ?? planPayload.total_budget
+    ?? planData.totalBudget
+    ?? planData.total_budget
+    ?? planData.budget
+    ?? 0;
+  const actualCost = planPayload.actualCost
+    ?? planPayload.actual_cost
+    ?? planData.actualCost
+    ?? planData.actual_cost
+    ?? planData.totalCost
+    ?? planPayload.totalCost
+    ?? days.reduce((sum, day) => sum + Number(day.totalCost ?? day.totalEstimatedCost ?? 0), 0);
+  const requestPayload = {
+    title: planTitle,
+    city,
+    totalDays,
+    totalBudget,
+    actualCost,
+    strategyUsed: planPayload.strategyUsed
+      || planPayload.strategy_used
+      || planData.strategyUsed
+      || planData.strategy_used
+      || 'DIRECT_JSON',
+    status: planPayload.status,
+    is_public: planPayload.is_public ?? planPayload.isPublic ?? false,
+    shareToken: planPayload.shareToken ?? planPayload.share_token,
+    planData
+  };
+
+  const savedPlan = await safeFetch(
     `${API_BASE}/plans`,
     {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify(planPayload)
-    },
-    () => {
-      const newPlan = {
-        ...planPayload,
-        id: Date.now(),
-        createdAt: new Date().toISOString(),
-        shareToken: `gz-${Math.random().toString(36).substring(2, 9)}`
-      };
-      return newPlan;
+      body: JSON.stringify(requestPayload)
     }
   );
+  return savedPlan && typeof savedPlan === 'object' ? normalizeSavedPlan(savedPlan) : savedPlan;
 }
 
 /**
  * Lấy danh sách lịch trình đã lưu của người dùng (GET /api/v1/plans)
  */
 export async function getMyPlansApi() {
-  return safeFetch(
+  const plans = await safeFetch(
     `${API_BASE}/plans`,
     {
       method: 'GET',
       headers: getAuthHeaders()
-    },
-    () => MOCK_SAVED_PLANS
+    }
   );
+  return Array.isArray(plans) ? plans.map(normalizeSavedPlan) : [];
 }
 
 /**
@@ -464,8 +720,7 @@ export async function getPlanByIdApi(planId) {
     {
       method: 'GET',
       headers: getAuthHeaders()
-    },
-    () => MOCK_SAVED_PLANS.find((p) => p.id === planId) || MOCK_SAVED_PLANS[0]
+    }
   );
 }
 
@@ -478,8 +733,7 @@ export async function deletePlanApi(planId) {
     {
       method: 'DELETE',
       headers: getAuthHeaders()
-    },
-    () => ({ success: true, message: 'Đã xóa lịch trình' })
+    }
   );
 }
 
@@ -492,8 +746,7 @@ export async function getSharedPlanApi(shareToken) {
     {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
-    },
-    () => MOCK_SAVED_PLANS.find((p) => p.shareToken === shareToken) || MOCK_SAVED_PLANS[0]
+    }
   );
 }
 
@@ -505,14 +758,36 @@ export async function getSharedPlanApi(shareToken) {
  * Lấy danh sách địa điểm yêu thích (GET /api/v1/users/me/favorites)
  */
 export async function getMyFavoritesApi() {
-  return safeFetch(
+  const favorites = await safeFetch(
     `${API_BASE}/users/me/favorites`,
     {
       method: 'GET',
       headers: getAuthHeaders()
-    },
-    () => MOCK_SAMPLE_FAVORITES
+    }
   );
+  return Array.isArray(favorites)
+    ? favorites.map((favorite) => {
+        const place = favorite.place || {};
+        const city = place.city ?? favorite.city;
+        const tags = Array.isArray(place.tags)
+          ? place.tags
+          : (place.placeTags || [])
+              .map((placeTag) => placeTag.tag?.name || placeTag.tag?.code)
+              .filter(Boolean);
+
+        return {
+          ...place,
+          id: place.id ?? favorite.place_id,
+          favoriteId: favorite.id,
+          city: getCityKey(city),
+          zoneName: place.zoneName || place.zone?.name,
+          estimatedCost: Number(
+            place.estimatedCost ?? place.estimated_cost ?? place.cost ?? 0
+          ),
+          tags
+        };
+      })
+    : [];
 }
 
 /**
@@ -526,8 +801,7 @@ export async function addFavoriteApi(placeId) {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ placeId })
-    },
-    () => ({ placeId, success: true })
+    }
   );
 }
 
@@ -540,8 +814,7 @@ export async function removeFavoriteApi(placeId) {
     {
       method: 'DELETE',
       headers: getAuthHeaders()
-    },
-    () => ({ success: true })
+    }
   );
 }
 
@@ -559,8 +832,7 @@ export async function adminCreatePlaceApi(placeData) {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(placeData)
-    },
-    () => ({ ...placeData, id: Date.now() })
+    }
   );
 }
 
@@ -574,8 +846,7 @@ export async function adminUpdatePlaceApi(placeId, placeData) {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify(placeData)
-    },
-    () => ({ ...placeData, id: placeId })
+    }
   );
 }
 
@@ -588,8 +859,7 @@ export async function adminDeletePlaceApi(placeId) {
     {
       method: 'DELETE',
       headers: getAuthHeaders()
-    },
-    () => ({ success: true })
+    }
   );
 }
 
@@ -603,8 +873,7 @@ export async function adminCreateZoneApi(zoneData) {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(zoneData)
-    },
-    () => ({ ...zoneData, id: Date.now() })
+    }
   );
 }
 
@@ -618,8 +887,7 @@ export async function adminUpdateZoneApi(zoneId, zoneData) {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify(zoneData)
-    },
-    () => ({ ...zoneData, id: zoneId })
+    }
   );
 }
 
@@ -632,8 +900,7 @@ export async function adminDeleteZoneApi(zoneId) {
     {
       method: 'DELETE',
       headers: getAuthHeaders()
-    },
-    () => ({ success: true })
+    }
   );
 }
 

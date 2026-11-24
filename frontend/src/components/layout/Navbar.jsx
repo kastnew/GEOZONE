@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import '../../styles/Navbar.css';
-import { Heart, LogOut, Map, UserRound } from 'lucide-react';
+import { Heart, LogOut, Map, ShieldCheck, UserRound } from 'lucide-react';
 
 export default function Navbar({
   currentView = 'home',
@@ -36,6 +36,7 @@ export default function Navbar({
         : pathname.startsWith('/my-trips') ? 'trips'
           : pathname === '/favorites' ? 'favs'
             : null;
+  const isAdminUser = String(user?.role || '').toUpperCase() === 'ADMIN';
 
   const measureIndicator = () => {
     const nav = navRef.current;
@@ -99,32 +100,49 @@ export default function Navbar({
 
   useEffect(() => {
     const handleEscape = (event) => {
-      if (event.key === 'Escape' && isUserMenuOpen) onToggleUserMenu();
+      if (event.key === 'Escape' && isUserMenuOpen) {
+        clearCloseTimer();
+        onToggleUserMenu();
+      }
     };
     const handleOutsideClick = (event) => {
       if (isUserMenuOpen && menuRef.current && !menuRef.current.contains(event.target)) {
+        clearCloseTimer();
         onToggleUserMenu();
       }
     };
 
     document.addEventListener('keydown', handleEscape);
-    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('pointerdown', handleOutsideClick);
     return () => {
       document.removeEventListener('keydown', handleEscape);
-      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('pointerdown', handleOutsideClick);
     };
   }, [isUserMenuOpen, onToggleUserMenu]);
 
   const clearCloseTimer = () => {
-    if (closeTimerRef.current) {
+    if (closeTimerRef.current !== null) {
       window.clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => () => clearCloseTimer(), []);
+
+  const handleMenuMouseEnter = () => {
+    clearCloseTimer();
+    const hoverAvailable = window.matchMedia
+      ? window.matchMedia('(hover: hover) and (pointer: fine)').matches
+      : true;
+    if (hoverAvailable && !isUserMenuOpen) {
+      onToggleUserMenu();
     }
   };
 
   const scheduleMenuClose = () => {
     clearCloseTimer();
     closeTimerRef.current = window.setTimeout(() => {
+      closeTimerRef.current = null;
       if (isUserMenuOpen) onToggleUserMenu();
     }, 150);
   };
@@ -282,7 +300,7 @@ export default function Navbar({
             <div
               className="au-menu"
               ref={menuRef}
-              onMouseEnter={clearCloseTimer}
+              onMouseEnter={handleMenuMouseEnter}
               onMouseLeave={scheduleMenuClose}
             >
               <button
@@ -298,7 +316,7 @@ export default function Navbar({
               >
                 <i>{getInitial(user.name)}</i>
                 <span>{user.name}</span>
-                {user.role === 'admin' && <em className="au-role">Admin</em>}
+                {isAdminUser && <em className="au-role">Admin</em>}
               </button>
               <div
                 className={`au-pop ${isUserMenuOpen ? 'is-open' : ''}`}
@@ -314,6 +332,7 @@ export default function Navbar({
                   type="button"
                   className="au-item"
                   onClick={() => {
+                    clearCloseTimer();
                     onNavigate('account');
                     onToggleUserMenu();
                   }}
@@ -324,6 +343,7 @@ export default function Navbar({
                   type="button"
                   className="au-item"
                   onClick={() => {
+                    clearCloseTimer();
                     onNavigate('trips');
                     onToggleUserMenu();
                   }}
@@ -334,16 +354,33 @@ export default function Navbar({
                   type="button"
                   className="au-item"
                   onClick={() => {
+                    clearCloseTimer();
                     onNavigate('favs');
                     onToggleUserMenu();
                   }}
                 >
                     <Heart size={16} strokeWidth={1.75} aria-hidden="true" /> Địa điểm đã lưu
                 </button>
+                {isAdminUser && (
+                  <a
+                    href="/admin"
+                    className="au-item"
+                    role="menuitem"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      clearCloseTimer();
+                      onNavigate('admin');
+                      onToggleUserMenu();
+                    }}
+                  >
+                    <ShieldCheck size={16} strokeWidth={1.75} aria-hidden="true" /> Quản trị hệ thống
+                  </a>
+                )}
                 <button
                   type="button"
                   className="au-item out"
                   onClick={() => {
+                    clearCloseTimer();
                     onLogout();
                     onToggleUserMenu();
                   }}

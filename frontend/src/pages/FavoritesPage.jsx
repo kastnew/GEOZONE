@@ -6,6 +6,7 @@ import { Heart } from 'lucide-react';
 
 export default function FavoritesPage({
   favorites = [],
+  isLoading = false,
   isLoggedIn = false,
   selectedCity = 'all',
   onSelectCity = () => {},
@@ -125,7 +126,11 @@ export default function FavoritesPage({
           )}
 
           {/* Favorites Grid */}
-          {filteredFavorites.length > 0 ? (
+          {isLoading ? (
+            <div className="gz-tempty" role="status" aria-live="polite">
+              <p>Đang tải địa điểm yêu thích…</p>
+            </div>
+          ) : filteredFavorites.length > 0 ? (
             <div className="gz-tgrid" id="fvGrid">
               {filteredFavorites.map((place) => (
                 <FavoriteCard

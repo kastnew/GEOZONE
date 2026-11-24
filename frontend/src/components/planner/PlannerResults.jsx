@@ -14,6 +14,8 @@ export default function PlannerResults({
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const routeLayerRef = useRef(null);
+  const resizeTimerRef = useRef(null);
+  const fitBoundsTimerRef = useRef(null);
 
   const DAY_COLORS = [
     'var(--gz-zone-z1)',
@@ -31,7 +33,10 @@ export default function PlannerResults({
 
     const map = L.map(mapContainerRef.current, {
       center: [16.4637, 107.5909],
-      zoom: 12
+      zoom: 12,
+      zoomAnimation: false,
+      fadeAnimation: false,
+      markerZoomAnimation: false
     });
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -43,14 +48,28 @@ export default function PlannerResults({
     routeLayerRef.current = routeLayer;
     mapInstanceRef.current = map;
 
-    setTimeout(() => {
-      map.invalidateSize();
+    resizeTimerRef.current = window.setTimeout(() => {
+      resizeTimerRef.current = null;
+      if (mapInstanceRef.current === map && mapContainerRef.current?.isConnected) {
+        map.invalidateSize();
+      }
     }, 150);
 
     return () => {
+      if (resizeTimerRef.current !== null) {
+        window.clearTimeout(resizeTimerRef.current);
+        resizeTimerRef.current = null;
+      }
+      if (fitBoundsTimerRef.current !== null) {
+        window.clearTimeout(fitBoundsTimerRef.current);
+        fitBoundsTimerRef.current = null;
+      }
+      map.stop();
       map.remove();
-      mapInstanceRef.current = null;
-      routeLayerRef.current = null;
+      if (mapInstanceRef.current === map) {
+        mapInstanceRef.current = null;
+        routeLayerRef.current = null;
+      }
     };
   }, [shouldShowMap]);
 
@@ -127,13 +146,25 @@ export default function PlannerResults({
     });
 
     if (bounds.isValid()) {
-      setTimeout(() => {
-        if (mapInstanceRef.current) {
-          mapInstanceRef.current.invalidateSize();
-          mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40] });
+      if (fitBoundsTimerRef.current !== null) {
+        window.clearTimeout(fitBoundsTimerRef.current);
+      }
+      const map = mapInstanceRef.current;
+      fitBoundsTimerRef.current = window.setTimeout(() => {
+        fitBoundsTimerRef.current = null;
+        if (mapInstanceRef.current === map && mapContainerRef.current?.isConnected) {
+          map.invalidateSize();
+          map.fitBounds(bounds, { padding: [40, 40], animate: false });
         }
       }, 100);
     }
+
+    return () => {
+      if (fitBoundsTimerRef.current !== null) {
+        window.clearTimeout(fitBoundsTimerRef.current);
+        fitBoundsTimerRef.current = null;
+      }
+    };
   }, [plan, shouldShowMap]);
 
   if (isLoading) {

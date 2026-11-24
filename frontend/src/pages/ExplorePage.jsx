@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/Explore.css';
 import '../styles/Planner.css';
 import ExploreTopBar from '../components/explore/ExploreTopBar';
@@ -45,6 +45,14 @@ export default function ExplorePage({
   const [selectedPreferences, setSelectedPreferences] = useState([]);
   const [isPlanning, setIsPlanning] = useState(false);
   const [generatedPlan, setGeneratedPlan] = useState(null);
+
+  // Khi đổi thành phố, xóa lịch trình cũ của thành phố trước để tránh hiển thị nhầm
+  useEffect(() => {
+    if (generatedPlan && generatedPlan.city && generatedPlan.city !== selectedCity) {
+      setGeneratedPlan(null);
+      setSwapState({ isOpen: false, dayIndex: 0, placeIndex: 0, place: null });
+    }
+  }, [selectedCity]);
 
   // Dynamic Swap State
   const [swapState, setSwapState] = useState({
@@ -208,13 +216,37 @@ export default function ExplorePage({
   const isFav = (placeId) => favorites.some((f) => f.id === placeId);
   const isInCart = (placeId) => cartItems.some((c) => c.id === placeId);
 
-  // Alternatives in same zone for Swap Modal
+  // Thu thập toàn bộ ID địa điểm đang có trong lịch trình (mọi ngày) để không cho trùng khi đổi
+  const plannedPlaceIds = new Set(
+    (generatedPlan?.days || []).flatMap((d) =>
+      (d.places || []).map((p) => p.id ?? p.placeId)
+    )
+  );
+
+  // Tính khoảng cách GPS (km) giữa 2 điểm để ưu tiên gợi ý các điểm gần nhất
+  const calcDistKm = (lat1, lng1, lat2, lng2) => {
+    if (!lat1 || !lng1 || !lat2 || !lng2) return 99;
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+    return Number((R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))).toFixed(2));
+  };
+
+  // Danh sách địa điểm thay thế: loại bỏ toàn bộ điểm đã có trong lịch trình, sắp xếp theo độ gần GPS
   const availableAlternatives = swapState.place
-    ? cityPlaces.filter(
-        (p) =>
-          p.id !== swapState.place.id &&
-          (p.zoneCode === swapState.place.zoneCode || !swapState.place.zoneCode)
-      )
+    ? cityPlaces
+        .filter((p) => !plannedPlaceIds.has(p.id) && p.id !== (swapState.place.id ?? swapState.place.placeId))
+        .map((p) => ({
+          ...p,
+          distanceKm: calcDistKm(swapState.place.latitude, swapState.place.longitude, p.latitude, p.longitude)
+        }))
+        .sort((a, b) => a.distanceKm - b.distanceKm)
     : [];
 
   return (

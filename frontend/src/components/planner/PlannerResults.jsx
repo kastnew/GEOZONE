@@ -16,9 +16,11 @@ export default function PlannerResults({
 
   const DAY_COLORS = ['#2563eb', '#16a34a', '#d97706', '#c026d3'];
 
-  // Initialize Route Map
+  const shouldShowMap = Boolean(!isLoading && plan && plan.days && plan.days.length > 0);
+
+  // Initialize Route Map (re-create cleanly whenever #pMap mounts after loading)
   useEffect(() => {
-    if (!mapContainerRef.current || mapInstanceRef.current || !plan) return;
+    if (!shouldShowMap || !mapContainerRef.current) return;
 
     const map = L.map(mapContainerRef.current, {
       center: [16.4637, 107.5909],
@@ -34,15 +36,20 @@ export default function PlannerResults({
     routeLayerRef.current = routeLayer;
     mapInstanceRef.current = map;
 
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 150);
+
     return () => {
       map.remove();
       mapInstanceRef.current = null;
+      routeLayerRef.current = null;
     };
-  }, [plan]);
+  }, [shouldShowMap]);
 
-  // Update Route Polyline and Markers when plan changes
+  // Update Route Polyline and Markers when plan changes or map mounts
   useEffect(() => {
-    if (!mapInstanceRef.current || !routeLayerRef.current || !plan?.days) return;
+    if (!shouldShowMap || !mapInstanceRef.current || !routeLayerRef.current || !plan?.days) return;
 
     routeLayerRef.current.clearLayers();
     const bounds = L.latLngBounds([]);
@@ -83,11 +90,17 @@ export default function PlannerResults({
         });
 
         const marker = L.marker(latlng, { icon: markerIcon });
+        const timeInfo = place.time ? `<div style="font-size:12px; color:#2563eb; font-weight:600; margin-top:2px;">🕒 ${place.time}</div>` : '';
+        const travelInfo = place.travelTimeFromPrev > 0
+          ? `<div style="font-size:11px; color:#64748b; margin-top:2px;">🛵 Di chuyển từ điểm trước: ~${place.travelTimeFromPrev} phút (${place.distanceFromPrevKm || 0} km)</div>`
+          : '';
         marker.bindPopup(`
-          <div style="font-family:system-ui, sans-serif; padding:4px;">
+          <div style="font-family:system-ui, sans-serif; padding:4px; min-width:180px;">
             <b style="color:${dayColor}">Ngày ${day.dayNumber || dIdx + 1} · Điểm ${pIdx + 1}</b>
             <div style="font-size:14px; font-weight:700; color:#0f172a; margin-top:2px;">${place.name}</div>
+            ${timeInfo}
             <div style="font-size:12px; color:#64748b;">${place.zoneName || ''}</div>
+            ${travelInfo}
             <div style="font-size:12px; color:#16a34a; font-weight:600; margin-top:4px;">${formatVND(place.estimatedCost ?? place.cost ?? 0)}</div>
           </div>
         `);
@@ -99,7 +112,7 @@ export default function PlannerResults({
         const polyline = L.polyline(latlngs, {
           color: dayColor,
           weight: 4,
-          opacity: 0.8,
+          opacity: 0.85,
           dashArray: '6, 8'
         });
         routeLayerRef.current.addLayer(polyline);
@@ -107,9 +120,14 @@ export default function PlannerResults({
     });
 
     if (bounds.isValid()) {
-      mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40] });
+      setTimeout(() => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+          mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40] });
+        }
+      }, 100);
     }
-  }, [plan]);
+  }, [plan, shouldShowMap]);
 
   if (isLoading) {
     return (
@@ -164,8 +182,29 @@ export default function PlannerResults({
                 style={{ '--dc': dayColor }}
               >
                 <h3>
-                  <span>Ngày {day.dayNumber || dIdx + 1}: {day.title || ''}</span>
-                  <small>{formatVND(day.totalCost || 0)}</small>
+                  <span>
+                    {day.title || `Ngày ${day.dayNumber || dIdx + 1}: ${day.zoneName || ''}`}
+                    {day.weather && (
+                      <span
+                        style={{
+                          marginLeft: '8px',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          padding: '2px 8px',
+                          borderRadius: '999px',
+                          background: day.weather.condition === 'RAINY' ? '#fee2e2' : day.weather.condition === 'SUNNY' ? '#fef3c7' : '#e0f2fe',
+                          color: day.weather.condition === 'RAINY' ? '#b91c1c' : day.weather.condition === 'SUNNY' ? '#b45309' : '#0369a1'
+                        }}
+                        title={day.weather.advice || ''}
+                      >
+                        {day.weather.condition === 'RAINY' ? '🌧️ Mưa' : day.weather.condition === 'SUNNY' ? '☀️ Nắng' : '⛅ Mát'} {day.weather.tempMax}°C
+                      </span>
+                    )}
+                  </span>
+                  <small>
+                    {day.totalDistanceKm !== undefined ? `~${day.totalDistanceKm} km · ` : ''}
+                    {formatVND(day.totalCost || 0)}
+                  </small>
                 </h3>
 
                 <div>
@@ -185,8 +224,10 @@ export default function PlannerResults({
                           </span>
                         </div>
                         <small>
+                          {place.time && <b style={{ color: dayColor }}>{place.time}</b>}
+                          {place.time && ' · '}
                           {place.zoneName} · {formatDuration(place.duration || 60)}
-                          {place.time && ` (${place.time})`}
+                          {place.travelTimeFromPrev > 0 && ` · Di chuyển ~${place.travelTimeFromPrev}p (${place.distanceFromPrevKm || 0} km)`}
                         </small>
                       </div>
 
@@ -220,6 +261,31 @@ export default function PlannerResults({
           <div className="zh">
             <span>Bản đồ lộ trình</span>
             <small style={{ color: '#64748b' }}>Tối ưu khoảng cách di chuyển</small>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+            {plan.days.map((d, idx) => {
+              const color = DAY_COLORS[idx % DAY_COLORS.length];
+              return (
+                <span
+                  key={d.dayNumber || idx}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    padding: '3px 10px',
+                    borderRadius: '999px',
+                    background: '#f8fafc',
+                    border: `1px solid ${color}`,
+                    color
+                  }}
+                >
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
+                  Ngày {d.dayNumber || idx + 1} ({(d.places || []).length} điểm{d.totalDistanceKm !== undefined ? ` · ${d.totalDistanceKm} km` : ''})
+                </span>
+              );
+            })}
           </div>
           <div
             id="pMap"

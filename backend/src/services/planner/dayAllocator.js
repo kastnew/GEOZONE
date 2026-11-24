@@ -11,7 +11,8 @@ function selectDayCandidateSet(
   usedPrimaryZoneIds,
   penaltiesForDay,
   dailyCap,
-  maxDailyMinutes
+  maxDailyMinutes,
+  maxPlacesPerDay = 6
 ) {
   const getEffectiveScore = place =>
     (place.weatherAdjustedScore ?? place.totalScore ?? 0) + (penaltiesForDay.get(place.id) || 0);
@@ -42,8 +43,7 @@ function selectDayCandidateSet(
   let currentDayMinutes = anchor.duration || 60;
   let currentDayCost = anchor.estimatedCost || 0;
 
-  // 2. Nhặt thêm tối đa 3 địa điểm quanh tâm dựa trên Điểm chất lượng (đã trừ Penalty) + Khoảng cách GPS
-  const maxPlacesPerDay = 4;
+  // 2. Nhặt thêm tối đa (maxPlacesPerDay - 1) địa điểm quanh tâm dựa trên Điểm chất lượng + Khoảng cách GPS
   while (selectedPlaces.length < maxPlacesPerDay) {
     const remainingCandidates = weatherScored.filter(p => {
       if (usedPlaceIds.has(p.id) || dayUsed.has(p.id)) return false;
@@ -175,9 +175,12 @@ export function allocateDays(
     // Chấm điểm theo thời tiết của ngày hôm đó (1 lần duy nhất cho ngày)
     const weatherScored = applyWeatherAdjustment(availablePlaces, weatherOfDay.condition);
 
-    // Vòng lặp Phản hồi (Iterative Feedback Loop với Bước 5): Tối đa thử lại 2 lần nếu kẹt giờ
+    // Vòng lặp Phản hồi 2 cấp (Iterative Feedback Loop với Bước 5):
+    // - Lần 0 -> Lần 1: Thử tối đa 6 điểm; nếu kẹt giờ thì cộng Penalty (-0.6) để thay điểm khác.
+    // - Lần 2: Nếu vẫn kẹt giờ, tự động rút bớt 1 điểm (giảm maxPlacesForAttempt) để chắc chắn khớp khung giờ.
     const penaltiesForDay = new Map();
     const MAX_RETRIES = 2;
+    let currentMaxPlaces = 6;
     let bestPick = null;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -187,7 +190,8 @@ export function allocateDays(
         usedPrimaryZoneIds,
         penaltiesForDay,
         dailyCap,
-        maxDailyMinutes
+        maxDailyMinutes,
+        currentMaxPlaces
       );
 
       bestPick = pick;
@@ -198,11 +202,16 @@ export function allocateDays(
         break; // Lộ trình hợp lệ hoàn toàn!
       }
 
-      // Cộng Penalty (-0.6) cho điểm gây xung đột để lần lặp kế tiếp tự chọn điểm khác hợp giờ hơn
+      // Cộng Penalty (-0.6) cho điểm gây xung đột
       penaltiesForDay.set(
         check.culpritPlaceId,
         (penaltiesForDay.get(check.culpritPlaceId) || 0) - 0.6
       );
+
+      // Ở lần thử cuối (attempt >= 1), rút bớt 1 điểm so với số điểm hiện có để giải phóng quỹ thời gian
+      if (attempt >= 1 && pick.selectedPlaces.length > 3) {
+        currentMaxPlaces = pick.selectedPlaces.length - 1;
+      }
     }
 
     const selectedPlaces = bestPick?.selectedPlaces || [];

@@ -24,7 +24,8 @@ export class PlanController {
         preferences: req.body.preferences || ['food', 'beach', 'culture'],
         startTime: req.body.startTime || '08:00',
         endTime: req.body.endTime || '21:00',
-        enableRag: req.body.enableRag !== undefined ? req.body.enableRag : ENV.ENABLE_RAG
+        enableRag: req.body.enableRag !== undefined ? req.body.enableRag : ENV.ENABLE_RAG,
+        skipAi: req.body.skipAi === true
       };
 
       logger.info(`[PlanController] Bắt đầu lập lịch cho: ${tripRequest.city}, ${tripRequest.days} ngày, RAG: ${tripRequest.enableRag}`);
@@ -56,6 +57,24 @@ export class PlanController {
       const scheduledDays = scheduleTimeSlots(dayBundles, tripRequest.startTime, tripRequest.endTime);
 
       const totalActualCost = scheduledDays.reduce((acc, d) => acc + d.totalEstimatedCost, 0);
+
+      // Chế độ chạy thuần Thuật toán Planner (không qua LLM AI để tiết kiệm thời gian & test lộ trình trực tiếp)
+      if (tripRequest.skipAi) {
+        return res.status(200).json({
+          success: true,
+          data: {
+            planId: `plan_${Date.now()}`,
+            city: tripRequest.city,
+            totalDays: tripRequest.days,
+            totalBudget: tripRequest.totalBudget,
+            actualCost: totalActualCost,
+            strategyUsed: 'PLANNER_ONLY',
+            weatherForecast: dailyWeather,
+            overallSummary: `Lịch trình ${tripRequest.city} ${tripRequest.days} ngày được tối ưu trực tiếp từ thuật toán Planner (Thời tiết + GPS + Ngân sách).`,
+            days: scheduledDays
+          }
+        });
+      }
 
       // Bước 6: Lựa chọn chiến lược AI (Có RAG hay Không có RAG)
       const aiStrategy = tripRequest.enableRag ? new RagStrategy() : new DirectJsonStrategy();

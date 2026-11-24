@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { formatVND, formatDuration, TAGS } from '../../data/mockData';
+import React, { useState, useEffect } from 'react';
+import { formatVND, formatDuration } from '../../data/mockData';
 
 export default function SwapModal({
   isOpen = false,
@@ -11,6 +11,10 @@ export default function SwapModal({
   isLoading = false
 }) {
   const [selectedAlternative, setSelectedAlternative] = useState(null);
+
+  useEffect(() => {
+    setSelectedAlternative(null);
+  }, [isOpen, currentPlace?.id]);
 
   if (!isOpen || !currentPlace) return null;
 
@@ -66,7 +70,7 @@ export default function SwapModal({
           </div>
 
           <h4 style={{ margin: '0 0 10px', fontSize: '14px', color: '#334155' }}>
-            Gợi ý địa điểm thay thế cùng phân vùng:
+            Gợi ý địa điểm thay thế gần đây (không trùng lịch trình):
           </h4>
 
           {availableAlternatives.length > 0 ? (
@@ -93,7 +97,8 @@ export default function SwapModal({
                       </span>
                     </div>
                     <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
-                      {alt.zoneName} · {formatDuration(alt.duration || 60)} · ★ {(alt.popularity ? Math.round(alt.popularity * 100) / 10 : 8.0)}
+                      {alt.zoneName} · {formatDuration(alt.duration || 60)}
+                      {alt.distanceKm !== undefined && alt.distanceKm < 90 && ` · Cách ~${alt.distanceKm} km`}
                     </div>
                   </div>
                 );

@@ -13,7 +13,9 @@
     "install:all": "npm install",
     "prisma:generate": "npm run prisma:generate --workspace backend",
     "prisma:migrate": "npm run prisma:migrate --workspace backend",
-    "db:seed": "npm run db:seed --workspace backend"
+    "db:seed": "npm run db:seed --workspace backend",
+    "prisma:seed": "npm run db:seed",
+    "db:replace-places": "node data/seed/seed.js --replace-places-only"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

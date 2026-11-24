@@ -58,10 +58,9 @@ GEO_ZONE/
 │   ├── vite.config.js
 │   └── jsconfig.json
 │
-├── data/                           # Dữ liệu mẫu & Kho tri thức
-│   ├── raw/                        # danang_places.json (100-150 địa điểm chuẩn hóa)
-│   ├── knowledge_base/             # Cẩm nang ẩm thực, văn hóa, kinh nghiệm di chuyển
-│   └── seed/                       # seed.js (Nạp CSDL & tạo sẵn 2 tài khoản demo)
+├── data/                           # Seed script và dữ liệu tham khảo
+│   └── seed/                       # seed.js (Nạp catalog, Zone, Tags và tài khoản mẫu)
+├── frontend/src/data/              # Danh mục địa điểm của 5 thành phố dùng để seed
 │
 ├── HUONG_DAN_LAM_VIEC_CODEBASE.md  # 📘 Hướng dẫn chi tiết cách làm việc với các file code
 └── NHIEM_VU_4_TUAN_CAC_THANH_VIEN.md # 📅 Bảng phân công chi tiết 4 tuần cho nhóm 4 người
@@ -71,35 +70,56 @@ GEO_ZONE/
 
 ## 🚀 Hướng Dẫn Cài Đặt & Chạy Thử
 
-### 1. Cài đặt toàn bộ dự án
+### 1. Chuẩn bị môi trường
+
+Cài Node.js và PostgreSQL, sau đó tạo database `geozone_db` trong PostgreSQL (bằng pgAdmin hoặc công cụ dòng lệnh). Tất cả lệnh dưới đây chạy từ thư mục gốc `GEOZONE`.
+
 ```bash
-# Chạy tại thư mục gốc GEOZONE
 npm install
 ```
 
-Lệnh trên cài dependency cho cả `backend` và `frontend` nhờ npm workspaces.
+Npm workspaces sẽ cài dependency cho cả `backend` và `frontend`.
 
-### 2. Cấu hình Backend và cơ sở dữ liệu
+### 2. Cấu hình Backend và PostgreSQL
+
+Tạo file môi trường riêng cho backend:
+
+```powershell
+Copy-Item .\backend\.env.example .\backend\.env
+```
+
+Trên macOS/Linux, dùng `cp backend/.env.example backend/.env`.
+
+Mở `backend/.env` và cập nhật `DATABASE_URL` theo tài khoản PostgreSQL trên máy. Đặt `FRONTEND_ORIGINS` thành origin chính xác của frontend (mặc định `http://localhost:3000`; khi triển khai, liệt kê các origin được phép, phân cách bằng dấu phẩy). Đặt hai giá trị bí mật riêng, ngẫu nhiên cho `ACCESS_TOKEN_SECRET` và `REFRESH_TOKEN_SECRET`; không commit file `.env`. `GEMINI_API_KEY` chỉ cần thiết khi bật tính năng gọi LLM.
+
+Áp dụng migration, sau đó nạp dữ liệu mẫu:
+
 ```bash
-cd backend
-copy .env.example .env
-# Điền DATABASE_URL, JWT_SECRET và GEMINI_API_KEY vào .env
 npm run prisma:generate
 npm run prisma:migrate
-npm run db:seed
+npm run prisma:seed
 ```
-*Tài khoản test mặc định đã được tạo sẵn:*
+
+Lệnh seed đọc toàn bộ dữ liệu 5 thành phố từ `frontend/src/data/` (Đà Nẵng, Huế, Hà Nội, Hạ Long và Ninh Bình), đồng thời tạo các Zone, Tags và tài khoản mẫu. Seed có thể chạy lại: cập nhật dữ liệu mẫu đã có, không xóa hàng loạt địa điểm, chuyến đi, tài khoản hay mục yêu thích của người dùng.
+
+Nếu chỉ muốn thay toàn bộ catalog địa điểm hiện có bằng dữ liệu trong các file trên, chạy `npm run db:replace-places`. Lệnh này thay các hàng trong `places` và `place_tags`, chỉ bổ sung `zones`/`tags` còn thiếu, giữ lại favorites nếu địa điểm tương ứng còn trong catalog, và không cập nhật tài khoản hay chuyến đi. Lệnh sẽ dừng nếu có KnowledgeChunk liên kết cần được bảo toàn.
+
+Tài khoản mặc định sau khi seed:
+
 - **User Demo:** `demo@geozone.vn` / Mật khẩu: `password123`
 - **Admin Demo:** `admin@geozone.vn` / Mật khẩu: `admin123`
 
-### 3. Khởi động cả Backend và Frontend
+Đổi mật khẩu mẫu trước khi sử dụng môi trường chia sẻ hoặc triển khai thật.
+
+### 3. Khởi động Backend và Frontend
+
 ```bash
-# Chạy tại thư mục gốc GEOZONE
 npm run dev
 ```
 
-Lệnh này chạy đồng thời:
+Ứng dụng chạy đồng thời tại:
+
 - Backend API: `http://localhost:5000`
 - Frontend: `http://localhost:3000`
 
-Frontend đã được cấu hình proxy `/api` tới backend nên không cần chạy thêm terminal thứ hai.
+Frontend đã cấu hình proxy `/api` tới backend. Nếu muốn khởi động riêng, dùng `npm run dev --workspace backend` hoặc `npm run dev --workspace frontend`.

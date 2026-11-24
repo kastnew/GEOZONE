@@ -23,7 +23,7 @@
   flex: none;
   background: var(--gz-color-surface);
   color: var(--gz-color-ink);
-  padding: 10px 24px;
+  padding: 12px 24px;
   display: flex;
   justify-content: space-between;
   gap: 20px;
@@ -35,33 +35,61 @@
 
 .modes {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   padding: 4px;
+  flex: 0 0 auto;
   border: 1px solid var(--gz-color-line);
-  border-radius: var(--gz-radius-pill);
+  border-radius: var(--gz-radius-lg);
   background: var(--gz-color-surface-subtle);
 }
 
 .modes button {
-  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-width: 154px;
+  min-height: 48px;
   background: transparent;
   color: var(--gz-color-ink-secondary);
   border: 0;
-  border-radius: var(--gz-radius-pill);
-  padding: 6px 16px;
+  border-radius: var(--gz-radius-md);
+  padding: 6px 14px;
   font: 600 13px var(--gz-font-body);
+  text-align: left;
   cursor: pointer;
   transition: color var(--gz-motion-fast), background-color var(--gz-motion-fast);
 }
 
 .modes button:hover {
   color: var(--gz-color-primary);
+  background: var(--gz-color-primary-soft);
 }
 
 .modes button[aria-pressed="true"] {
   background: var(--gz-color-primary);
   color: var(--gz-color-ink-inverse);
-  box-shadow: var(--gz-shadow-subtle);
+}
+
+.mode-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.mode-copy strong {
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.mode-copy small {
+  color: var(--gz-color-ink-muted);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.modes button[aria-pressed="true"] .mode-copy small {
+  color: rgba(255, 255, 255, .78);
 }
 
 .info {
@@ -89,14 +117,38 @@
   gap: 12px;
 }
 
-.cityfield select {
-  height: 36px;
-  background: var(--gz-color-surface);
-  color: var(--gz-color-ink);
-  border: 1px solid var(--gz-color-line-strong);
+.cityfield {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 11px;
+  border: 1px solid #d6e8ed;
   border-radius: var(--gz-radius-md);
-  padding: 6px 12px;
-  font: 600 13px var(--gz-font-body);
+  color: var(--gz-color-primary-pressed);
+  background: var(--gz-color-primary-soft);
+}
+
+.cityfield-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cityfield select {
+  min-width: 116px;
+  height: 34px;
+  background: transparent;
+  color: var(--gz-color-ink);
+  border: 0;
+  border-left: 1px solid #c8dfe5;
+  border-radius: 0;
+  padding: 4px 4px 4px 10px;
+  font: 700 13px var(--gz-font-body);
   cursor: pointer;
 }
 
@@ -499,6 +551,10 @@
   .top {
     padding: 10px 16px;
     flex-wrap: wrap;
+    align-items: stretch;
+  }
+  .modes button {
+    min-width: 140px;
   }
   .info {
     flex-wrap: wrap;
@@ -507,6 +563,39 @@
 }
 
 @media (max-width: 520px) {
+  .top {
+    gap: 10px;
+  }
+  .modes {
+    width: 100%;
+  }
+  .modes button {
+    min-width: 0;
+    flex: 1;
+    padding: 6px 9px;
+  }
+  .mode-copy small {
+    display: none;
+  }
+  .info {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .title p {
+    max-width: 180px;
+  }
+  .infobar {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .cityfield {
+    flex: 1;
+    justify-content: space-between;
+  }
+  .cityfield select {
+    min-width: 90px;
+    flex: 1;
+  }
   .row2 {
     gap: 6px;
   }

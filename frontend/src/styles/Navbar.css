@@ -273,7 +273,8 @@
   top: 100%;
   right: 0;
   width: 220px;
-  height: 10px;
+  height: 8px;
+  pointer-events: auto;
 }
 
 .au-pop.is-open {

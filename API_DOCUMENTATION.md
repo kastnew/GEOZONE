@@ -14,7 +14,7 @@ Tài liệu đặc tả hợp đồng giao tiếp API (API Contract Documentatio
 - **Xác thực (Authentication):** Sử dụng chuẩn **Dual-Token** (Access Token 15m dạng Bearer Header + Refresh Token 7d dạng HttpOnly Cookie).
 - **Credentials:** Các API làm việc với Cookie (Auth refresh, login, logout) bắt buộc bật `credentials: 'include'` (hoặc `withCredentials: true` trên Axios).
 - **Phân quyền (Authorization):** Gồm 3 quyền chính trong hệ thống: `USER` (Khách du lịch), `ADMIN` (Quản trị viên), `CUSTOMER` (Tương thích ngược).
-
+ 
 ---
 
 # Bảng Mục Lục API

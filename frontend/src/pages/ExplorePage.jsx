@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import '../styles/Explore.css';
 import '../styles/Planner.css';
 import ExploreTopBar from '../components/explore/ExploreTopBar';

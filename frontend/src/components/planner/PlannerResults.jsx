@@ -7,9 +7,9 @@ import { ArrowRightLeft, Save } from 'lucide-react';
 export default function PlannerResults({
   plan = null,
   isLoading = false,
-  onSavePlan = () => {},
-  onOpenSwap = () => {},
-  onSelectPlace = () => {}
+  onSavePlan = () => { },
+  onOpenSwap = () => { },
+  onSelectPlace = () => { }
 }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -95,7 +95,8 @@ export default function PlannerResults({
             <b style="color:${dayColor}">Ngày ${day.dayNumber || dIdx + 1} · Điểm ${pIdx + 1}</b>
             <div style="font-size:14px; font-weight:700; color:#0f172a; margin-top:2px;">${place.name}</div>
             <div style="font-size:12px; color:#64748b;">${place.zoneName || ''}</div>
-            <div style="font-size:12px; color:var(--gz-color-primary); font-weight:600; margin-top:4px;">${formatVND(place.estimatedCost ?? place.cost ?? 0)}</div>
+            ${travelInfo}
+    <div style="font-size:12px; color:var(--gz-color-primary); font-weight:600; margin-top:4px;">${formatVND(place.estimatedCost ?? place.cost ?? 0)}</div>
           </div>
         `);
         routeLayerRef.current.addLayer(marker);

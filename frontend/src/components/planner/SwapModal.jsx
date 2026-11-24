@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { formatVND, formatDuration, TAGS } from '../../data/mockData';
 import { X } from 'lucide-react';
 

@@ -27,7 +27,15 @@ export default function HomePage({
           className="gz-p"
           data-k={p.key}
           style={{ backgroundImage: `url('${p.img}')` }}
+          role="link"
+          tabIndex={0}
           onClick={() => handleCityClick(p.key)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleCityClick(p.key);
+            }
+          }}
           title={`Khám phá ${p.name}`}
         >
           <b>{p.name}</b>

@@ -1,6 +1,7 @@
 import React from 'react';
 import '../../styles/Trips.css';
 import { formatVND, formatDuration } from '../../data/mockData';
+import { CalendarDays, Copy, MapPin, X } from 'lucide-react';
 
 export default function TripDetailModal({
   isOpen = false,
@@ -40,7 +41,7 @@ export default function TripDetailModal({
             aria-label="Đóng"
             onClick={onClose}
           >
-            ✕
+            <X size={18} strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
 
@@ -58,9 +59,9 @@ export default function TripDetailModal({
               borderBottom: '1px solid #e2e8f0'
             }}
           >
-            <span>📍 Điểm đến: <b>{trip.cityName || trip.city}</b></span>
-            <span>🗓 Số ngày: <b>{trip.daysCount || (trip.days ? trip.days.length : 1)} ngày</b></span>
-            <span>💰 Tổng vé: <b>{formatVND(trip.totalCost || 0)}</b></span>
+            <span><MapPin size={14} strokeWidth={1.75} aria-hidden="true" /> Điểm đến: <b>{trip.cityName || trip.city}</b></span>
+            <span><CalendarDays size={14} strokeWidth={1.75} aria-hidden="true" /> Số ngày: <b>{trip.daysCount || (trip.days ? trip.days.length : 1)} ngày</b></span>
+            <span> Tổng vé: <b>{formatVND(trip.totalCost || 0)}</b></span>
           </div>
 
           <div id="tvDays" style={{ display: 'grid', gap: '16px' }}>
@@ -72,7 +73,7 @@ export default function TripDetailModal({
                     background: '#f8fafc',
                     borderRadius: '12px',
                     padding: '14px 18px',
-                    borderLeft: '4px solid #2563eb'
+                    borderLeft: '4px solid var(--gz-color-primary)'
                   }}
                 >
                   <h4 style={{ margin: '0 0 10px', fontSize: '15px', color: '#0f172a' }}>
@@ -129,10 +130,10 @@ export default function TripDetailModal({
             type="button"
             id="tvCopy"
             className="gz-btn ghost"
-            style={{ borderColor: '#cbd5e1', color: '#2563eb' }}
+            style={{ borderColor: 'var(--gz-color-line-strong)', color: 'var(--gz-color-primary)' }}
             onClick={() => onCopyShareLink(trip)}
           >
-            🔗 Sao chép liên kết chia sẻ
+            <Copy size={15} strokeWidth={1.75} aria-hidden="true" /> Sao chép liên kết chia sẻ
           </button>
           <button type="button" className="gz-btn" onClick={onClose}>
             Đóng

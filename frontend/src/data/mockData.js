@@ -16,7 +16,7 @@ export const CITIES = {
     name: 'Huế',
     api: 'Hue',
     file: 'data/hue_places.json',
-    accent: '#6a4a9c',
+    accent: '#0b6e8e',
     center: [16.4637, 107.5909],
     sub: 'Cố đô, sông Hương, lăng tẩm và đầm phá',
     hero: [
@@ -30,7 +30,7 @@ export const CITIES = {
     name: 'Đà Nẵng',
     api: 'Da Nang',
     file: 'data/danang_places.json',
-    accent: '#0d6f9c',
+    accent: '#0b6e8e',
     center: [16.0544, 108.2022],
     sub: 'Biển Mỹ Khê, Sơn Trà, Ngũ Hành Sơn và Bà Nà',
     hero: []
@@ -40,7 +40,7 @@ export const CITIES = {
     name: 'Hà Nội',
     api: 'Ha Noi',
     file: 'data/hanoi_places.json',
-    accent: '#b3472f',
+    accent: '#0b6e8e',
     center: [21.0285, 105.8542],
     sub: 'Phố cổ, Hồ Gươm, Văn Miếu, Sơn Tây và Ba Vì',
     hero: [
@@ -53,7 +53,7 @@ export const CITIES = {
     name: 'Hạ Long',
     api: 'Ha Long',
     file: 'data/halong_places.json',
-    accent: '#0a7f8c',
+    accent: '#0b6e8e',
     center: [20.9500, 107.0700],
     sub: 'Vịnh Hạ Long, Bãi Cháy, Hòn Gai và đảo Tuần Châu',
     hero: [
@@ -67,7 +67,7 @@ export const CITIES = {
     name: 'Ninh Bình',
     api: 'NinhBinh',
     file: 'data/ninhbinh_places.json',
-    accent: '#2c7a58',
+    accent: '#0b6e8e',
     center: [20.2506, 105.9745],
     sub: 'Tràng An, Tam Cốc, Cố đô Hoa Lư và Cúc Phương',
     hero: [

@@ -1,20 +1,22 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import '../styles/About.css';
+import { BrainCircuit, Map, Scale } from 'lucide-react';
 
 export default function AboutPage({ onNavigate = () => {} }) {
   const features = [
     {
-      icon: '🗺️',
+      Icon: Map,
       title: 'Dữ liệu địa lý',
       desc: 'Phân vùng địa điểm để lộ trình gọn, ít di chuyển.'
     },
     {
-      icon: '🧮',
+      Icon: Scale,
       title: 'Thuật toán tối ưu hóa',
       desc: 'Cân đối ngân sách, thời gian và mức độ ưu tiên.'
     },
     {
-      icon: '🤖',
+      Icon: BrainCircuit,
       title: 'Mô hình ngôn ngữ lớn',
       desc: 'Hoàn thiện nội dung lịch trình theo từng ngày.'
     }
@@ -26,20 +28,14 @@ export default function AboutPage({ onNavigate = () => {} }) {
       <div
         className="gz-pb"
         data-k="halong"
-        style={{ backgroundImage: "url('/images/heroes/halong.jpg')" }}
+        style={{ '--gz-hero-image': "url('/images/heroes/halong.jpg')" }}
       >
         <div className="gz-wrap">
           <h1>Giới thiệu</h1>
           <p className="gz-crumb">
-            <a
-              href="#trang-chu"
-              onClick={(e) => {
-                e.preventDefault();
-                onNavigate('home');
-              }}
-            >
+            <Link to="/">
               Trang chủ
-            </a>{' '}
+            </Link>{' '}
             / GeoZone AI
           </p>
         </div>
@@ -49,6 +45,7 @@ export default function AboutPage({ onNavigate = () => {} }) {
       <div className="gz-intro">
         <div className="gz-wrap gz-split">
           <div>
+            <p className="gz-eyebrow">VỀ GEOZONE AI</p>
             <h2>Mỗi chuyến đi là một hành trình khám phá</h2>
             <p>
               Mỗi chuyến đi là một hành trình khám phá những vùng đất mới, trải
@@ -85,12 +82,14 @@ export default function AboutPage({ onNavigate = () => {} }) {
           <div className="gz-feats">
             {features.map((f, idx) => (
               <div key={idx} className="gz-f">
-                <span style={{ fontSize: '24px' }}>{f.icon}</span>
+                <span className="gz-f-icon">
+                  <f.Icon size={22} strokeWidth={1.75} aria-hidden="true" />
+                </span>
                 <div>
                   <strong style={{ display: 'block', fontSize: '16px', marginBottom: '4px' }}>
                     {f.title}
                   </strong>
-                  <span style={{ color: '#5b6781', fontSize: '14px' }}>{f.desc}</span>
+                  <span style={{ color: 'var(--gz-color-ink-secondary)', fontSize: '14px' }}>{f.desc}</span>
                 </div>
               </div>
             ))}

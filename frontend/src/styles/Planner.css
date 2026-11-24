@@ -95,7 +95,7 @@
   font: 700 15px var(--body);
   cursor: pointer;
   transition: opacity .15s, transform .15s;
-  box-shadow: 0 4px 12px rgba(106, 74, 156, .25);
+  box-shadow: 0 4px 12px rgb(11 110 142 / .18);
 }
 
 .go:hover {
@@ -199,8 +199,8 @@
 }
 
 .zh span {
-  color: #2563eb;
-  background: #eff6ff;
+  color: var(--gz-color-primary-pressed);
+  background: var(--gz-color-primary-soft);
   border-radius: 6px;
   padding: 2px 8px;
 }
@@ -227,8 +227,8 @@
 }
 
 .zchips button[aria-pressed="true"] {
-  background: #2563eb;
-  border-color: #2563eb;
+  background: var(--gz-color-primary);
+  border-color: var(--gz-color-primary);
   color: #fff;
 }
 

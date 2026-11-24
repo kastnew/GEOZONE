@@ -1,0 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --gz-color-canvas: #fafaf8;
+  --gz-color-canvas-cool: #f8fafc;
+  --gz-color-surface: #ffffff;
+  --gz-color-surface-subtle: #f1f5f9;
+  --gz-color-surface-muted: #e8eef2;
+
+  /* Coastal ocean and warm sand */
+  --gz-color-primary: #0b6e8e;
+  --gz-color-primary-hover: #095a73;
+  --gz-color-primary-pressed: #07485d;
+  --gz-color-primary-soft: #e6f3f6;
+  --gz-color-sand: #b7791f;
+  --gz-color-sand-soft: #fff5d9;
+
+  /* Ink and semantic colors */
+  --gz-color-ink: #0f172a;
+  --gz-color-ink-secondary: #475569;
+  --gz-color-ink-muted: #64748b;
+  --gz-color-ink-inverse: #ffffff;
+  --gz-color-line: #e2e8f0;
+  --gz-color-line-strong: #cbd5e1;
+  --gz-color-success: #166534;
+  --gz-color-success-soft: #ecfdf3;
+  --gz-color-warning: #9a5b13;
+  --gz-color-warning-soft: #fff7e6;
+  --gz-color-danger: #b42318;
+  --gz-color-danger-soft: #fff1f0;
+
+  /* Geographic zone badges: muted and intentionally distinct */
+  --gz-zone-z1: #2f7f95;
+  --gz-zone-z1-soft: #e3f1f4;
+  --gz-zone-z2: #668f78;
+  --gz-zone-z2-soft: #eaf2ec;
+  --gz-zone-z3: #b88a4a;
+  --gz-zone-z3-soft: #fbf1df;
+  --gz-zone-z4: #ad6d5f;
+  --gz-zone-z4-soft: #f7e9e5;
+  --gz-zone-z5: #68808d;
+  --gz-zone-z5-soft: #eaf0f2;
+
+  /* Typography */
+  --gz-font-body: "Be Vietnam Pro", system-ui, sans-serif;
+  --gz-font-display: "Be Vietnam Pro", system-ui, sans-serif;
+  --gz-font-size-body: 0.9375rem;
+  --gz-line-height-body: 1.65;
+  --gz-font-weight-regular: 400;
+  --gz-font-weight-medium: 500;
+  --gz-font-weight-semibold: 600;
+  --gz-font-weight-bold: 700;
+  --gz-numeric: tabular-nums;
+
+  /* Shape, spacing, and elevation */
+  --gz-radius-sm: 0.375rem;
+  --gz-radius-md: 0.625rem;
+  --gz-radius-lg: 0.875rem;
+  --gz-radius-xl: 1.25rem;
+  --gz-radius-pill: 999px;
+  --gz-space-1: 0.25rem;
+  --gz-space-2: 0.5rem;
+  --gz-space-3: 0.75rem;
+  --gz-space-4: 1rem;
+  --gz-space-5: 1.25rem;
+  --gz-space-6: 1.5rem;
+  --gz-space-8: 2rem;
+  --gz-space-10: 2.5rem;
+  --gz-shadow-subtle: 0 1px 2px rgb(15 23 42 / 0.05);
+  --gz-shadow-dialog: 0 18px 48px rgb(15 23 42 / 0.16);
+
+  /* Motion and focus */
+  --gz-motion-fast: 140ms;
+  --gz-motion-standard: 220ms;
+  --gz-motion-hero: 350ms;
+  --gz-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --gz-ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+  --gz-focus-ring: 0 0 0 3px rgb(11 110 142 / 0.24);
+}
+
+.gz-numeric,
+[data-numeric],
+time,
+.price,
+.cost,
+.rating,
+.duration {
+  font-variant-numeric: var(--gz-numeric);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --gz-motion-fast: 1ms;
+    --gz-motion-standard: 1ms;
+    --gz-motion-hero: 1ms;
+  }
+}

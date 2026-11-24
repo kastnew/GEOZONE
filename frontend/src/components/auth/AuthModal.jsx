@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { loginApi, registerApi } from '../../services/api.js';
+import { X } from 'lucide-react';
 
 export const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = 'login' }) => {
   const [mode, setMode] = useState(initialMode); // 'login' | 'register'
@@ -47,7 +48,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = 'login' })
           onClick={onClose}
           className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg cursor-pointer"
         >
-          ✕
+          <X size={18} strokeWidth={1.75} aria-hidden="true" />
         </button>
 
         {/* Tab chuyển đổi */}

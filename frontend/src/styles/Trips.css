@@ -3,9 +3,9 @@
    ========================================================================== */
 
 .gz-trips {
-  background: #f8fafc;
+  background: var(--gz-color-canvas-cool);
   min-height: calc(100vh - 64px);
-  padding: 40px 0 80px;
+  padding: 0 0 80px;
 }
 
 .gz-trips.on {
@@ -26,7 +26,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--gz-color-line);
   gap: 16px;
   flex-wrap: wrap;
 }
@@ -38,17 +40,26 @@
 }
 
 .gz-tbar .gz-link {
-  color: #2563eb;
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid var(--gz-color-danger-soft);
+  border-radius: var(--gz-radius-md);
+  background: var(--gz-color-surface);
+  color: var(--gz-color-danger);
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
 }
 
+.gz-tbar .gz-link:hover {
+  background: var(--gz-color-danger-soft);
+}
+
 .gz-gnote {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1e40af;
-  border-radius: 12px;
+  background: var(--gz-color-primary-soft);
+  border: 1px solid var(--gz-color-line);
+  color: var(--gz-color-primary-pressed);
+  border-radius: var(--gz-radius-lg);
   padding: 14px 18px;
   margin-bottom: 24px;
   font-size: 14px;
@@ -56,19 +67,19 @@
 
 .gz-tgrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
   gap: 20px;
 }
 
 .tcard {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
+  background: var(--gz-color-surface);
+  border: 1px solid var(--gz-color-line);
+  border-radius: var(--gz-radius-lg);
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .04);
+  box-shadow: var(--gz-shadow-subtle);
   transition: transform .15s, box-shadow .15s;
 }
 
@@ -87,15 +98,24 @@
 .tcard-head h3 {
   margin: 0;
   font: 700 18px var(--display);
-  color: #0f172a;
+  color: var(--gz-color-ink);
 }
 
 .tcard-meta {
   font-size: 13px;
-  color: #64748b;
+  color: var(--gz-color-ink-secondary);
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  gap: 12px;
+}
+
+.tcard-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .tcard-actions {
@@ -104,6 +124,28 @@
   margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid #f1f5f9;
+}
+
+.tcard-actions .gz-btn.trip-card-view,
+.tcard-actions .gz-btn.trip-card-delete {
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.tcard-actions .gz-btn.trip-card-view {
+  border-color: var(--gz-color-line-strong);
+  color: var(--gz-color-primary-pressed);
+}
+
+.tcard-actions .gz-btn.trip-card-delete {
+  margin-left: auto;
+  border-color: var(--gz-color-danger-soft);
+  color: var(--gz-color-danger);
+}
+
+.tcard-actions .gz-btn.trip-card-delete:hover {
+  background: var(--gz-color-danger-soft);
 }
 
 .gz-tempty {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import '../styles/Explore.css';
 import '../styles/Planner.css';
 import ExploreTopBar from '../components/explore/ExploreTopBar';
@@ -27,6 +27,8 @@ export default function ExplorePage({
   onAdminExport = () => {},
   onAdminReset = () => {},
   onSavePlan = () => {},
+  generatedPlan = null,
+  onGeneratedPlanChange = () => {},
   showToast = () => {}
 }) {
   // Local exploration filters
@@ -44,7 +46,6 @@ export default function ExplorePage({
   const [budget, setBudget] = useState(1000000);
   const [selectedPreferences, setSelectedPreferences] = useState([]);
   const [isPlanning, setIsPlanning] = useState(false);
-  const [generatedPlan, setGeneratedPlan] = useState(null);
 
   // Dynamic Swap State
   const [swapState, setSwapState] = useState({
@@ -60,51 +61,48 @@ export default function ExplorePage({
   const cityConfig = CITIES[selectedCity] || CITIES.hue;
 
   // Filter place cards
-  const filteredPlaces = cityPlaces.filter((p) => {
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchName = (p.name || '').toLowerCase().includes(q);
-      const matchAddr = (p.address || '').toLowerCase().includes(q);
-      const matchZone = (p.zoneName || '').toLowerCase().includes(q);
-      if (!matchName && !matchAddr && !matchZone) return false;
-    }
+  const filteredPlaces = useMemo(() => {
+    const filtered = cityPlaces.filter((p) => {
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchName = (p.name || '').toLowerCase().includes(q);
+        const matchAddr = (p.address || '').toLowerCase().includes(q);
+        const matchZone = (p.zoneName || '').toLowerCase().includes(q);
+        if (!matchName && !matchAddr && !matchZone) return false;
+      }
 
-    if (selectedZone && p.zoneCode !== selectedZone) {
-      return false;
-    }
+      if (selectedZone && p.zoneCode !== selectedZone) return false;
 
-    const maxCost = parseFloat(selectedCost);
-    const placeCost = p.estimatedCost ?? p.cost ?? 0;
-    if (placeCost > maxCost) {
-      return false;
-    }
+      const maxCost = parseFloat(selectedCost);
+      const placeCost = p.estimatedCost ?? p.cost ?? 0;
+      if (placeCost > maxCost) return false;
 
-    if (selectedTags.length > 0) {
-      const hasAllTags = selectedTags.some((t) => (p.tags || []).includes(t));
-      if (!hasAllTags) return false;
-    }
+      if (selectedTags.length > 0 && !selectedTags.some((tag) => (p.tags || []).includes(tag))) {
+        return false;
+      }
 
-    if (isOpenOnly && p.openingTime && p.closingTime) {
-      const now = new Date();
-      const currentMins = now.getHours() * 60 + now.getMinutes();
-      const [openH, openM] = p.openingTime.split(':').map(Number);
-      const [closeH, closeM] = p.closingTime.split(':').map(Number);
-      const openMins = openH * 60 + openM;
-      const closeMins = closeH * 60 + closeM;
-      if (currentMins < openMins || currentMins > closeMins) return false;
-    }
+      if (isOpenOnly && p.openingTime && p.closingTime) {
+        const now = new Date();
+        const currentMins = now.getHours() * 60 + now.getMinutes();
+        const [openH, openM] = p.openingTime.split(':').map(Number);
+        const [closeH, closeM] = p.closingTime.split(':').map(Number);
+        const openMins = openH * 60 + openM;
+        const closeMins = closeH * 60 + closeM;
+        if (currentMins < openMins || currentMins > closeMins) return false;
+      }
 
-    return true;
-  });
+      return true;
+    });
 
-  // Sorting
-  filteredPlaces.sort((a, b) => {
-    if (selectedSort === 'pop') return (b.popularity || 0) - (a.popularity || 0);
-    if (selectedSort === 'costAsc') return (a.estimatedCost || 0) - (b.estimatedCost || 0);
-    if (selectedSort === 'durAsc') return (a.duration || 60) - (b.duration || 60);
-    if (selectedSort === 'name') return (a.name || '').localeCompare(b.name || '');
-    return 0;
-  });
+    filtered.sort((a, b) => {
+      if (selectedSort === 'pop') return (b.popularity || 0) - (a.popularity || 0);
+      if (selectedSort === 'costAsc') return (a.estimatedCost || 0) - (b.estimatedCost || 0);
+      if (selectedSort === 'durAsc') return (a.duration || 60) - (b.duration || 60);
+      if (selectedSort === 'name') return (a.name || '').localeCompare(b.name || '');
+      return 0;
+    });
+    return filtered;
+  }, [cityPlaces, searchQuery, selectedZone, selectedCost, selectedTags, isOpenOnly, selectedSort]);
 
   // Tag counts
   const tagCounts = {};
@@ -113,6 +111,20 @@ export default function ExplorePage({
       tagCounts[t] = (tagCounts[t] || 0) + 1;
     });
   });
+
+  const clearExploreFilters = () => {
+    setSearchQuery('');
+    setSelectedTags([]);
+    setSelectedZone('');
+    setSelectedCost('1e9');
+    setSelectedSort('pop');
+    setIsOpenOnly(false);
+  };
+
+  const handleCityChange = (cityKey) => {
+    setSelectedPlace(null);
+    onSelectCity(cityKey);
+  };
 
   const handleToggleTag = (tag) => {
     if (selectedTags.includes(tag)) {
@@ -140,7 +152,7 @@ export default function ExplorePage({
         budget,
         tags: selectedPreferences
       });
-      setGeneratedPlan(planResult);
+      onGeneratedPlanChange(planResult);
       showToast('Đã tạo và tối ưu lịch trình thành công!');
     } catch (err) {
       showToast(err.message || 'Lỗi khi tạo lịch trình');
@@ -195,7 +207,7 @@ export default function ExplorePage({
         totalCost: updatedDays.reduce((sum, d) => sum + d.totalCost, 0)
       };
 
-      setGeneratedPlan(updatedPlan);
+      onGeneratedPlanChange(updatedPlan);
       setSwapState({ isOpen: false, dayIndex: 0, placeIndex: 0, place: null });
       showToast(`Đã đổi sang "${newPlace.name}"!`);
     } catch (err) {
@@ -224,7 +236,7 @@ export default function ExplorePage({
         mode={mode}
         onSelectMode={onSelectMode}
         selectedCity={selectedCity}
-        onSelectCity={onSelectCity}
+        onSelectCity={handleCityChange}
         cartCount={cartItems.length}
         onOpenCart={onOpenCart}
       />
@@ -273,9 +285,10 @@ export default function ExplorePage({
                 />
               ))
             ) : (
-              <p style={{ textAlign: 'center', color: '#64748b', padding: '40px 16px' }}>
-                Không tìm thấy địa điểm nào phù hợp với bộ lọc hiện tại.
-              </p>
+              <div className="gz-empty-state">
+                <p>Không tìm thấy địa điểm phù hợp.</p>
+                <button type="button" onClick={clearExploreFilters}>Xóa bộ lọc</button>
+              </div>
             )}
           </div>
         </div>
@@ -295,13 +308,14 @@ export default function ExplorePage({
       <main className="planner" id="planner" hidden={mode !== 'planner'}>
         <PlannerSidebar
           selectedCity={selectedCity}
-          onCityChange={onSelectCity}
+          onCityChange={handleCityChange}
           daysCount={daysCount}
           onDaysChange={setDaysCount}
           budget={budget}
           onBudgetChange={setBudget}
           selectedPreferences={selectedPreferences}
           onTogglePreference={handleTogglePreference}
+          onClearPreferences={() => setSelectedPreferences([])}
           onSubmit={handleGeneratePlan}
           isLoading={isPlanning}
         />

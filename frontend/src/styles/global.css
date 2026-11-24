@@ -3,15 +3,15 @@
    ========================================================================== */
 
 :root {
-  --accent: #6a4a9c;
-  --ink: #14201e;
-  --muted: #5d6b68;
-  --bg: #f2f5f4;
-  --panel: #fff;
-  --line: #d9e0de;
-  --ok: #1f7a4d;
-  --no: #a3392f;
-  --display: "Bricolage Grotesque", "Be Vietnam Pro", system-ui, sans-serif;
+  --accent: var(--gz-color-primary);
+  --ink: var(--gz-color-ink);
+  --muted: var(--gz-color-ink-secondary);
+  --bg: var(--gz-color-canvas-cool);
+  --panel: var(--gz-color-surface);
+  --line: var(--gz-color-line);
+  --ok: var(--gz-color-success);
+  --no: var(--gz-color-danger);
+  --display: var(--gz-font-display);
   --body: "Be Vietnam Pro", system-ui, sans-serif;
   color-scheme: light;
 }
@@ -35,10 +35,11 @@ html body {
   height: auto !important;
   display: block !important;
   margin: 0;
-  font: 15px/1.5 var(--body);
-  color: var(--ink);
+  font: 16px/1.65 var(--body);
+  color: #334155;
   background: var(--bg);
   padding-bottom: env(safe-area-inset-bottom, 0);
+  font-variant-numeric: tabular-nums;
 }
 
 button,
@@ -47,6 +48,15 @@ input,
 textarea {
   font: inherit;
   color: inherit;
+  font-style: normal;
+}
+
+button,
+label,
+select,
+input,
+textarea {
+  font-style: normal;
 }
 
 :focus-visible {
@@ -66,10 +76,12 @@ textarea {
 /* Page Header Banners (.gz-pb) */
 .gz-pb {
   position: relative;
+  isolation: isolate;
+  overflow: hidden;
   min-height: 230px;
   display: flex;
   align-items: flex-end;
-  background: #233 center / cover no-repeat;
+  background-color: #233;
   color: #fff;
   padding: 0 0 28px;
 }
@@ -78,12 +90,25 @@ textarea {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(8, 14, 32, .35), rgba(8, 14, 32, .7));
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(15, 23, 42, .45), rgba(15, 23, 42, .72));
+}
+
+.gz-pb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--gz-hero-image);
+  background-color: transparent;
+  background-position: center;
+  background-size: cover;
+  animation: heroImageSettle 420ms var(--gz-ease-editorial) both;
 }
 
 .gz-pb .gz-wrap {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .gz-pb h1 {
@@ -95,16 +120,22 @@ textarea {
 .gz-crumb {
   margin: 8px 0 0;
   font-size: 14px;
-  opacity: .9;
+  color: rgba(255, 255, 255, .85);
+  opacity: 1;
 }
 
 .gz-crumb a {
-  color: #fff;
+  color: rgba(255, 255, 255, .85);
   text-decoration: none;
 }
 
 .gz-crumb a:hover {
   text-decoration: underline;
+}
+
+.gz-pb .gz-crumb,
+.gz-pb .gz-crumb a {
+  color: rgba(255, 255, 255, .85);
 }
 
 /* Base Buttons */
@@ -117,6 +148,7 @@ textarea {
   color: #fff;
   text-decoration: none;
   font: 600 15px var(--body);
+  font-style: normal;
   padding: 10px 20px;
   border-radius: 999px;
   border: 1px solid transparent;
@@ -149,13 +181,18 @@ textarea {
   background: rgba(255, 255, 255, .1);
 }
 
+@keyframes heroImageSettle {
+  from { transform: scale(1.03); }
+  to { transform: scale(1); }
+}
+
 /* Floating Return / Quick Link */
 .gzback {
   position: fixed;
   left: 10px;
   bottom: 10px;
   z-index: 9999;
-  background: #2563eb;
+  background: var(--gz-color-primary);
   color: #fff;
   font: 600 12px sans-serif;
   padding: 8px 12px;

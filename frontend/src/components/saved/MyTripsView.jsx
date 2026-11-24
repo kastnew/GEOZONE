@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { getMyPlansApi, getPlanByIdApi, deletePlanApi } from '../../services/api.js';
 import { LoadingSpinner } from '../common/LoadingSpinner.jsx';
+import { Eye, Map, Plus, Sparkles } from 'lucide-react';
+import { useToast } from '../../context/ToastContext.jsx';
 
 export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
+  const { showToast } = useToast();
   const [trips, setTrips] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -33,7 +36,7 @@ export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
         onSelectPlan(fullPlan.planData);
       }
     } catch (err) {
-      alert(err.message || 'Không thể mở lịch trình');
+      showToast(err.message || 'Không thể mở lịch trình', 'error');
     } finally {
       setActionLoadingId(null);
     }
@@ -48,7 +51,7 @@ export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
       await deletePlanApi(id);
       setTrips(trips.filter(t => t.id !== id));
     } catch (err) {
-      alert(err.message || 'Không thể xóa lịch trình');
+      showToast(err.message || 'Không thể xóa lịch trình', 'error');
     }
   };
 
@@ -71,7 +74,7 @@ export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-800 flex items-center space-x-2">
-            <span>🧳</span>
+            <Map size={19} strokeWidth={1.75} aria-hidden="true" />
             <span>Chuyến đi của tôi</span>
           </h2>
           <p className="text-xs text-slate-500 mt-1">
@@ -83,7 +86,7 @@ export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
           onClick={onGoToPlanner}
           className="px-4 py-2.5 rounded-xl font-bold text-xs text-white bg-blue-600 hover:bg-blue-700 transition shadow-sm cursor-pointer whitespace-nowrap self-start sm:self-auto"
         >
-          + Tạo lịch trình mới
+          <Plus size={15} strokeWidth={1.75} aria-hidden="true" /> Tạo lịch trình mới
         </button>
       </div>
 
@@ -96,7 +99,7 @@ export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
       {/* Danh sách các chuyến đi */}
       {trips.length === 0 ? (
         <div className="bg-white border border-dashed border-slate-300 rounded-2xl p-12 text-center text-slate-400">
-          <span className="text-5xl mb-3 block">🏝️</span>
+          <Map className="text-5xl mb-3 block" size={48} strokeWidth={1.75} aria-hidden="true" />
           <h3 className="text-base font-bold text-slate-700">Chưa có chuyến đi nào được lưu</h3>
           <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-6">
             Bạn chưa lưu lịch trình du lịch nào. Hãy sử dụng công cụ AI Planner để tạo chuyến đi tự động và nhấn "Lưu lịch trình".
@@ -143,7 +146,7 @@ export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
                 <div className="flex items-center space-x-2 text-[11px] text-slate-500">
                   <span>Chế độ AI:</span>
                   <span className="font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                    {trip.strategyUsed === 'RAG_AUGMENTED' ? '✨ CÓ RAG' : '⚡ KHÔNG RAG'}
+                    {trip.strategyUsed === 'RAG_AUGMENTED' ? <><Sparkles size={13} strokeWidth={1.75} aria-hidden="true" /> CÓ RAG</> : 'KHÔNG RAG'}
                   </span>
                 </div>
               </div>
@@ -161,7 +164,7 @@ export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
                   onClick={() => handleOpenPlan(trip.id)}
                   className="px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-xs cursor-pointer disabled:opacity-50"
                 >
-                  {actionLoadingId === trip.id ? 'Đang mở...' : '👁️ Xem chi tiết'}
+                  {actionLoadingId === trip.id ? 'Đang mở...' : <><Eye size={14} strokeWidth={1.75} aria-hidden="true" /> Xem chi tiết</>}
                 </button>
               </div>
             </div>

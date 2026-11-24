@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TAGS } from '../../data/mockData';
+import { Search, ShieldCheck } from 'lucide-react';
 
 export default function FilterPanel({
   searchQuery = '',
@@ -38,7 +39,7 @@ export default function FilterPanel({
       {/* Admin Quick Bar */}
       {isAdmin && (
         <div className="adm-bar" id="admBar">
-          <span>⭐ Chế độ quản trị:</span>
+          <span><ShieldCheck size={15} strokeWidth={1.75} aria-hidden="true" /> Chế độ quản trị:</span>
           <button type="button" id="admAdd" onClick={onAdminAdd}>
             + Thêm địa điểm mới
           </button>
@@ -55,6 +56,7 @@ export default function FilterPanel({
       <form className="filters" id="filters" onSubmit={(e) => e.preventDefault()}>
         <div className="row">
           <div className="search">
+            <Search className="search-icon" size={16} strokeWidth={1.75} aria-hidden="true" />
             <input
               type="search"
               id="q"
@@ -166,7 +168,7 @@ export default function FilterPanel({
       </form>
 
       {/* Filter Statistics */}
-      <p className="count" id="count" aria-live="polite" style={{ padding: '8px 16px', margin: 0, fontSize: '13px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>
+      <p className="count" id="count" aria-live="polite" style={{ padding: '8px 16px', margin: 0, fontSize: '13px', color: 'var(--gz-color-ink-muted)', borderBottom: '1px solid var(--gz-color-line)' }}>
         Hiển thị <b>{filteredCount}</b> / {totalCount} địa điểm
       </p>
     </section>

@@ -32,12 +32,17 @@
   position: relative;
   background: #233 center / cover no-repeat;
   cursor: pointer;
-  transition: flex .35s ease, filter .3s ease;
+  overflow: hidden;
+  transform: translateZ(0) scale(1);
+  will-change: flex, transform, filter;
+  transition: flex .35s cubic-bezier(.22, 1, .36, 1), transform .35s cubic-bezier(.22, 1, .36, 1), filter .3s ease;
 }
 
 .gz-p:hover {
   flex: 1.25;
+  transform: translateZ(0) scale(1.012);
   filter: brightness(1.1);
+  z-index: 1;
 }
 
 .gz-p b {

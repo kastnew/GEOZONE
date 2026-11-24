@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import '../../styles/AuthModal.css';
+import { ShieldCheck, UserRound, X } from 'lucide-react';
 
 export default function AuthModal({
   isOpen = false,
@@ -75,7 +76,7 @@ export default function AuthModal({
             aria-label="Đóng"
             onClick={onClose}
           >
-            ✕
+            <X size={18} strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
 
@@ -225,10 +226,10 @@ export default function AuthModal({
           <span>Tài khoản mẫu thử nghiệm (bấm để điền nhanh):</span>
           <div style={{ display: 'grid', gap: '6px', marginTop: '6px' }}>
             <button type="button" onClick={() => handleFillDemo('user')}>
-              👤 Người dùng thường (<code>demo@geozone.vn</code> / <code>password123</code>)
+              <UserRound size={14} strokeWidth={1.75} aria-hidden="true" /> Người dùng thường (<code>demo@geozone.vn</code> / <code>password123</code>)
             </button>
             <button type="button" onClick={() => handleFillDemo('admin')}>
-              ⭐ Quản trị viên (<code>admin@geozone.vn</code> / <code>admin123</code>)
+              <ShieldCheck size={14} strokeWidth={1.75} aria-hidden="true" /> Quản trị viên (<code>admin@geozone.vn</code> / <code>admin123</code>)
             </button>
           </div>
         </div>

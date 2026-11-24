@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatVND, TAGS } from '../../data/mockData';
+import { Check, Heart, Pencil, Plus } from 'lucide-react';
 
 export default function PlaceCard({
   place,
@@ -35,6 +36,17 @@ export default function PlaceCard({
       data-id={place.id}
       onClick={() => onSelect(place)}
     >
+      <div className="c-image-wrap">
+        <img
+          src={place.imageUrl || '/images/heroes/danang.jpg'}
+          alt={place.name}
+          loading="lazy"
+          onError={(event) => {
+            event.currentTarget.onerror = null;
+            event.currentTarget.src = '/images/heroes/danang.jpg';
+          }}
+        />
+      </div>
       <div className="c-head">
         <h3 className="c-name">{place.name}</h3>
         <span className="c-pop">★ {score}</span>
@@ -42,7 +54,7 @@ export default function PlaceCard({
 
       <div className="c-sub">
         <span>{place.zoneName}</span> ·{' '}
-        <span style={{ color: isOpen ? '#16a34a' : '#dc2626', fontWeight: 600 }}>
+        <span style={{ color: isOpen ? 'var(--gz-color-success)' : 'var(--gz-color-danger)', fontWeight: 600 }}>
           {isOpen ? 'Đang mở cửa' : 'Đã đóng'}
         </span>
         <span> · {formatVND(place.estimatedCost ?? place.cost ?? 0)}</span>
@@ -64,7 +76,9 @@ export default function PlaceCard({
           className="add"
           onClick={() => onToggleCart(place)}
         >
-          {isInCart ? '✓ Đã thêm' : '+ Thêm vào lịch trình'}
+          {isInCart
+            ? <><Check size={14} strokeWidth={1.75} aria-hidden="true" /> Đã thêm</>
+            : <><Plus size={14} strokeWidth={1.75} aria-hidden="true" /> Thêm vào lịch trình</>}
         </button>
 
         <button
@@ -74,7 +88,9 @@ export default function PlaceCard({
           onClick={() => onToggleFavorite(place)}
           title={isFavorite ? 'Bỏ thích' : 'Yêu thích'}
         >
-          {isFavorite ? '♥ Đã thích' : '♡'}
+          {isFavorite
+            ? <><Heart size={14} fill="currentColor" strokeWidth={1.75} aria-hidden="true" /> Đã thích</>
+            : <><Heart size={14} strokeWidth={1.75} aria-hidden="true" /> Thích</>}
         </button>
 
         {isAdmin && (
@@ -83,7 +99,7 @@ export default function PlaceCard({
             className="adm-b"
             onClick={() => onEdit(place)}
           >
-            ✏ Sửa
+            <><Pencil size={14} strokeWidth={1.75} aria-hidden="true" /> Sửa</>
           </button>
         )}
       </div>

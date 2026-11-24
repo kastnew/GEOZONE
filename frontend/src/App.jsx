@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import './styles/global.css';
+import { useToast } from './context/ToastContext.jsx';
 
 // Layout & Common Components
 import Navbar from './components/layout/Navbar';
-import BottomBack from './components/layout/BottomBack';
-import Toast from './components/common/Toast';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -51,12 +51,68 @@ import {
   exportDataApi,
   resetDatabaseApi,
   revertPlaceApi
+  ,getPlanByIdApi
+  ,getSharedPlanApi
 } from './services/api';
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  }, [pathname]);
+
+  return null;
+}
+
+function NotFoundPage() {
+  return (
+    <section className="gz-empty-state">
+      <h1>Không tìm thấy trang</h1>
+      <p>Đường dẫn này không tồn tại hoặc đã được thay đổi.</p>
+      <Link className="gz-empty-state-link" to="/">Về trang chủ</Link>
+    </section>
+  );
+}
+
+function ProtectedRoute({ user, isLoading, children }) {
+  if (isLoading) return <section className="gz-empty-state"><p>Đang xác thực tài khoản…</p></section>;
+  return user ? children : <Navigate to="/" replace />;
+}
+
+function PlanRouteView({ shared = false }) {
+  const { planId, shareToken } = useParams();
+  const [plan, setPlan] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const loadPlan = shared ? getSharedPlanApi(shareToken) : getPlanByIdApi(planId);
+    loadPlan.then(setPlan).catch((err) => setError(err.message || 'Không thể tải lịch trình.'));
+  }, [planId, shareToken, shared]);
+
+  if (error) {
+    return <section className="gz-empty-state"><h1>Không thể mở lịch trình</h1><p>{error}</p><Link className="gz-empty-state-link" to="/">Về trang chủ</Link></section>;
+  }
+  if (!plan) return <section className="gz-empty-state"><p>Đang tải lịch trình…</p></section>;
+  return (
+    <TripDetailModal
+      isOpen
+      onClose={() => window.history.back()}
+      trip={plan}
+      onCopyShareLink={(trip) => {
+        navigator.clipboard?.writeText(`${window.location.origin}/share/${trip.shareToken || trip.id}`);
+      }}
+      onDeleteTrip={() => {}}
+    />
+  );
+}
+
 export default function App() {
-  // Navigation & View State
-  const [currentView, setCurrentView] = useState('home'); // 'home' | 'about' | 'explore' | 'trips' | 'favs' | 'account'
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [isAuthHydrating, setIsAuthHydrating] = useState(true);
   const [exploreMode, setExploreMode] = useState('explore'); // 'explore' | 'planner'
+  const [generatedPlan, setGeneratedPlan] = useState(null);
   const [selectedCity, setSelectedCity] = useState('hue');
 
   // User & Auth State
@@ -81,17 +137,18 @@ export default function App() {
   const [adminPlaceToEdit, setAdminPlaceToEdit] = useState(null);
   const [isAdminNewPlace, setIsAdminNewPlace] = useState(false);
 
-  // Toast Notification State
-  const [toastMsg, setToastMsg] = useState('');
-  const [isToastVisible, setIsToastVisible] = useState(false);
-
-  const showToast = (msg) => {
-    setToastMsg(msg);
-    setIsToastVisible(true);
-    setTimeout(() => {
-      setIsToastVisible(false);
-    }, 3200);
-  };
+  const { showToast } = useToast();
+  const currentView = (() => {
+    if (location.pathname === '/about') return 'about';
+    if (location.pathname === '/explore') return 'explore';
+    if (location.pathname.startsWith('/my-trips')) return 'trips';
+    if (location.pathname === '/favorites') return 'favs';
+    if (location.pathname === '/profile') return 'account';
+    return 'home';
+  })();
+  const isKnownRoute = ['/', '/about', '/explore', '/my-trips', '/favorites', '/profile'].includes(location.pathname)
+    || location.pathname.startsWith('/my-trips/')
+    || location.pathname.startsWith('/share/');
 
   // 1. Initial Load: Sync User, Plans, and Favorites from Backend
   useEffect(() => {
@@ -101,7 +158,10 @@ export default function App() {
         .then((userData) => {
           if (userData) setUser(userData);
         })
-        .catch(() => {});
+        .catch(() => {})
+        .finally(() => setIsAuthHydrating(false));
+    } else {
+      setIsAuthHydrating(false);
     }
 
     // Load initial plans from Backend
@@ -119,13 +179,27 @@ export default function App() {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (!isAuthHydrating && !user && ['/my-trips', '/favorites', '/profile'].includes(location.pathname)) {
+      showToast('Vui lòng đăng nhập để xem mục này');
+      navigate('/', { replace: true });
+    }
+  }, [isAuthHydrating, user, location.pathname, navigate, showToast]);
+
   // Navigation Handler
   const handleNavigate = (view, options = {}) => {
-    setCurrentView(view);
+    const paths = {
+      home: '/',
+      about: '/about',
+      explore: '/explore',
+      trips: '/my-trips',
+      favs: '/favorites',
+      account: '/profile'
+    };
     if (options.mode) {
       setExploreMode(options.mode === 'plan' ? 'planner' : options.mode);
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigate(paths[view] || '/');
   };
 
   // Auth Handlers
@@ -301,8 +375,7 @@ export default function App() {
     try {
       await deleteAccountApi();
     } catch (err) {
-      alert(`[Chưa có Backend API]:\n${err.message}`);
-      showToast(err.message);
+      showToast(`[Chưa có Backend API]: ${err.message}`, 'error');
     }
   };
 
@@ -310,8 +383,7 @@ export default function App() {
     try {
       await exportDataApi();
     } catch (err) {
-      alert(`[Chưa có Backend API]:\n${err.message}`);
-      showToast(err.message);
+      showToast(`[Chưa có Backend API]: ${err.message}`, 'error');
     }
   };
 
@@ -319,8 +391,7 @@ export default function App() {
     try {
       await resetDatabaseApi();
     } catch (err) {
-      alert(`[Chưa có Backend API]:\n${err.message}`);
-      showToast(err.message);
+      showToast(`[Chưa có Backend API]: ${err.message}`, 'error');
     }
   };
 
@@ -328,8 +399,7 @@ export default function App() {
     try {
       await revertPlaceApi(placeId);
     } catch (err) {
-      alert(`[Chưa có Backend API]:\n${err.message}`);
-      showToast(err.message);
+      showToast(`[Chưa có Backend API]: ${err.message}`, 'error');
     }
   };
 
@@ -361,6 +431,7 @@ export default function App() {
 
   return (
     <div className="geozone-app">
+      <ScrollToTop />
       {/* 1. Global Navigation Bar */}
       <Navbar
         currentView={currentView}
@@ -379,8 +450,9 @@ export default function App() {
       />
 
       {/* 2. Main Page Views */}
-      <main>
-        {currentView === 'home' && (
+      <main key={location.pathname} className="gz-route-transition">
+        {!isKnownRoute && <NotFoundPage />}
+        {location.pathname === '/' && (
           <HomePage
             onNavigate={handleNavigate}
             onSelectCity={(cityKey) => setSelectedCity(cityKey)}
@@ -416,12 +488,15 @@ export default function App() {
             onAdminExport={handleAdminExport}
             onAdminReset={handleAdminReset}
             onSavePlan={handleSaveGeneratedPlan}
+            generatedPlan={generatedPlan}
+            onGeneratedPlanChange={setGeneratedPlan}
             showToast={showToast}
           />
         )}
 
-        {currentView === 'trips' && (
-          <TripsPage
+        {currentView === 'trips' && location.pathname === '/my-trips' && (
+          <ProtectedRoute user={user} isLoading={isAuthHydrating}>
+            <TripsPage
             trips={trips}
             isLoggedIn={!!user}
             onOpenAuth={(tab) => {
@@ -432,11 +507,13 @@ export default function App() {
             onDeleteTrip={handleDeleteTrip}
             onClearAllTrips={handleClearAllTrips}
             onNavigate={handleNavigate}
-          />
+            />
+          </ProtectedRoute>
         )}
 
-        {currentView === 'favs' && (
-          <FavoritesPage
+        {currentView === 'favs' && location.pathname === '/favorites' && (
+          <ProtectedRoute user={user} isLoading={isAuthHydrating}>
+            <FavoritesPage
             favorites={favorites}
             isLoggedIn={!!user}
             selectedCity={selectedFavCityFilter}
@@ -452,11 +529,13 @@ export default function App() {
             onRemoveFavorite={handleRemoveFavorite}
             onClearAllFavorites={handleClearAllFavorites}
             onNavigate={handleNavigate}
-          />
+            />
+          </ProtectedRoute>
         )}
 
-        {currentView === 'account' && (
-          <AccountPage
+        {currentView === 'account' && location.pathname === '/profile' && (
+          <ProtectedRoute user={user} isLoading={isAuthHydrating}>
+            <AccountPage
             user={user}
             stats={{
               tripsCount: trips.length,
@@ -471,7 +550,15 @@ export default function App() {
               setAuthTab('login');
               setIsAuthModalOpen(true);
             }}
-          />
+            />
+          </ProtectedRoute>
+        )}
+
+        {location.pathname.startsWith('/my-trips/') && (
+          <PlanRouteView />
+        )}
+        {location.pathname.startsWith('/share/') && (
+          <PlanRouteView shared />
         )}
       </main>
 
@@ -520,16 +607,6 @@ export default function App() {
         onDelete={(id) => handleAdminDeletePlace(id)}
       />
 
-      {/* 4. Global Toast Alert */}
-      <Toast message={toastMsg} isVisible={isToastVisible} />
-
-      {/* 5. Floating Bottom Back Button */}
-      {currentView !== 'home' && (
-        <BottomBack
-          label="← Quay lại Trang chủ"
-          onClick={() => handleNavigate('home')}
-        />
-      )}
     </div>
   );
 }

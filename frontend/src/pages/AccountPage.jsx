@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import '../styles/Account.css';
 
 export default function AccountPage({
@@ -22,20 +23,14 @@ export default function AccountPage({
         className="gz-pb"
         id="gzAccHero"
         data-k="ninhbinh"
-        style={{ backgroundImage: "url('/images/heroes/ninhbinh.jpg')" }}
+        style={{ '--gz-hero-image': "url('/images/heroes/ninhbinh.jpg')" }}
       >
         <div className="gz-wrap">
           <h1>Tài khoản của tôi</h1>
           <p className="gz-crumb">
-            <a
-              href="#trang-chu"
-              onClick={(e) => {
-                e.preventDefault();
-                onNavigate('home');
-              }}
-            >
+            <Link to="/">
               Trang chủ
-            </a>{' '}
+            </Link>{' '}
             / Thông tin cá nhân
           </p>
         </div>
@@ -179,8 +174,8 @@ export default function AccountPage({
                     type="submit"
                     className="gz-btn ghost"
                     style={{
-                      borderColor: '#cbd5e1',
-                      color: '#0f172a',
+                      borderColor: 'var(--gz-color-line-strong)',
+                      color: 'var(--gz-color-ink)',
                       marginTop: '8px'
                     }}
                   >

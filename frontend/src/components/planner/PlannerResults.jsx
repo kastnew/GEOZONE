@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import '../../styles/leaflet.css';
 import { formatVND, formatDuration } from '../../data/mockData';
+import { ArrowRightLeft, Save } from 'lucide-react';
 
 export default function PlannerResults({
   plan = null,
@@ -14,7 +15,13 @@ export default function PlannerResults({
   const mapInstanceRef = useRef(null);
   const routeLayerRef = useRef(null);
 
-  const DAY_COLORS = ['#2563eb', '#16a34a', '#d97706', '#c026d3'];
+  const DAY_COLORS = [
+    'var(--gz-zone-z1)',
+    'var(--gz-zone-z2)',
+    'var(--gz-zone-z3)',
+    'var(--gz-zone-z4)',
+    'var(--gz-zone-z5)'
+  ];
 
   // Initialize Route Map
   useEffect(() => {
@@ -88,7 +95,7 @@ export default function PlannerResults({
             <b style="color:${dayColor}">Ngày ${day.dayNumber || dIdx + 1} · Điểm ${pIdx + 1}</b>
             <div style="font-size:14px; font-weight:700; color:#0f172a; margin-top:2px;">${place.name}</div>
             <div style="font-size:12px; color:#64748b;">${place.zoneName || ''}</div>
-            <div style="font-size:12px; color:#16a34a; font-weight:600; margin-top:4px;">${formatVND(place.estimatedCost ?? place.cost ?? 0)}</div>
+            <div style="font-size:12px; color:var(--gz-color-primary); font-weight:600; margin-top:4px;">${formatVND(place.estimatedCost ?? place.cost ?? 0)}</div>
           </div>
         `);
         routeLayerRef.current.addLayer(marker);
@@ -112,9 +119,28 @@ export default function PlannerResults({
   }, [plan]);
 
   if (isLoading) {
+    const progressSteps = [
+      'Lọc địa điểm',
+      'Phân cụm Zone',
+      'Tối ưu ngân sách',
+      'Hoàn thiện lịch trình'
+    ];
+
     return (
       <section className="pres" id="pRes">
-        <p className="empty">Đang tối ưu lịch trình với AI và thuật toán phân vùng…</p>
+        <div className="planner-loading" role="status" aria-live="polite">
+          <div className="planner-skeleton planner-skeleton-title" />
+          <div className="planner-skeleton planner-skeleton-line" />
+          <ol className="planner-progress">
+            {progressSteps.map((step, index) => (
+              <li key={step} className={index === 0 ? 'is-active' : ''}>
+                <span>{index + 1}</span>
+                {step}
+              </li>
+            ))}
+          </ol>
+          <p className="empty">Đang tối ưu lịch trình với AI và thuật toán phân vùng…</p>
+        </div>
       </section>
     );
   }
@@ -148,7 +174,7 @@ export default function PlannerResults({
           id="pSave"
           onClick={onSavePlan}
         >
-          💾 Lưu chuyến đi này
+          <Save size={15} strokeWidth={1.75} aria-hidden="true" /> Lưu chuyến đi này
         </button>
       </div>
 
@@ -180,7 +206,7 @@ export default function PlannerResults({
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <strong>{place.name}</strong>
-                          <span style={{ fontSize: '12.5px', color: '#16a34a', fontWeight: 600 }}>
+                          <span style={{ fontSize: '12.5px', color: 'var(--gz-color-success)', fontWeight: 600 }}>
                             {formatVND(place.estimatedCost ?? place.cost ?? 0)}
                           </span>
                         </div>
@@ -205,7 +231,7 @@ export default function PlannerResults({
                         }}
                         title="Đổi địa điểm khác"
                       >
-                        ⇄ Đổi
+                        <ArrowRightLeft size={14} strokeWidth={1.75} aria-hidden="true" /> Đổi
                       </button>
                     </div>
                   ))}
@@ -219,7 +245,7 @@ export default function PlannerResults({
         <aside className="zmap">
           <div className="zh">
             <span>Bản đồ lộ trình</span>
-            <small style={{ color: '#64748b' }}>Tối ưu khoảng cách di chuyển</small>
+            <small style={{ color: 'var(--gz-color-ink-muted)' }}>Tối ưu khoảng cách di chuyển</small>
           </div>
           <div
             id="pMap"

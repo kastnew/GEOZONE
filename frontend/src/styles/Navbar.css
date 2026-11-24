@@ -9,6 +9,12 @@
   height: 64px;
   background: #fff;
   border-bottom: 1px solid #e2e8f0;
+  transition: box-shadow .22s ease, border-color .22s ease;
+}
+
+.gz-nav.is-scrolled {
+  border-bottom-color: #cbd5e1;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, .08);
 }
 
 .gz-nav .gz-wrap {
@@ -35,17 +41,18 @@
   width: 32px;
   height: 32px;
   border-radius: 9px;
-  background: linear-gradient(135deg, var(--accent), #2563eb);
+  background: var(--gz-color-primary);
   color: #fff;
   display: grid;
   place-items: center;
   font-style: normal;
   font-size: 15px;
   font-weight: 800;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, .25);
+  box-shadow: 0 4px 10px rgb(11 110 142 / .2);
 }
 
 .gz-links {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 22px;
@@ -62,18 +69,40 @@
 
 .gz-links a:hover,
 .gz-links a.active {
-  color: #0f172a;
+  color: var(--gz-color-primary-pressed);
+}
+
+.gz-links a.active {
+  font-weight: 700;
 }
 
 .gz-links a.active::after {
-  content: "";
+  display: none;
+}
+
+.gz-nav-indicator {
   position: absolute;
   left: 0;
-  right: 0;
   bottom: 0;
-  height: 2px;
-  background: var(--accent);
-  border-radius: 2px;
+  height: 2.5px;
+  border-radius: 999px;
+  background: var(--gz-color-primary);
+  opacity: 0;
+  transition: opacity 180ms ease;
+  pointer-events: none;
+  transform-origin: left center;
+}
+
+.gz-nav-indicator.has-active {
+  opacity: 1;
+}
+
+.gz-nav-indicator:not(.has-active) {
+  width: 0 !important;
+}
+
+.gz-nav-indicator.is-ready {
+  transition: transform 260ms cubic-bezier(.22, 1, .36, 1), width 260ms cubic-bezier(.22, 1, .36, 1), opacity 180ms ease;
 }
 
 /* Badge count inside nav link */
@@ -83,7 +112,7 @@
   margin-left: 5px;
   padding: 0 6px;
   border-radius: 99px;
-  background: #2563eb;
+  background: var(--gz-color-primary);
   color: #fff;
   font: 700 12px/20px var(--body);
   text-align: center;
@@ -93,6 +122,16 @@
 .gz-links a b:empty,
 .gz-links a b[data-n="0"] {
   display: none;
+}
+
+.gz-links a b.is-popping,
+.gz-mt .gzFavBadge.is-popping {
+  animation: gz-badge-pop 220ms cubic-bezier(.22, 1, .36, 1);
+}
+
+@keyframes gz-badge-pop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.18); }
 }
 
 /* Mobile Quick Trigger Icon Buttons */
@@ -117,7 +156,7 @@
   height: 18px;
   padding: 0 5px;
   border-radius: 99px;
-  background: #2563eb;
+  background: var(--gz-color-primary);
   color: #fff;
   font: 700 11px/18px var(--body);
   text-align: center;
@@ -128,12 +167,12 @@
 }
 
 .gz-mt-fav {
-  background: #fff1f2;
-  color: #e11d48;
+  background: var(--gz-color-primary-soft);
+  color: var(--gz-color-primary-pressed);
 }
 
 .gz-mt-fav b {
-  background: #e11d48;
+  background: var(--gz-color-primary);
 }
 
 /* Auth Navigation Buttons */
@@ -162,7 +201,7 @@
 }
 
 .au-pill {
-  background: var(--accent);
+  background: var(--gz-color-primary);
   color: #fff;
 }
 
@@ -202,7 +241,7 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: var(--gz-color-primary);
   color: #fff;
   display: grid;
   place-items: center;
@@ -221,10 +260,34 @@
   width: 220px;
   padding: 6px;
   z-index: 3100;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px) scale(.97);
+  transform-origin: top right;
+  transition: opacity 180ms ease, transform 180ms cubic-bezier(.22, 1, .36, 1);
 }
 
-.au-pop[hidden] {
-  display: none;
+.au-menu::before {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 220px;
+  height: 10px;
+}
+
+.au-pop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.au-pop[aria-hidden="true"] {
+  visibility: hidden;
+}
+
+.au-pop[aria-hidden="false"] {
+  visibility: visible;
 }
 
 .au-who {
@@ -341,5 +404,16 @@
   .gz-nav .gz-btn {
     padding: 8px 11px;
     font-size: 12.5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gz-nav,
+  .gz-nav-indicator,
+  .au-pop,
+  .gz-links a b.is-popping,
+  .gz-mt .gzFavBadge.is-popping {
+    transition-duration: 1ms !important;
+    animation: none !important;
   }
 }

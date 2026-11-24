@@ -1,4 +1,5 @@
 import React from 'react';
+import { MapPin } from 'lucide-react';
 import { formatVND, TAGS, CITIES } from '../../data/mockData';
 
 export default function FavoriteCard({
@@ -8,7 +9,7 @@ export default function FavoriteCard({
 }) {
   if (!place) return null;
   const cityConfig = CITIES[place.city] || {};
-  const accentColor = cityConfig.accent || '#2563eb';
+  const accentColor = 'var(--gz-color-primary)';
 
   return (
     <article
@@ -45,14 +46,14 @@ export default function FavoriteCard({
           type="button"
           className="gz-btn ghost"
           style={{
-            borderColor: '#cbd5e1',
-            color: '#2563eb',
+            borderColor: 'var(--gz-color-line-strong)',
+            color: 'var(--gz-color-primary-pressed)',
             padding: '5px 12px',
             fontSize: '12.5px'
           }}
           onClick={() => onView(place)}
         >
-          📍 Xem trên bản đồ
+          <MapPin size={14} strokeWidth={1.75} aria-hidden="true" /> Xem trên bản đồ
         </button>
         <button
           type="button"

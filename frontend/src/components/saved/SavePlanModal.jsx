@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { savePlanApi } from '../../services/api.js';
+import { Save } from 'lucide-react';
 
 export const SavePlanModal = ({ isOpen, onClose, currentPlan, onSuccess }) => {
   const [title, setTitle] = useState(
@@ -39,7 +40,7 @@ export const SavePlanModal = ({ isOpen, onClose, currentPlan, onSuccess }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
       <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
-        <h3 className="text-lg font-bold text-slate-800">💾 Lưu lịch trình vào tài khoản</h3>
+        <h3 className="text-lg font-bold text-slate-800"><Save size={18} strokeWidth={1.75} aria-hidden="true" /> Lưu lịch trình vào tài khoản</h3>
         <p className="text-xs text-slate-500 mt-1">
           Lịch trình sẽ được lưu vĩnh viễn để bạn có thể xem lại bất kỳ lúc nào tại mục "Chuyến đi của tôi".
         </p>

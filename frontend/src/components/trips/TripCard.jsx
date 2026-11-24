@@ -1,4 +1,5 @@
 import React from 'react';
+import { CalendarDays, Eye, MapPin, Trash2, Wallet } from 'lucide-react';
 import { formatVND } from '../../data/mockData';
 
 export default function TripCard({
@@ -18,11 +19,12 @@ export default function TripCard({
       </div>
 
       <div className="tcard-meta">
-        <span>📍 {trip.cityName || trip.city}</span>
-        <span>💰 {formatVND(trip.totalCost || 0)}</span>
+        <span><MapPin size={14} strokeWidth={1.75} aria-hidden="true" /> {trip.cityName || trip.city}</span>
+        <span><Wallet size={14} strokeWidth={1.75} aria-hidden="true" /> {formatVND(trip.totalCost || 0)}</span>
         {trip.createdAt && (
           <span>
-            📅 {new Date(trip.createdAt).toLocaleDateString('vi-VN')}
+            <CalendarDays size={14} strokeWidth={1.75} aria-hidden="true" />
+            {new Date(trip.createdAt).toLocaleDateString('vi-VN')}
           </span>
         )}
       </div>
@@ -30,30 +32,17 @@ export default function TripCard({
       <div className="tcard-actions">
         <button
           type="button"
-          className="gz-btn ghost"
-          style={{
-            borderColor: '#cbd5e1',
-            color: '#2563eb',
-            padding: '6px 14px',
-            fontSize: '13px'
-          }}
+          className="gz-btn ghost trip-card-view"
           onClick={() => onView(trip)}
         >
-          👁 Xem chi tiết
+          <Eye size={14} strokeWidth={1.75} aria-hidden="true" /> Xem chi tiết
         </button>
         <button
           type="button"
-          className="gz-btn ghost"
-          style={{
-            borderColor: '#fecdd3',
-            color: '#e11d48',
-            padding: '6px 14px',
-            fontSize: '13px',
-            marginLeft: 'auto'
-          }}
+          className="gz-btn ghost trip-card-delete"
           onClick={() => onDelete(trip.id)}
         >
-          🗑 Xóa
+          <Trash2 size={14} strokeWidth={1.75} aria-hidden="true" /> Xóa
         </button>
       </div>
     </article>

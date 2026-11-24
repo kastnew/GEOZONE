@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { formatVND, formatDuration, TAGS } from '../../data/mockData';
+import { X } from 'lucide-react';
 
 export default function SwapModal({
   isOpen = false,
@@ -52,12 +53,12 @@ export default function SwapModal({
             style={{ border: 0, background: 'transparent', cursor: 'pointer', fontSize: '18px', color: '#64748b' }}
             onClick={onClose}
           >
-            ✕
+            <X size={18} strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
 
         <div style={{ padding: '16px 20px', maxHeight: '60vh', overflowY: 'auto' }}>
-          <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '10px', marginBottom: '16px', borderLeft: '4px solid #e11d48' }}>
+          <div style={{ background: 'var(--gz-color-surface-subtle)', padding: '12px 16px', borderRadius: '10px', marginBottom: '16px', borderLeft: '4px solid var(--gz-color-primary)' }}>
             <span style={{ fontSize: '12px', color: '#64748b', display: 'block' }}>Địa điểm hiện tại:</span>
             <strong style={{ fontSize: '15px', color: '#0f172a' }}>{currentPlace.name}</strong>
             <div style={{ fontSize: '12.5px', color: '#64748b', marginTop: '2px' }}>
@@ -78,8 +79,8 @@ export default function SwapModal({
                     key={alt.id}
                     onClick={() => setSelectedAlternative(alt)}
                     style={{
-                      border: `1.5px solid ${isSelected ? '#2563eb' : '#e2e8f0'}`,
-                      background: isSelected ? '#eff6ff' : '#fff',
+                      border: `1.5px solid ${isSelected ? 'var(--gz-color-primary)' : 'var(--gz-color-line)'}`,
+                      background: isSelected ? 'var(--gz-color-primary-soft)' : 'var(--gz-color-surface)',
                       borderRadius: '10px',
                       padding: '12px 14px',
                       cursor: 'pointer',
@@ -88,7 +89,7 @@ export default function SwapModal({
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <strong style={{ fontSize: '14px', color: '#0f172a' }}>{alt.name}</strong>
-                      <span style={{ fontSize: '12.5px', color: '#16a34a', fontWeight: 600 }}>
+                      <span style={{ fontSize: '12.5px', color: 'var(--gz-color-primary)', fontWeight: 600 }}>
                         {formatVND(alt.estimatedCost ?? alt.cost ?? 0)}
                       </span>
                     </div>

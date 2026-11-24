@@ -46,7 +46,7 @@ Trip Request (Thành phố, Số ngày, Ngân sách, Sở thích)
 * **Trần ngân sách đơn lẻ (`maxSinglePlaceCost`):** Tự động loại bỏ địa điểm có vé đơn lẻ vượt quá 65% tổng ngân sách cả chuyến đi.
 * **Bảo vệ địa điểm miễn phí (`0đ`):** Các địa điểm công cộng miễn phí luôn được giữ lại để làm điểm cân bằng tài chính.
 * **Ngưỡng chất lượng & thời lượng:** Loại bỏ địa điểm có `rating < 3.0` hoặc thời lượng tham quan quá dài (`> 360` phút).
-* **Fallback 2 tầng:** Nếu lọc theo sở thích bị thiếu số lượng hoặc thiếu độ phủ phân vùng, tự động nạp thêm các địa điểm có `popularity * rating` cao nhất ở các khu vực còn thiếu.
+* **Fallback 2 tầng:** Nếu lọc theo sở thích bị thiếu số lượng hoặc thiếu độ phủ phân vùng, tự động nạp thêm các địa điểm có `popularity * rating` cao nhất ở các khu vực còn thiếu (kỳ vọng tối thiểu `days * 6` ứng viên).
 
 ### Bước 2: Chấm điểm 2 Pha & Thích ứng Thời tiết (`placeScorer.js`)
 * **Hàm `scorePlaces()` (Chấm 1 lần duy nhất các yếu tố tĩnh):**
@@ -67,13 +67,14 @@ Trip Request (Thành phố, Số ngày, Ngân sách, Sở thích)
 * **Quỹ ngân sách cân bằng động (Rolling Budget):** Tính hạn mức ngày `dailyTarget = remainingBudget / remainingDays` (biên độ trần `+20%`), tự động dồn phần dư/thiếu sang ngày hôm sau để không ngày nào chi tiêu quá lệch.
 * **Chọn điểm theo Cụm Mỏ Neo (Anchor + Proximity Clustering):**
   * Chọn 1 điểm chưa đi có điểm thích ứng thời tiết cao nhất làm điểm **Mỏ Neo** của ngày.
-  * Nhặt thêm 3 địa điểm tiếp theo dựa trên công thức kết hợp:
+  * Nhặt thêm các điểm tiếp theo (tối đa **6 điểm/ngày**, dừng sớm nếu chạm ngưỡng thời lượng 8 tiếng hoặc trần ngân sách ngày) dựa trên công thức kết hợp:
     $$\text{PickScore} = (\text{Điểm địa điểm} \times 0.7) + (\text{Điểm gần GPS} \times 0.3) + \text{Bonus nhẹ (+0.05) nếu cùng Zone}$$
   * Quản lý tập `usedPlaceIds` xuyên suốt chuyến đi để **tuyệt đối không trùng lặp địa điểm**.
   * Gắn nhãn `zoneId` / `zoneName` của ngày theo Zone chiếm đa số các điểm đã chọn (giữ hiển thị đẹp trên UI và bản đồ).
-* **Vòng lặp Phản hồi Tự sửa lỗi (Feedback Loop với Bước 5):**
-  * Sau khi nhặt xong 4 điểm cho một ngày, gọi `validateDaySchedule()` của Bước 5 để kiểm tra xem có xếp được khung giờ hợp lệ tuyệt đối không.
-  * Nếu bị kẹt giờ (ví dụ trùng nhiều điểm mở muộn buổi tối hoặc đóng cửa sớm), tự động cộng điểm phạt (`-0.6`) cho điểm gây xung đột và quay lại chọn điểm thay thế phù hợp hơn (tối đa 2 lần thử lại mỗi ngày).
+* **Vòng lặp Phản hồi Tự sửa lỗi 2 cấp (Feedback Loop với Bước 5):**
+  * Sau khi nhặt xong tập điểm cho một ngày, gọi `validateDaySchedule()` của Bước 5 để kiểm tra xem có xếp được khung giờ hợp lệ tuyệt đối không.
+  * **Cấp 1:** Nếu bị kẹt giờ, cộng điểm phạt (`-0.6`) cho điểm gây xung đột và quay lại Bước 4 chọn điểm khác thay thế hợp giờ hơn.
+  * **Cấp 2:** Nếu sau khi thay điểm vẫn bị chật/kẹt giờ, tự động **rút bớt 1 điểm** (ví dụ từ 6 xuống 5 hoặc 4 điểm) để giải phóng quỹ thời gian, đảm bảo 100% xếp được chu trình hợp lệ.
 
 ### Bước 5: Tối ưu Lộ trình & Khung giờ (`timeSlotScheduler.js`)
 * **Thuật toán sử dụng:** **Sinh Hoán Vị có Cắt tỉa nhánh (Backtracking with Pruning)** áp dụng cho $N \le 7$ điểm/ngày (tự động fallback sang **Nearest Neighbor** nếu $N > 7$).

@@ -307,20 +307,30 @@ export async function getTagsApi() {
 
 /**
  * Sinh lịch trình tự động (POST /api/v1/ai/generate-plan)
+ * Gửi skipAi: true để chạy trực tiếp bằng thuật toán Planner (chưa cần gọi LLM AI)
  * Body: { city, days, budget, tags }
  */
 export async function generateItineraryApi(payload) {
-  return safeFetch(
+  const cityKey = payload.city || 'hue';
+  const cityConfig = CITIES[cityKey] || CITIES.hue;
+
+  const backendBody = {
+    city: cityConfig.api || cityKey,
+    days: Number(payload.days) || 2,
+    totalBudget: Number(payload.budget ?? payload.totalBudget) || 1500000,
+    preferences: payload.tags || payload.preferences || [],
+    skipAi: true
+  };
+
+  const rawResult = await safeFetch(
     `${API_BASE}/ai/generate-plan`,
     {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify(payload)
+      body: JSON.stringify(backendBody)
     },
     () => {
-      // Mock AI Partition Algorithm
-      const cityKey = payload.city || 'hue';
-      const cityConfig = CITIES[cityKey] || CITIES.hue;
+      // Fallback khi backend chưa chạy
       const allCityPlaces = PLACES_BY_CITY[cityKey] || [];
       const daysCount = parseInt(payload.days || 2, 10);
       const placesToPick = allCityPlaces.slice(0, daysCount * 3);
@@ -349,6 +359,31 @@ export async function generateItineraryApi(payload) {
       };
     }
   );
+
+  // Chuẩn hóa dữ liệu trả về từ Backend Planner sang định dạng hiển thị của Frontend
+  const normalizedDays = (rawResult.days || []).map((day) => {
+    const rawItems = day.activities || day.places || [];
+    return {
+      ...day,
+      totalCost: day.totalEstimatedCost ?? day.totalCost ?? 0,
+      places: rawItems.map((act) => ({
+        ...act,
+        id: act.placeId ?? act.id,
+        name: act.placeName ?? act.name,
+        time: act.timeSlot ?? act.time
+      }))
+    };
+  });
+
+  return {
+    ...rawResult,
+    name: rawResult.name || `Lịch trình du lịch ${cityConfig.name} ${rawResult.totalDays || normalizedDays.length} ngày`,
+    city: cityKey,
+    cityName: cityConfig.name,
+    daysCount: rawResult.totalDays || normalizedDays.length,
+    totalCost: rawResult.actualCost ?? rawResult.totalCost ?? 0,
+    days: normalizedDays
+  };
 }
 
 /**

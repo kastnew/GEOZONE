@@ -4,6 +4,7 @@ import { scorePlaces } from '../services/planner/placeScorer.js';
 import { groupPlacesByZone } from '../services/planner/zoneGrouper.js';
 import { allocateDays } from '../services/planner/dayAllocator.js';
 import { scheduleTimeSlots } from '../services/planner/timeSlotScheduler.js';
+import { getWeatherForecast } from '../services/planner/weatherService.js';
 import { DirectJsonStrategy } from '../services/ai/strategies/directJsonStrategy.js';
 import { RagStrategy } from '../services/ai/strategies/ragStrategy.js';
 import { prisma } from '../config/database.js';
@@ -28,20 +29,31 @@ export class PlanController {
 
       logger.info(`[PlanController] Bắt đầu lập lịch cho: ${tripRequest.city}, ${tripRequest.days} ngày, RAG: ${tripRequest.enableRag}`);
 
+      // Bước 0: Lấy dự báo thời tiết theo số ngày đi (có fallback an toàn nếu mất mạng)
+      const dailyWeather = await getWeatherForecast(tripRequest.city, tripRequest.days);
+
       // Bước 1: Lọc ứng viên
       const candidates = await filterCandidatePlaces(tripRequest);
 
-      // Bước 2: Chấm điểm
+      // Bước 2: Chấm điểm (Sở thích + Rating + Chi phí - Phạt trùng loại)
       const scoredCandidates = scorePlaces(candidates, tripRequest.preferences);
 
-      // Bước 3: Phân nhóm theo zone_id
+      // Bước 3: Chuẩn hóa tọa độ và phân nhóm Zone
       const zoneClusters = groupPlacesByZone(scoredCandidates);
 
-      // Bước 4: Phân bổ các Zone vào từng ngày
-      const dayBundles = allocateDays(zoneClusters, tripRequest.days, tripRequest.totalBudget);
+      // Bước 4: Phân bổ điểm theo Cụm tọa độ, Thời tiết từng ngày & Ngân sách cân bằng
+      const dayBundles = allocateDays(
+        zoneClusters,
+        tripRequest.days,
+        tripRequest.totalBudget,
+        8,
+        dailyWeather,
+        tripRequest.startTime,
+        tripRequest.endTime
+      );
 
-      // Bước 5: Phân bổ khung giờ chi tiết
-      const scheduledDays = scheduleTimeSlots(dayBundles, tripRequest.startTime);
+      // Bước 5: Tối ưu lộ trình (Sinh hoán vị) & Phân bổ khung giờ chi tiết
+      const scheduledDays = scheduleTimeSlots(dayBundles, tripRequest.startTime, tripRequest.endTime);
 
       const totalActualCost = scheduledDays.reduce((acc, d) => acc + d.totalEstimatedCost, 0);
 

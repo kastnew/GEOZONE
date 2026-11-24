@@ -148,3 +148,52 @@ export function scorePlaces(
   // Sắp xếp lại giảm dần theo totalScore cuối cùng
   return finalScoredPlaces.sort((a, b) => b.totalScore - a.totalScore);
 }
+
+const OUTDOOR_TAGS = new Set(['beach', 'nature', 'adventure']);
+const INDOOR_FLEXIBLE_TAGS = new Set(['food', 'culture', 'nightlife']);
+
+/**
+ * Hàm phụ trợ (chỉ gọi 1 lần cho mỗi ngày ở Bước 4):
+ * Điều chỉnh điểm số địa điểm dựa trên dự báo thời tiết của ngày đó.
+ * Không làm thay đổi totalScore gốc từ scorePlaces.
+ *
+ * @param {any[]} scoredPlaces
+ * @param {'SUNNY' | 'CLOUDY' | 'RAINY'} [weatherCondition='CLOUDY']
+ */
+export function applyWeatherAdjustment(scoredPlaces, weatherCondition = 'CLOUDY') {
+  if (!Array.isArray(scoredPlaces) || scoredPlaces.length === 0) {
+    return [];
+  }
+
+  return scoredPlaces.map(place => {
+    const tags = Array.isArray(place.tags) ? place.tags.map(t => String(t).toLowerCase()) : [];
+    const hasBeachOrAdventure = tags.includes('beach') || tags.includes('adventure');
+    const hasOutdoor = tags.some(t => OUTDOOR_TAGS.has(t));
+    const hasIndoorOrFlex = tags.some(t => INDOOR_FLEXIBLE_TAGS.has(t));
+
+    let weatherDelta = 0;
+
+    if (weatherCondition === 'RAINY') {
+      if (hasBeachOrAdventure) {
+        weatherDelta = -0.35;
+      } else if (hasOutdoor && !hasIndoorOrFlex) {
+        weatherDelta = -0.25;
+      } else if (hasIndoorOrFlex) {
+        weatherDelta = 0.15;
+      }
+    } else if (weatherCondition === 'SUNNY') {
+      if (hasOutdoor) {
+        weatherDelta = 0.05;
+      }
+    }
+
+    const base = Number(place.totalScore) || 0;
+    const weatherAdjustedScore = Math.max(0, Number((base + weatherDelta).toFixed(4)));
+
+    return {
+      ...place,
+      weatherDelta,
+      weatherAdjustedScore
+    };
+  });
+}

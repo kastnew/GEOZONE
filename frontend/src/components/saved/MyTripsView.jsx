@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getMyPlansApi, getPlanByIdApi, deletePlanApi } from '../../services/api.js';
+import { getMyPlans, getPlanById, deletePlan } from '../../services/api.js';
 import { LoadingSpinner } from '../common/LoadingSpinner.jsx';
 import { Eye, Map, Plus, Sparkles } from 'lucide-react';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -19,7 +19,7 @@ export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
     setIsLoading(true);
     setErrorMsg(null);
     try {
-      const data = await getMyPlansApi();
+      const data = await getMyPlans();
       setTrips(data);
     } catch (err) {
       setErrorMsg(err.message || 'Không thể tải danh sách chuyến đi');
@@ -35,7 +35,7 @@ export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
   const handleOpenPlan = async (id) => {
     setActionLoadingId(id);
     try {
-      const fullPlan = await getPlanByIdApi(id);
+      const fullPlan = await getPlanById(id);
       if (fullPlan && fullPlan.planData) {
         onSelectPlan(fullPlan.planData);
       }
@@ -52,7 +52,7 @@ export const MyTripsView = ({ onSelectPlan, onGoToPlanner, currentUser }) => {
     if (!pendingDelete || isDeleting) return;
     setIsDeleting(true);
     try {
-      await deletePlanApi(pendingDelete.id);
+      await deletePlan(pendingDelete.id);
       setTrips((currentTrips) =>
         currentTrips.filter((trip) => String(trip.id) !== String(pendingDelete.id))
       );

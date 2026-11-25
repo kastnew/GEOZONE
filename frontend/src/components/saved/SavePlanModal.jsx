@@ -1,107 +1,111 @@
-import React, { useState } from 'react';
-import { savePlanApi } from '../../services/api.js';
-import { Save } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Save, X } from 'lucide-react';
+import { CITIES, formatVND } from '../../data/mockData';
+import { createPlan } from '../../services/api.js';
+import '../../styles/Trips.css';
 
 export const SavePlanModal = ({ isOpen, onClose, currentPlan, onSuccess }) => {
-  const [title, setTitle] = useState(
-    currentPlan ? `Chuyến đi ${currentPlan.city} ${currentPlan.totalDays} ngày` : ''
-  );
+  const [title, setTitle] = useState('');
+  const [isPublic, setIsPublic] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState(null);
+  const [errorMsg, setErrorMsg] = useState('');
+  const city = CITIES[currentPlan?.city] || CITIES.danang;
+  const daysCount = currentPlan?.totalDays || currentPlan?.daysCount || currentPlan?.days?.length || 1;
+  const actualCost = currentPlan?.actualCost ?? currentPlan?.totalCost ?? 0;
+
+  useEffect(() => {
+    if (!isOpen || !currentPlan) return;
+    setTitle(currentPlan.title || `Khám phá ${city.name} ${daysCount} ngày`);
+    setIsPublic(false);
+    setErrorMsg('');
+  }, [isOpen, currentPlan, city.name, daysCount]);
 
   if (!isOpen || !currentPlan) return null;
 
-  const handleSave = async (e) => {
-    e.preventDefault();
+  const handleSave = async (event) => {
+    event.preventDefault();
     setIsLoading(true);
-    setErrorMsg(null);
+    setErrorMsg('');
 
     try {
-      const payload = {
-        planTitle: title.trim() || `Chuyến đi ${currentPlan.city} ${currentPlan.totalDays} ngày`,
-        city: currentPlan.city,
-        totalDays: currentPlan.totalDays,
-        totalBudget: currentPlan.totalBudget,
-        actualCost: currentPlan.actualCost,
-        strategyUsed: currentPlan.strategyUsed,
-        planData: currentPlan
-      };
-
-      const saved = await savePlanApi(payload);
+      const saved = await createPlan({
+        ...currentPlan,
+        title: title.trim(),
+        is_public: isPublic,
+        totalDays: Number(daysCount),
+        actualCost: Number(actualCost)
+      });
       onSuccess(saved);
       onClose();
-    } catch (err) {
-      setErrorMsg(err.message || 'Lỗi khi lưu lịch trình');
+    } catch (error) {
+      setErrorMsg(error.message || 'Không thể lưu lịch trình. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
-        <h3 className="text-lg font-bold text-slate-800"><Save size={18} strokeWidth={1.75} aria-hidden="true" /> Lưu lịch trình vào tài khoản</h3>
-        <p className="text-xs text-slate-500 mt-1">
-          Lịch trình sẽ được lưu vĩnh viễn để bạn có thể xem lại bất kỳ lúc nào tại mục "Chuyến đi của tôi".
-        </p>
-
-        {errorMsg && (
-          <div className="mt-3 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
-            {errorMsg}
-          </div>
-        )}
-
-        <form onSubmit={handleSave} className="mt-4 space-y-4">
+    <div
+      className="gz-plan-modal-backdrop"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !isLoading) onClose();
+      }}
+    >
+      <section
+        className="gz-plan-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="gz-save-plan-title"
+      >
+        <button className="gz-plan-modal-close" type="button" onClick={onClose} disabled={isLoading} aria-label="Đóng">
+          <X size={18} strokeWidth={1.75} aria-hidden="true" />
+        </button>
+        <div className="gz-plan-modal-heading">
+          <span className="gz-plan-modal-icon"><Save size={20} strokeWidth={1.75} aria-hidden="true" /></span>
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Đặt tên cho chuyến đi
-            </label>
+            <h2 id="gz-save-plan-title">Lưu chuyến đi</h2>
+            <p>Lưu lịch trình vào tài khoản để xem lại và chia sẻ bất cứ lúc nào.</p>
+          </div>
+        </div>
+
+        {errorMsg && <p className="gz-plan-modal-error" role="alert">{errorMsg}</p>}
+
+        <form onSubmit={handleSave}>
+          <label className="gz-plan-field">
+            <span>Tên chuyến đi</span>
             <input
               type="text"
               required
+              maxLength={200}
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ví dụ: Chuyến du lịch Đà Nẵng 3 ngày cùng gia đình"
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder={`Khám phá ${city.name} ${daysCount} ngày`}
             />
+          </label>
+
+          <label className="gz-plan-field">
+            <span>Quyền riêng tư</span>
+            <select value={isPublic ? 'public' : 'private'} onChange={(event) => setIsPublic(event.target.value === 'public')}>
+              <option value="private">Riêng tư — chỉ bạn xem được</option>
+              <option value="public">Công khai — có thể chia sẻ bằng liên kết</option>
+            </select>
+          </label>
+
+          <div className="gz-plan-save-summary">
+            <span>Điểm đến <strong>{city.name}</strong></span>
+            <span>Thời lượng <strong>{daysCount} ngày</strong></span>
+            <span>Chi phí dự kiến <strong className="gz-numeric">{formatVND(actualCost)}</strong></span>
           </div>
 
-          <div className="p-3 bg-slate-50 rounded-xl text-xs text-slate-600 space-y-1 border border-slate-100">
-            <div className="flex justify-between">
-              <span>Điểm đến:</span>
-              <strong className="text-slate-800">{currentPlan.city}</strong>
-            </div>
-            <div className="flex justify-between">
-              <span>Thời gian:</span>
-              <strong className="text-slate-800">{currentPlan.totalDays} ngày</strong>
-            </div>
-            <div className="flex justify-between">
-              <span>Chi phí dự toán:</span>
-              <strong className="text-blue-600">
-                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(currentPlan.actualCost)}
-              </strong>
-            </div>
-          </div>
-
-          <div className="flex justify-end space-x-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isLoading}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-sm disabled:opacity-50 cursor-pointer"
-            >
-              {isLoading ? 'Đang lưu...' : 'Xác nhận lưu'}
+          <div className="gz-plan-modal-actions">
+            <button type="button" className="gz-btn ghost" onClick={onClose} disabled={isLoading}>Hủy</button>
+            <button type="submit" className="gz-btn" disabled={isLoading || !title.trim()}>
+              <Save size={16} strokeWidth={1.75} aria-hidden="true" />
+              {isLoading ? 'Đang lưu…' : 'Lưu lịch trình'}
             </button>
           </div>
         </form>
-      </div>
+      </section>
     </div>
   );
 };

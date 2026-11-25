@@ -747,7 +747,7 @@ HTTP status: `200 OK`. Trả về `404 Not Found` nếu không còn địa đi�
 
 # 8. Itineraries Management
 
-Nhóm API quản lý việc lưu trữ, truy xuất và chia sẻ lịch trình chính thức của người dùng trong CSDL PostgreSQL (bảng `saved_plans`). Toàn bộ đã được triển khai và kiểm thử 100%.
+Nhóm API quản lý việc lưu trữ, truy xuất và chia sẻ lịch trình chính thức của người dùng trong CSDL PostgreSQL (bảng `saved_plans`).
 
 # POST /api/v1/plans
 
@@ -755,7 +755,7 @@ Tạo mới / Lưu một lịch trình du lịch vào CSDL.
 
 - **Phương thức:** `POST`
 - **Quyền yêu cầu:** `USER` (Bắt buộc Bearer Access Token).
-- **Cơ chế:** Backend tự động trích xuất `req.user.sub` làm `user_id` sở hữu, không cho phép giả mạo `userId` từ body. Tự động sinh `share_token` ngẫu nhiên nếu `is_public: true` mà không truyền mã trước.
+- **Cơ chế:** Backend tự động trích xuất `req.user.sub` làm `user_id` sở hữu, không cho phép giả mạo `userId` từ body. Backend tự sinh `share_token` ngẫu nhiên khi lịch trình công khai; không nhận token do client gửi.
 
 Request body:
 
@@ -773,6 +773,14 @@ Request body:
   }
 }
 ```
+
+Quy tắc xác thực:
+- `planData` (hoặc khóa tương thích `plan_data`) phải là object có mảng `days` không rỗng.
+- `title`, nếu truyền, phải là chuỗi không rỗng sau khi trim và tối đa 200 ký tự; nếu bỏ qua, backend tự tạo tiêu đề.
+- `totalDays` / `total_days` phải là số nguyên từ 1 đến 30; mặc định là `2`.
+- `totalBudget` / `total_budget` và `actualCost` / `actual_cost` phải là số JSON hữu hạn, lớn hơn hoặc bằng `0`; mặc định là `0`.
+- `is_public`, nếu truyền, phải là JSON boolean; mặc định là `false`.
+- Backend bỏ qua `shareToken` / `share_token` từ client, tự sinh token ngẫu nhiên cho lịch trình công khai và lưu `null` cho lịch trình riêng tư.
 
 Response thành công:
 
@@ -798,7 +806,7 @@ Response thành công:
 }
 ```
 
-HTTP status: `201 Created`. `400 Bad Request` nếu thiếu `planData`.
+HTTP status: `201 Created`. `400 Bad Request` nếu thiếu hoặc sai định dạng `planData`, hay có trường không hợp lệ.
 
 # GET /api/v1/plans
 
@@ -858,8 +866,12 @@ Cập nhật thông tin lịch trình (đổi tiêu đề, trạng thái, hoặc
   "is_public": true
 }
 ```
+- `title`, nếu truyền, phải là chuỗi không rỗng sau khi trim và tối đa 200 ký tự.
+- `status`, nếu truyền, phải thuộc `DRAFT`, `VALIDATING`, `COMPLETED`, hoặc `FAILED`.
+- `is_public`, nếu truyền, phải là JSON boolean. Backend bỏ qua `id`, `user_id`, và `share_token` từ client.
+- Phải truyền ít nhất một trong các trường `title`, `status`, hoặc `is_public`.
 
-HTTP status: `200 OK`. `403` nếu không có quyền sửa, `404` nếu không tìm thấy.
+HTTP status: `200 OK`. `400` nếu body không có trường hợp lệ hoặc giá trị không hợp lệ, `403` nếu không có quyền sửa, `404` nếu không tìm thấy.
 
 # DELETE /api/v1/plans/:planId
 

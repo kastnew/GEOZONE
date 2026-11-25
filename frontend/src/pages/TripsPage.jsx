@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/Trips.css';
 import TripCard from '../components/trips/TripCard';
 import { Compass } from 'lucide-react';
+import { RenamePlanDialog, SharePlanDialog } from '../components/trips/PlanManagementDialogs.jsx';
+import { useToast } from '../context/ToastContext.jsx';
 
 export default function TripsPage({
   trips = [],
@@ -11,10 +13,27 @@ export default function TripsPage({
   onOpenAuth = () => {},
   onViewTrip = () => {},
   onDeleteTrip = () => {},
+  onRenameTrip = async () => {},
+  onToggleTripShare = async () => {},
   onClearAllTrips = () => {},
   onNavigate = () => {}
 }) {
+  const [tripToRename, setTripToRename] = useState(null);
+  const [tripToShare, setTripToShare] = useState(null);
+  const { showToast } = useToast();
   const hasTrips = trips && trips.length > 0;
+
+  const handleRename = async (tripId, title) => {
+    const updated = await onRenameTrip(tripId, title);
+    showToast('Đã đổi tên chuyến đi.', 'success');
+    return updated;
+  };
+
+  const handleShareToggle = async (tripId, isPublic) => {
+    const updated = await onToggleTripShare(tripId, isPublic);
+    setTripToShare(updated);
+    return updated;
+  };
 
   return (
     <section className="gz-view gz-trips on" data-view="trips" aria-label="Chuyến đi của tôi">
@@ -38,27 +57,6 @@ export default function TripsPage({
 
       <div className="gz-tbody">
         <div className="gz-wrap">
-          {/* Guest Sync Banner */}
-          {!isLoggedIn && (
-            <div className="gz-gnote" id="gzGuestNote">
-              <p>Bạn chưa đăng nhập, nên chuyến đi chỉ lưu trên trình duyệt này.</p>
-              <button
-                type="button"
-                className="gz-btn ghost"
-                style={{
-                  borderColor: 'var(--gz-color-primary)',
-                  color: 'var(--gz-color-primary-pressed)',
-                  padding: '6px 12px',
-                  fontSize: '13px',
-                  marginTop: '6px'
-                }}
-                onClick={() => onOpenAuth('login')}
-              >
-                Đăng nhập để đồng bộ lên máy chủ
-              </button>
-            </div>
-          )}
-
           {/* Action Toolbar */}
           {hasTrips && (
             <div className="gz-tbar" id="gzTbar">
@@ -78,8 +76,8 @@ export default function TripsPage({
 
           {/* Trips Grid */}
           {isLoading ? (
-            <div className="gz-tempty" role="status" aria-live="polite">
-              <p>Đang tải chuyến đi của bạn…</p>
+            <div className="gz-tgrid" role="status" aria-live="polite" aria-label="Đang tải chuyến đi">
+              {[1, 2, 3].map((item) => <div className="tcard-skeleton" key={item} />)}
             </div>
           ) : hasTrips ? (
             <div className="gz-tgrid" id="gzTgrid">
@@ -89,6 +87,8 @@ export default function TripsPage({
                   trip={trip}
                   onView={onViewTrip}
                   onDelete={onDeleteTrip}
+                  onRename={setTripToRename}
+                  onShare={setTripToShare}
                 />
               ))}
             </div>
@@ -115,6 +115,16 @@ export default function TripsPage({
           )}
         </div>
       </div>
+      <RenamePlanDialog
+        trip={tripToRename}
+        onClose={() => setTripToRename(null)}
+        onSave={handleRename}
+      />
+      <SharePlanDialog
+        trip={tripToShare}
+        onClose={() => setTripToShare(null)}
+        onToggle={handleShareToggle}
+      />
     </section>
   );
 }

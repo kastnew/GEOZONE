@@ -26,13 +26,15 @@ export const PlaceItem = ({ activity, dayNumber, onSwapRequest }) => {
             <span className="text-sm font-bold text-emerald-600 block">
               {activity.estimatedCost > 0 ? formatVnd(activity.estimatedCost) : 'Miễn phí'}
             </span>
-            <button
-              type="button"
-              onClick={() => onSwapRequest(activity, dayNumber)}
-              className="mt-2 text-xs font-semibold px-2.5 py-1 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 transition shadow-2xs cursor-pointer"
-            >
-              <ArrowRightLeft size={14} strokeWidth={1.75} aria-hidden="true" /> Đổi địa điểm
-            </button>
+            {onSwapRequest && (
+              <button
+                type="button"
+                onClick={() => onSwapRequest(activity, dayNumber)}
+                className="mt-2 text-xs font-semibold px-2.5 py-1 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 transition shadow-2xs cursor-pointer"
+              >
+                <ArrowRightLeft size={14} strokeWidth={1.75} aria-hidden="true" /> Đổi địa điểm
+              </button>
+            )}
           </div>
         </div>
 

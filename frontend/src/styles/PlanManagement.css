@@ -1,0 +1,511 @@
+.gz-plan-modal-backdrop {
+  position: fixed;
+  z-index: 1100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, .48);
+  backdrop-filter: blur(3px);
+}
+
+.gz-plan-modal {
+  position: relative;
+  width: min(100%, 520px);
+  max-height: min(90vh, 760px);
+  overflow: auto;
+  padding: 28px;
+  border: 1px solid var(--gz-color-line);
+  border-radius: var(--gz-radius-xl);
+  background: var(--gz-color-surface);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, .18);
+  color: var(--gz-color-ink);
+}
+
+.gz-plan-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--gz-color-line);
+  border-radius: 50%;
+  background: var(--gz-color-surface);
+  color: var(--gz-color-ink-secondary);
+  cursor: pointer;
+}
+
+.gz-plan-modal-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding-right: 36px;
+  margin-bottom: 22px;
+}
+
+.gz-plan-modal-icon,
+.gz-plan-unavailable-mark {
+  display: grid;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--gz-color-primary-soft);
+  color: var(--gz-color-primary-pressed);
+}
+
+.gz-plan-modal-heading h2 {
+  margin: 0;
+  font: 700 20px var(--display);
+}
+
+.gz-plan-modal-heading p,
+.gz-plan-dialog-description {
+  margin: 6px 0 0;
+  color: var(--gz-color-ink-secondary);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.gz-plan-field {
+  display: grid;
+  gap: 7px;
+  margin: 16px 0;
+  color: var(--gz-color-ink);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.gz-plan-field input,
+.gz-plan-field select {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--gz-color-line-strong);
+  border-radius: var(--gz-radius-md);
+  background: var(--gz-color-surface);
+  color: var(--gz-color-ink);
+  font: inherit;
+  font-weight: 450;
+}
+
+.gz-plan-field input:focus,
+.gz-plan-field select:focus {
+  outline: 3px solid var(--gz-color-primary-soft);
+  border-color: var(--gz-color-primary);
+}
+
+.gz-plan-save-summary {
+  display: grid;
+  gap: 9px;
+  margin-top: 20px;
+  padding: 14px 0;
+  border-top: 1px solid var(--gz-color-line);
+  border-bottom: 1px solid var(--gz-color-line);
+  color: var(--gz-color-ink-secondary);
+  font-size: 13px;
+}
+
+.gz-plan-save-summary span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gz-plan-save-summary strong {
+  color: var(--gz-color-ink);
+  font-weight: 650;
+}
+
+.gz-plan-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.gz-plan-modal-actions .gz-btn {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.gz-plan-modal-error {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--gz-color-danger-soft);
+  border-radius: var(--gz-radius-md);
+  background: var(--gz-color-danger-soft);
+  color: var(--gz-color-danger);
+  font-size: 13px;
+}
+
+.gz-plan-share-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px 0;
+  margin: 18px 0;
+  border-top: 1px solid var(--gz-color-line);
+  border-bottom: 1px solid var(--gz-color-line);
+  cursor: pointer;
+}
+
+.gz-plan-share-toggle > span:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.gz-plan-share-toggle strong {
+  color: var(--gz-color-ink);
+  font-size: 14px;
+}
+
+.gz-plan-share-toggle small {
+  color: var(--gz-color-ink-secondary);
+  font-size: 12px;
+}
+
+.gz-plan-share-toggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.gz-plan-switch {
+  position: relative;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 26px;
+  border-radius: 20px;
+  background: #cbd5e1;
+  transition: background .16s ease;
+}
+
+.gz-plan-switch::after {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  content: "";
+  transition: transform .16s ease;
+}
+
+.gz-plan-share-toggle input:checked + .gz-plan-switch {
+  background: var(--gz-color-primary);
+}
+
+.gz-plan-share-toggle input:checked + .gz-plan-switch::after {
+  transform: translateX(18px);
+}
+
+.gz-plan-share-toggle input:focus-visible + .gz-plan-switch {
+  outline: 3px solid var(--gz-color-primary-soft);
+}
+
+.gz-plan-share-toggle input:disabled + .gz-plan-switch {
+  opacity: .6;
+}
+
+.gz-plan-share-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.gz-plan-share-link > span {
+  flex: 1;
+  overflow: hidden;
+  padding: 10px 12px;
+  border: 1px solid var(--gz-color-line);
+  border-radius: var(--gz-radius-md);
+  background: var(--gz-color-canvas-cool);
+  color: var(--gz-color-ink-secondary);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gz-plan-share-link .gz-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  white-space: nowrap;
+}
+
+.gz-plan-page {
+  min-height: calc(100vh - 64px);
+  padding: 36px 24px 72px;
+  background: var(--gz-color-canvas-cool);
+}
+
+.gz-plan-detail-wrap {
+  width: min(100%, 1120px);
+  margin: 0 auto;
+}
+
+.gz-plan-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 22px;
+  color: var(--gz-color-ink-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.gz-plan-back-link:hover {
+  color: var(--gz-color-primary-pressed);
+}
+
+.gz-plan-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--gz-color-line);
+}
+
+.gz-plan-detail-header h1 {
+  margin: 5px 0 12px;
+  color: var(--gz-color-ink);
+  font: 700 clamp(26px, 4vw, 38px) var(--display);
+  line-height: 1.15;
+}
+
+.gz-plan-eyebrow {
+  margin: 0;
+  color: var(--gz-color-primary-pressed);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.gz-plan-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  color: var(--gz-color-ink-secondary);
+  font-size: 14px;
+}
+
+.gz-plan-detail-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.gz-plan-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.gz-plan-detail-actions .gz-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.gz-plan-detail-actions .gz-plan-delete-button {
+  border-color: var(--gz-color-danger-soft);
+  color: var(--gz-color-danger);
+}
+
+.gz-plan-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--gz-color-line);
+}
+
+.gz-plan-detail-summary > div {
+  display: grid;
+  gap: 6px;
+}
+
+.gz-plan-detail-summary span {
+  color: var(--gz-color-ink-secondary);
+  font-size: 12px;
+}
+
+.gz-plan-detail-summary strong {
+  color: var(--gz-color-ink);
+  font-size: 16px;
+}
+
+.gz-plan-map-section,
+.gz-plan-timeline-section {
+  margin-top: 30px;
+}
+
+.gz-plan-map-section h2,
+.gz-plan-timeline-section h2,
+.gz-plan-create-cta h2 {
+  margin: 0 0 14px;
+  color: var(--gz-color-ink);
+  font: 700 22px var(--display);
+}
+
+.gz-plan-map-section .mapwrap {
+  height: clamp(360px, 46vw, 500px);
+  overflow: hidden;
+  border: 1px solid var(--gz-color-line);
+  border-radius: var(--gz-radius-lg);
+  background: var(--gz-color-surface);
+}
+
+.gz-plan-map-section .mapwrap #map {
+  min-height: 100% !important;
+}
+
+.gz-plan-timeline-section .gz-day-panel {
+  padding-top: 16px;
+}
+
+.gz-plan-share-banner {
+  margin-top: 18px;
+  padding: 13px 16px;
+  border-left: 3px solid var(--gz-color-primary);
+  background: var(--gz-color-primary-soft);
+  color: var(--gz-color-ink-secondary);
+  font-size: 14px;
+}
+
+.gz-plan-create-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 36px;
+  padding: 24px 0 0;
+  border-top: 1px solid var(--gz-color-line);
+}
+
+.gz-plan-create-cta h2 {
+  margin-bottom: 6px;
+}
+
+.gz-plan-create-cta p {
+  margin: 0;
+  color: var(--gz-color-ink-secondary);
+  font-size: 14px;
+}
+
+.gz-plan-create-cta .gz-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+}
+
+.gz-plan-unavailable {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  min-height: min(68vh, 620px);
+  padding: 32px 18px;
+  text-align: center;
+}
+
+.gz-plan-unavailable h1 {
+  margin: 16px 0 8px;
+  color: var(--gz-color-ink);
+  font: 700 28px var(--display);
+}
+
+.gz-plan-unavailable p {
+  max-width: 520px;
+  margin: 0 0 20px;
+  color: var(--gz-color-ink-secondary);
+  line-height: 1.6;
+}
+
+.gz-plan-unavailable .gz-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.gz-plan-no-days {
+  padding: 20px 0;
+  color: var(--gz-color-ink-secondary);
+}
+
+.gz-plan-skeleton {
+  border-radius: var(--gz-radius-lg);
+  background: linear-gradient(100deg, #e9eef2 20%, #fafaf8 42%, #e9eef2 64%);
+  background-size: 220% 100%;
+  animation: gz-skeleton 1.35s ease-in-out infinite;
+}
+
+.gz-plan-skeleton-heading {
+  width: min(100%, 680px);
+  height: 120px;
+  margin-bottom: 24px;
+}
+
+.gz-plan-skeleton-map {
+  height: 380px;
+  margin-bottom: 28px;
+}
+
+.gz-plan-skeleton-timeline {
+  height: 260px;
+}
+
+@media (max-width: 760px) {
+  .gz-plan-page {
+    padding: 24px 16px 56px;
+  }
+
+  .gz-plan-detail-header {
+    display: block;
+  }
+
+  .gz-plan-detail-actions {
+    justify-content: flex-start;
+    margin-top: 18px;
+  }
+
+  .gz-plan-detail-summary {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .gz-plan-create-cta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .gz-plan-share-link {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .gz-plan-share-link .gz-btn {
+    justify-content: center;
+  }
+
+  .gz-plan-modal {
+    padding: 24px 20px;
+  }
+}

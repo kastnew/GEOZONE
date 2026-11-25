@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { planController } from '../controllers/plan.controller.js';
-import { swapController } from '../controllers/swap.controller.js';
 import { verifyToken, verifyActiveUser } from '../middlewares/auth.middleware.js';
 import { checkOwner } from '../middlewares/checkOwner.js';
 import { validateUuidParam } from '../middlewares/validateUuid.js';
@@ -19,14 +18,6 @@ router.get('/', verifyToken, verifyActiveUser, planController.getMyPlans);
 
 // GET /api/v1/plans/share/:shareToken - Xem lịch trình chia sẻ công khai (Không yêu cầu đăng nhập)
 router.get('/share/:shareToken', planController.getPublicPlanByShareToken);
-
-// ==========================================
-// Backward Compatible Aliases
-// ==========================================
-router.post('/generate', planController.generateItinerary);
-router.post('/swap', swapController.swapPlace);
-router.post('/save', verifyToken, verifyActiveUser, planController.savePlan);
-router.get('/my-plans', verifyToken, verifyActiveUser, planController.getMyPlans);
 
 // ==========================================
 // Specific Plan Operations (Protected with checkOwner)

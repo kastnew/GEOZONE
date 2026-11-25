@@ -94,18 +94,70 @@ async function runBusinessApiTests() {
     console.log('--- TEST 3.1: QUẢN LÝ LỊCH TRÌNH (PLANS) ---');
     console.log('=========================================');
 
-    // 3.1.1 POST /api/v1/plans - Validate thiếu planData
-    console.log('1. Test POST /api/v1/plans thiếu planData -> Phải trả về 400');
-    const invalidPlanRes = await fetch(`${baseUrl}/plans`, {
+    const postPlan = (body) => fetch(`${baseUrl}/plans`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${user1Token}`
       },
-      body: JSON.stringify({ title: 'Chuyến đi thiếu dữ liệu' })
+      body: JSON.stringify(body)
     });
+    const expectInvalidPlan = async (label, body) => {
+      const response = await postPlan(body);
+      if (response.status !== 400) {
+        throw new Error(`${label}: expected 400, got ${response.status}`);
+      }
+      console.log(`✅ ${label} -> 400`);
+    };
+
+    // 3.1.1 POST /api/v1/plans - Validate thiếu planData
+    console.log('1. Test POST /api/v1/plans thiếu planData -> Phải trả về 400');
+    const invalidPlanRes = await postPlan({ title: 'Chuyến đi thiếu dữ liệu' });
     if (invalidPlanRes.status !== 400) throw new Error(`Expected 400, got ${invalidPlanRes.status}`);
     console.log('✅ Bắt lỗi thành công khi thiếu planData (400)');
+    await expectInvalidPlan('planData null', { planData: null });
+    await expectInvalidPlan('planData primitive', { planData: 'not-an-object' });
+    await expectInvalidPlan('planData là mảng', { planData: [] });
+    await expectInvalidPlan('planData rỗng', { planData: {} });
+    await expectInvalidPlan('planData thiếu days', { planData: { title: 'Thiếu ngày' } });
+    await expectInvalidPlan('planData có days rỗng', { planData: { days: [] } });
+    await expectInvalidPlan('planData có days sai kiểu', { planData: { days: 'ngày thứ nhất' } });
+    await expectInvalidPlan('is_public là chuỗi false', {
+      is_public: 'false',
+      planData: { days: [{ day: 1 }] }
+    });
+    await expectInvalidPlan('totalBudget âm', {
+      totalBudget: -1,
+      planData: { days: [{ day: 1 }] }
+    });
+    await expectInvalidPlan('totalBudget là chuỗi', {
+      totalBudget: '1000',
+      planData: { days: [{ day: 1 }] }
+    });
+    await expectInvalidPlan('actualCost âm', {
+      actualCost: -1,
+      planData: { days: [{ day: 1 }] }
+    });
+    await expectInvalidPlan('totalDays âm', {
+      totalDays: -1,
+      planData: { days: [{ day: 1 }] }
+    });
+    await expectInvalidPlan('totalDays vượt quá giới hạn', {
+      totalDays: 31,
+      planData: { days: [{ day: 1 }] }
+    });
+    await expectInvalidPlan('totalDays không phải số nguyên', {
+      totalDays: 1.5,
+      planData: { days: [{ day: 1 }] }
+    });
+    await expectInvalidPlan('title chỉ chứa khoảng trắng', {
+      title: '   ',
+      planData: { days: [{ day: 1 }] }
+    });
+    await expectInvalidPlan('title sai kiểu', {
+      title: 123,
+      planData: { days: [{ day: 1 }] }
+    });
 
     // 3.1.2 POST /api/v1/plans - Tạo lịch trình riêng tư (is_public: false)
     console.log('2. Test POST /api/v1/plans lưu lịch trình hợp lệ (is_public: false) -> 201');
@@ -153,12 +205,19 @@ async function runBusinessApiTests() {
         totalDays: 2,
         totalBudget: 1500000,
         is_public: true,
+        share_token: 'client-selected-share-token',
         planData: { days: [{ day: 1, places: ['Ngũ Hành Sơn'] }] }
       })
     });
     const createPublicJson = await createPublicPlanRes.json();
     if (createPublicPlanRes.status !== 201 || !createPublicJson.data?.share_token) {
       throw new Error('Tạo lịch trình công khai thất bại hoặc không tự sinh share_token');
+    }
+    if (
+      createPublicJson.data.share_token === 'client-selected-share-token'
+      || !/^[0-9a-f]{32}$/.test(createPublicJson.data.share_token)
+    ) {
+      throw new Error('share_token phải được sinh bảo mật ở backend, không nhận giá trị từ client');
     }
     const publicPlanId = createPublicJson.data.id;
     const shareToken = createPublicJson.data.share_token;
@@ -228,14 +287,96 @@ async function runBusinessApiTests() {
     }
     console.log('✅ Xem lịch trình công khai thành công qua share_token (200)');
 
+    const patchPlan = (planId, token, body) => fetch(`${baseUrl}/plans/${planId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(body)
+    });
+
+    console.log('11. Test PATCH /api/v1/plans/:planId từ chối body rỗng/không hợp lệ -> 400');
+    for (const invalidBody of [
+      {},
+      { unrelatedField: 'ignored' },
+      { title: '' },
+      { title: '   ' },
+      { title: 'x'.repeat(201) },
+      { status: 'INVALID_STATUS' },
+      { is_public: 'false' }
+    ]) {
+      const invalidPatchRes = await patchPlan(privatePlanId, user1Token, invalidBody);
+      if (invalidPatchRes.status !== 400) {
+        throw new Error(`PATCH body ${JSON.stringify(invalidBody)}: expected 400, got ${invalidPatchRes.status}`);
+      }
+    }
+    console.log('✅ PATCH từ chối body rỗng, field lạ, title/status/is_public không hợp lệ (400)');
+
+    console.log('12. Test PATCH /api/v1/plans/:planId chặn người không sở hữu -> 403');
+    const forbiddenPatchRes = await patchPlan(privatePlanId, user2Token, { title: 'Không được phép' });
+    if (forbiddenPatchRes.status !== 403) {
+      throw new Error(`Expected 403, got ${forbiddenPatchRes.status}`);
+    }
+    console.log('✅ PATCH chặn người không sở hữu (403)');
+
+    console.log('13. Test PATCH cập nhật title và bỏ qua id/user_id/share_token từ client -> 200');
+    const updateTitleRes = await patchPlan(privatePlanId, user1Token, {
+      title: 'Chuyến đi đã đổi tên',
+      id: '00000000-0000-0000-0000-000000000000',
+      user_id: user2Id,
+      share_token: 'client-selected-patch-token'
+    });
+    const updateTitleJson = await updateTitleRes.json();
+    if (
+      updateTitleRes.status !== 200
+      || updateTitleJson.data?.title !== 'Chuyến đi đã đổi tên'
+      || updateTitleJson.data?.id !== privatePlanId
+      || updateTitleJson.data?.user_id !== user1Id
+      || updateTitleJson.data?.share_token !== null
+    ) {
+      throw new Error(`PATCH cập nhật title hoặc whitelist dữ liệu sai: ${JSON.stringify(updateTitleJson)}`);
+    }
+    console.log('✅ PATCH đổi title; id, user_id, share_token do client gửi bị bỏ qua (200)');
+
+    console.log('14. Test PATCH bật chia sẻ tự sinh share_token và mở được link -> 200');
+    const enableShareRes = await patchPlan(privatePlanId, user1Token, { is_public: true });
+    const enableShareJson = await enableShareRes.json();
+    const patchShareToken = enableShareJson.data?.share_token;
+    if (
+      enableShareRes.status !== 200
+      || enableShareJson.data?.is_public !== true
+      || !/^[0-9a-f]{32}$/.test(patchShareToken || '')
+    ) {
+      throw new Error(`PATCH bật chia sẻ không tạo token hợp lệ: ${JSON.stringify(enableShareJson)}`);
+    }
+    const patchSharedPlanRes = await fetch(`${baseUrl}/plans/share/${patchShareToken}`);
+    const patchSharedPlanJson = await patchSharedPlanRes.json();
+    if (patchSharedPlanRes.status !== 200 || patchSharedPlanJson.data?.id !== privatePlanId) {
+      throw new Error('Link chia sẻ sau PATCH bật công khai không truy cập được');
+    }
+    console.log('✅ PATCH bật chia sẻ sinh token và GET link trả về 200');
+
+    console.log('15. Test PATCH tắt chia sẻ làm link cũ không truy cập được -> 404');
+    const disableShareRes = await patchPlan(privatePlanId, user1Token, { is_public: false });
+    const disableShareJson = await disableShareRes.json();
+    if (disableShareRes.status !== 200 || disableShareJson.data?.is_public !== false) {
+      throw new Error(`PATCH tắt chia sẻ thất bại: ${JSON.stringify(disableShareJson)}`);
+    }
+    const disabledShareRes = await fetch(`${baseUrl}/plans/share/${patchShareToken}`);
+    if (disabledShareRes.status !== 404) {
+      throw new Error(`Expected disabled share link to return 404, got ${disabledShareRes.status}`);
+    }
+    console.log('✅ Link chia sẻ bị vô hiệu hóa trả về 404');
+
     // 3.1.11 GET /api/v1/plans/share/:shareToken - shareToken không tồn tại -> 404
-    console.log('11. Test GET /api/v1/plans/share/fake-token -> 404');
+    console.log('16. Test GET /api/v1/plans/share/fake-token -> 404');
     const fakeTokenRes = await fetch(`${baseUrl}/plans/share/non-existent-share-token-xyz`);
     if (fakeTokenRes.status !== 404) throw new Error(`Expected 404, got ${fakeTokenRes.status}`);
     console.log('✅ Trả về 404 chuẩn xác khi share_token sai');
 
     // 3.1.12 DELETE /api/v1/plans/:planId - User 2 cố xóa lịch trình của User 1 -> 403
-    console.log('12. Test DELETE /api/v1/plans/:planId bởi người khác -> 403');
+    console.log('17. Test DELETE /api/v1/plans/:planId bởi người khác -> 403');
     const forbiddenDeleteRes = await fetch(`${baseUrl}/plans/${privatePlanId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${user2Token}` }
@@ -244,7 +385,7 @@ async function runBusinessApiTests() {
     console.log('✅ Chặn thành công hành vi xóa trái phép từ user khác (403)');
 
     // 3.1.13 DELETE /api/v1/plans/:planId - Chính chủ xóa lịch trình -> 200
-    console.log('13. Test DELETE /api/v1/plans/:planId bởi chính chủ -> 200');
+    console.log('18. Test DELETE /api/v1/plans/:planId bởi chính chủ -> 200');
     const ownerDeleteRes = await fetch(`${baseUrl}/plans/${privatePlanId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${user1Token}` }
@@ -253,7 +394,7 @@ async function runBusinessApiTests() {
     console.log('✅ Chủ sở hữu xóa lịch trình thành công (200)');
 
     // 3.1.14 DELETE /api/v1/plans/:planId - Xóa lại lần nữa -> 404
-    console.log('14. Test DELETE /api/v1/plans/:planId lần nữa -> 404');
+    console.log('19. Test DELETE /api/v1/plans/:planId lần nữa -> 404');
     const reDeleteRes = await fetch(`${baseUrl}/plans/${privatePlanId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${user1Token}` }

@@ -11,6 +11,16 @@ import { prisma } from '../config/database.js';
 import { ENV } from '../config/env.config.js';
 import { logger } from '../utils/logger.js';
 
+const PLAN_STATUSES = new Set(['DRAFT', 'VALIDATING', 'COMPLETED', 'FAILED']);
+
+function badRequest(res, message) {
+  return res.status(400).json({
+    success: false,
+    message,
+    error: { message }
+  });
+}
+
 export class PlanController {
   /**
    * Sinh lịch trình tự động (AI Planner)
@@ -99,57 +109,78 @@ export class PlanController {
         return res.status(401).json({ success: false, message: 'Chưa đăng nhập!' });
       }
 
-      const {
-        title,
-        planTitle,
-        city,
-        total_days,
-        totalDays,
-        total_budget,
-        totalBudget,
-        actual_cost,
-        actualCost,
-        status,
-        strategy_used,
-        strategyUsed,
-        plan_data,
-        planData,
-        share_token,
-        shareToken,
-        is_public,
-        isPublic
-      } = req.body;
-
-      const rawPlanData = plan_data || planData;
-      if (!rawPlanData) {
-        return res.status(400).json({
-          success: false,
-          message: 'Dữ liệu lịch trình (planData) không được để trống',
-          error: { message: 'Dữ liệu lịch trình (planData) không được để trống' }
-        });
+      const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body)
+        ? req.body
+        : {};
+      const rawPlanData = body.planData !== undefined ? body.planData : body.plan_data;
+      if (
+        !rawPlanData
+        || typeof rawPlanData !== 'object'
+        || Array.isArray(rawPlanData)
+        || Object.keys(rawPlanData).length === 0
+        || !Array.isArray(rawPlanData.days)
+        || rawPlanData.days.length === 0
+      ) {
+        return badRequest(res, 'Dữ liệu lịch trình phải là object có danh sách days không được để trống.');
       }
 
-      const defaultTitle = (title || planTitle)?.trim() || `Chuyến du lịch ${city || 'Đà Nẵng'} ${total_days || totalDays || 2} ngày`;
-
-      const isPublicBool = Boolean(is_public ?? isPublic ?? false);
-      let finalShareToken = share_token || shareToken || null;
-      if (isPublicBool && !finalShareToken) {
-        finalShareToken = crypto.randomBytes(16).toString('hex');
+      const rawTitle = body.title !== undefined ? body.title : body.planTitle;
+      if (
+        rawTitle !== undefined
+        && (typeof rawTitle !== 'string' || rawTitle.trim().length === 0 || rawTitle.trim().length > 200)
+      ) {
+        return badRequest(res, 'Tiêu đề phải là chuỗi không được để trống và tối đa 200 ký tự.');
       }
+
+      const rawTotalDays = body.totalDays !== undefined ? body.totalDays : body.total_days;
+      const totalDays = rawTotalDays === undefined ? 2 : rawTotalDays;
+      if (!Number.isInteger(totalDays) || totalDays < 1 || totalDays > 30) {
+        return badRequest(res, 'Số ngày phải là số nguyên từ 1 đến 30.');
+      }
+
+      const rawTotalBudget = body.totalBudget !== undefined ? body.totalBudget : body.total_budget;
+      const totalBudget = rawTotalBudget === undefined ? 0 : rawTotalBudget;
+      if (typeof totalBudget !== 'number' || !Number.isFinite(totalBudget) || totalBudget < 0) {
+        return badRequest(res, 'Ngân sách phải là số hữu hạn lớn hơn hoặc bằng 0.');
+      }
+
+      const rawActualCost = body.actualCost !== undefined ? body.actualCost : body.actual_cost;
+      const actualCost = rawActualCost === undefined ? 0 : rawActualCost;
+      if (typeof actualCost !== 'number' || !Number.isFinite(actualCost) || actualCost < 0) {
+        return badRequest(res, 'Chi phí thực tế phải là số hữu hạn lớn hơn hoặc bằng 0.');
+      }
+
+      const rawIsPublic = body.is_public !== undefined ? body.is_public : body.isPublic;
+      if (rawIsPublic !== undefined && typeof rawIsPublic !== 'boolean') {
+        return badRequest(res, 'Trường is_public phải là kiểu boolean (true/false)');
+      }
+      const isPublic = rawIsPublic ?? false;
+
+      const status = body.status === undefined ? 'COMPLETED' : body.status;
+      if (!PLAN_STATUSES.has(status)) {
+        return badRequest(res, 'Trạng thái lịch trình không hợp lệ.');
+      }
+
+      const city = body.city || 'Da Nang';
+      const title = rawTitle === undefined
+        ? `Chuyến du lịch ${city} ${totalDays} ngày`
+        : rawTitle.trim();
+      const strategyUsed = body.strategyUsed || body.strategy_used || 'DIRECT_JSON';
+      const shareToken = isPublic ? crypto.randomBytes(16).toString('hex') : null;
 
       const saved = await prisma.savedPlan.create({
         data: {
           user_id: currentUserId,
-          title: defaultTitle,
-          city: city || 'Da Nang',
-          total_days: Number(total_days || totalDays) || 2,
-          total_budget: Number(total_budget || totalBudget) || 0,
-          actual_cost: Number(actual_cost || actualCost) || 0,
-          status: status || 'COMPLETED',
-          strategy_used: strategy_used || strategyUsed || 'DIRECT_JSON',
+          title,
+          city,
+          total_days: totalDays,
+          total_budget: totalBudget,
+          actual_cost: actualCost,
+          status,
+          strategy_used: strategyUsed,
           plan_data: rawPlanData,
-          is_public: isPublicBool,
-          share_token: finalShareToken
+          is_public: isPublic,
+          share_token: shareToken
         }
       });
 
@@ -326,15 +357,41 @@ export class PlanController {
         }
       }
 
+      const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body)
+        ? req.body
+        : {};
       const updateData = {};
-      if (req.body.title !== undefined) updateData.title = String(req.body.title).trim();
-      if (req.body.status !== undefined) updateData.status = req.body.status;
-      if (req.body.is_public !== undefined || req.body.isPublic !== undefined) {
-        const isPublic = Boolean(req.body.is_public ?? req.body.isPublic);
-        updateData.is_public = isPublic;
-        if (isPublic && !plan.share_token) {
+
+      if (body.title !== undefined) {
+        if (typeof body.title !== 'string' || body.title.trim().length === 0 || body.title.trim().length > 200) {
+          return badRequest(res, 'Tiêu đề phải là chuỗi không được để trống và tối đa 200 ký tự.');
+        }
+        updateData.title = body.title.trim();
+      }
+
+      if (body.status !== undefined) {
+        if (!PLAN_STATUSES.has(body.status)) {
+          return badRequest(res, 'Trạng thái lịch trình không hợp lệ.');
+        }
+        updateData.status = body.status;
+      }
+
+      if (body.is_public !== undefined && body.isPublic !== undefined && body.is_public !== body.isPublic) {
+        return badRequest(res, 'Giá trị is_public không hợp lệ.');
+      }
+      const rawIsPublic = body.is_public !== undefined ? body.is_public : body.isPublic;
+      if (rawIsPublic !== undefined) {
+        if (typeof rawIsPublic !== 'boolean') {
+          return badRequest(res, 'Trường is_public phải là kiểu boolean (true/false)');
+        }
+        updateData.is_public = rawIsPublic;
+        if (rawIsPublic && (!plan.share_token || !plan.share_token.trim())) {
           updateData.share_token = crypto.randomBytes(16).toString('hex');
         }
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        return badRequest(res, 'Không có dữ liệu hợp lệ để cập nhật');
       }
 
       const updated = await prisma.savedPlan.update({

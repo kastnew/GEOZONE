@@ -24,8 +24,8 @@
   background: var(--gz-color-surface);
   color: var(--gz-color-ink);
   padding: 12px 24px;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 20px;
   align-items: center;
   position: relative;
@@ -35,6 +35,8 @@
 
 .modes {
   display: flex;
+  grid-column: 1;
+  justify-self: start;
   gap: 3px;
   padding: 4px;
   flex: 0 0 auto;
@@ -95,38 +97,46 @@
 .info {
   display: flex;
   align-items: center;
+  grid-column: 2;
+  justify-self: center;
   gap: 20px;
 }
 
 .title h1 {
-  font: 700 20px var(--gz-font-display);
+  font: 700 22px/1.2 var(--gz-font-display);
   color: var(--gz-color-ink);
   margin: 0;
-  letter-spacing: -.02em;
+  letter-spacing: -.025em;
 }
 
 .title p {
-  margin: 2px 0 0;
+  margin: 4px 0 0;
   font-size: 13px;
-  color: var(--gz-color-ink-muted);
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--gz-color-ink-secondary);
+}
+
+.title {
+  padding-left: 12px;
+  border-left: 2px solid var(--gz-color-primary);
 }
 
 .infobar {
   display: flex;
   align-items: center;
-  gap: 12px;
 }
 
 .cityfield {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 44px;
+  min-height: 42px;
   padding: 4px 11px;
-  border: 1px solid #d6e8ed;
+  border: 1px solid var(--gz-color-line-strong);
   border-radius: var(--gz-radius-md);
-  color: var(--gz-color-primary-pressed);
-  background: var(--gz-color-primary-soft);
+  color: var(--gz-color-ink-secondary);
+  background: var(--gz-color-surface-subtle);
 }
 
 .cityfield-label {
@@ -139,16 +149,20 @@
   white-space: nowrap;
 }
 
+.cityfield-label svg {
+  color: var(--gz-color-primary);
+}
+
 .cityfield select {
   min-width: 116px;
   height: 34px;
   background: transparent;
   color: var(--gz-color-ink);
   border: 0;
-  border-left: 1px solid #c8dfe5;
+  border-left: 1px solid var(--gz-color-line-strong);
   border-radius: 0;
   padding: 4px 4px 4px 10px;
-  font: 700 13px var(--gz-font-body);
+  font: 600 13px var(--gz-font-body);
   cursor: pointer;
 }
 
@@ -159,6 +173,8 @@
 
 .tripbtn {
   display: inline-flex;
+  grid-column: 3;
+  justify-self: end;
   align-items: center;
   gap: 8px;
   background: #fff;
@@ -549,21 +565,33 @@
     order: -1;
   }
   .top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "modes trip"
+      "info info";
     padding: 10px 16px;
-    flex-wrap: wrap;
-    align-items: stretch;
+    align-items: center;
   }
+  .modes { grid-area: modes; }
+  .info {
+    grid-area: info;
+    width: 100%;
+    justify-content: center;
+  }
+  .tripbtn { grid-area: trip; }
   .modes button {
     min-width: 140px;
-  }
-  .info {
-    flex-wrap: wrap;
-    gap: 10px;
   }
 }
 
 @media (max-width: 520px) {
   .top {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "modes"
+      "info"
+      "trip";
     gap: 10px;
   }
   .modes {
@@ -579,14 +607,16 @@
   }
   .info {
     width: 100%;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+    gap: 8px;
   }
   .title p {
     max-width: 180px;
   }
   .infobar {
     width: 100%;
-    justify-content: space-between;
   }
   .cityfield {
     flex: 1;
@@ -595,6 +625,9 @@
   .cityfield select {
     min-width: 90px;
     flex: 1;
+  }
+  .tripbtn {
+    justify-self: end;
   }
   .row2 {
     gap: 6px;

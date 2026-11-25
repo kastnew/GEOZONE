@@ -20,7 +20,8 @@ export default function ExploreMap({
   selectedPlace = null,
   onSelectPlace = () => {},
   onToggleCart = () => {},
-  cartItems = []
+  cartItems = [],
+  readOnly = false
 }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -148,16 +149,16 @@ export default function ExploreMap({
       popupContent.innerHTML = `
         <strong style="font-size:14px; color:#0f172a; display:block; margin-bottom:4px;">${place.name}</strong>
         <div style="font-size:12px; color:#64748b; margin-bottom:4px;">${place.zoneName || ''}</div>
-        <div style="font-size:12px; font-weight:600; color:${accentColor}; margin-bottom:8px;">${formatVND(place.estimatedCost ?? place.cost ?? 0)}</div>
-        <button id="pop-add-${place.id}" style="
+        <div style="font-size:12px; font-weight:600; color:${accentColor}; margin-bottom:${readOnly ? '0' : '8px'};">${formatVND(place.estimatedCost ?? place.cost ?? 0)}</div>
+        ${readOnly ? '' : `<button id="pop-add-${place.id}" style="
           background:${accentColor}; color:#fff; border:0; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:600; cursor:pointer; width:100%;
         ">
           ${inCart ? 'Bỏ chọn khỏi lịch trình' : '+ Thêm vào lịch trình'}
-        </button>
+        </button>`}
       `;
 
       // Attach button click event
-      const addBtn = popupContent.querySelector(`#pop-add-${place.id}`);
+      const addBtn = readOnly ? null : popupContent.querySelector(`#pop-add-${place.id}`);
       if (addBtn) {
         addBtn.onclick = (e) => {
           e.stopPropagation();
@@ -173,7 +174,7 @@ export default function ExploreMap({
 
       markersLayerRef.current.addLayer(marker);
     });
-  }, [places, selectedPlace, cartItems, cityConfig, onSelectPlace, onToggleCart]);
+  }, [places, selectedPlace, cartItems, cityConfig, onSelectPlace, onToggleCart, readOnly]);
 
   // Keep the viewport centered on the current city and visible filtered places.
   useEffect(() => {

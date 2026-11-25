@@ -70,17 +70,17 @@ export default function ExploreTopBar({
               ))}
             </select>
           </label>
-
-          <button
-            type="button"
-            className="tripbtn"
-            id="tripBtn"
-            onClick={onOpenCart}
-          >
-            Chuyến đi (<b id="tripCount">{cartCount}</b>)
-          </button>
         </div>
       </div>
+
+      <button
+        type="button"
+        className="tripbtn"
+        id="tripBtn"
+        onClick={onOpenCart}
+      >
+        Chuyến đi (<b id="tripCount">{cartCount}</b>)
+      </button>
     </header>
   );
 }

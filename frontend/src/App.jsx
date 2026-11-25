@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import './styles/global.css';
+import './styles/PlanManagement.css';
 import { useToast } from './context/ToastContext.jsx';
 
 // Layout & Common Components
@@ -17,7 +18,8 @@ import AccountPage from './pages/AccountPage';
 // Modals
 import AuthModal from './components/modals/AuthModal';
 import TripCartModal from './components/modals/TripCartModal';
-import TripDetailModal from './components/modals/TripDetailModal';
+import { SavePlanModal } from './components/saved/SavePlanModal.jsx';
+import PlanDetailPage from './pages/PlanDetailPage.jsx';
 import AdminPlaceModal from './components/modals/AdminPlaceModal';
 import AdminLayout from './components/admin/AdminLayout.jsx';
 import AdminOverviewPage from './pages/admin/AdminOverviewPage.jsx';
@@ -42,9 +44,9 @@ import {
   getMeApi,
   updateProfileApi,
   changePasswordApi,
-  savePlanApi,
-  getMyPlansApi,
-  deletePlanApi,
+  getMyPlans,
+  deletePlan,
+  updatePlan,
   getMyFavoritesApi,
   addFavoriteApi,
   removeFavoriteApi,
@@ -57,8 +59,6 @@ import {
   exportDataApi,
   resetDatabaseApi,
   revertPlaceApi
-  ,getPlanByIdApi
-  ,getSharedPlanApi
 } from './services/api';
 
 function ScrollToTop() {
@@ -93,31 +93,13 @@ function AdminRoute({ user, isLoading, children }) {
     : <Navigate to="/" replace />;
 }
 
-function PlanRouteView({ shared = false }) {
-  const { planId, shareToken } = useParams();
-  const [plan, setPlan] = useState(null);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    const loadPlan = shared ? getSharedPlanApi(shareToken) : getPlanByIdApi(planId);
-    loadPlan.then(setPlan).catch((err) => setError(err.message || 'Không thể tải lịch trình.'));
-  }, [planId, shareToken, shared]);
-
-  if (error) {
-    return <section className="gz-empty-state"><h1>Không thể mở lịch trình</h1><p>{error}</p><Link className="gz-empty-state-link" to="/">Về trang chủ</Link></section>;
+function getPathSegment(pathname, routePrefix) {
+  const segment = pathname.slice(routePrefix.length).split('/')[0];
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
   }
-  if (!plan) return <section className="gz-empty-state"><p>Đang tải lịch trình…</p></section>;
-  return (
-    <TripDetailModal
-      isOpen
-      onClose={() => window.history.back()}
-      trip={plan}
-      onCopyShareLink={(trip) => {
-        navigator.clipboard?.writeText(`${window.location.origin}/share/${trip.shareToken || trip.id}`);
-      }}
-      onDeleteTrip={() => {}}
-    />
-  );
 }
 
 export default function App() {
@@ -140,7 +122,9 @@ export default function App() {
   const [isCollectionsLoading, setIsCollectionsLoading] = useState(true);
   const [cartItems, setCartItems] = useState([]);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
-  const [selectedTripDetail, setSelectedTripDetail] = useState(null);
+  const [planToSave, setPlanToSave] = useState(null);
+  const [isSavePlanModalOpen, setIsSavePlanModalOpen] = useState(false);
+  const [savePlanSource, setSavePlanSource] = useState('planner');
 
   // Favorites State
   const [favorites, setFavorites] = useState([]);
@@ -182,7 +166,9 @@ export default function App() {
       setIsAuthModalOpen(false);
       setPendingConfirmation(null);
       setIsAuthHydrating(false);
-      navigate('/', { replace: true });
+      if (!location.pathname.startsWith('/share/')) {
+        navigate('/', { replace: true });
+      }
     };
 
     const handleAuthInvalidated = () => {
@@ -207,7 +193,7 @@ export default function App() {
       window.removeEventListener(AUTH_INVALIDATED_EVENT, handleAuthInvalidated);
       window.removeEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
     };
-  }, [navigate, showToast]);
+  }, [location.pathname, navigate, showToast]);
 
   // 1. Initial Load: Sync User, Plans, and Favorites from Backend
   useEffect(() => {
@@ -245,7 +231,7 @@ export default function App() {
     setFavorites([]);
     setIsCollectionsLoading(true);
 
-    Promise.allSettled([getMyPlansApi(), getMyFavoritesApi()]).then((results) => {
+    Promise.allSettled([getMyPlans(), getMyFavoritesApi()]).then((results) => {
       if (!isCurrent || !getToken()) return;
 
       const [plansResult, favoritesResult] = results;
@@ -272,7 +258,9 @@ export default function App() {
   }, [isAuthHydrating, userKey, showToast]);
 
   useEffect(() => {
-    if (!isAuthHydrating && !user && ['/my-trips', '/favorites', '/profile'].includes(location.pathname)) {
+    if (!isAuthHydrating && !user
+      && (location.pathname === '/my-trips' || location.pathname.startsWith('/my-trips/')
+        || ['/favorites', '/profile'].includes(location.pathname))) {
       showToast('Vui lòng đăng nhập để xem mục này');
       navigate('/', { replace: true });
     } else if (!isAuthHydrating && isAdminRoute && !isAdminUser) {
@@ -310,6 +298,7 @@ export default function App() {
       setIsCollectionsLoading(true);
       setUser(loggedInUser);
       setIsAuthModalOpen(false);
+      if (planToSave) setIsSavePlanModalOpen(true);
       showToast(`Chào mừng ${loggedInUser.name || loggedInUser.username}!`);
     } catch (err) {
       setAuthError(err.message || 'Đăng nhập không thành công');
@@ -372,49 +361,69 @@ export default function App() {
     }
   };
 
+  const requestSavePlan = (plan, source = 'planner') => {
+    if (!plan) return;
+    setPlanToSave(plan);
+    setSavePlanSource(source);
+    setIsCartModalOpen(false);
+    if (!user) {
+      setAuthTab('login');
+      setIsAuthModalOpen(true);
+      showToast('Đăng nhập để lưu lịch trình vào tài khoản của bạn.', 'info');
+      return;
+    }
+    setIsSavePlanModalOpen(true);
+  };
+
   const handleSaveCartAsTrip = async () => {
     if (cartItems.length === 0) return;
     const currentCityConfig = CITIES[selectedCity] || CITIES.hue;
+    const daysCount = Math.ceil(cartItems.length / 3);
     const newTripPayload = {
-      name: `Chuyến đi ${currentCityConfig.name} (${cartItems.length} địa điểm)`,
+      title: `Khám phá ${currentCityConfig.name} ${daysCount} ngày`,
       city: selectedCity,
       cityName: currentCityConfig.name,
-      daysCount: Math.ceil(cartItems.length / 3),
-      totalCost: cartItems.reduce((acc, p) => acc + (p.estimatedCost || p.cost || 0), 0),
-      days: [
-        {
-          dayNumber: 1,
-          title: `Khám phá các điểm nổi bật`,
-          places: cartItems
-        }
-      ]
+      totalDays: daysCount,
+      totalBudget: 0,
+      actualCost: cartItems.reduce((acc, p) => acc + (p.estimatedCost || p.cost || 0), 0),
+      days: Array.from({ length: daysCount }, (_, index) => ({
+        dayNumber: index + 1,
+        title: `Khám phá ${currentCityConfig.name}`,
+        totalCost: cartItems
+          .slice(index * 3, (index + 1) * 3)
+          .reduce((acc, place) => acc + (place.estimatedCost || place.cost || 0), 0),
+        places: cartItems.slice(index * 3, (index + 1) * 3)
+      }))
     };
 
-    try {
-      const savedTrip = await savePlanApi(newTripPayload);
-      setTrips((currentTrips) => [savedTrip, ...currentTrips]);
-      setCartItems([]);
-      setIsCartModalOpen(false);
-      showToast('Đã lưu chuyến đi thành công vào tài khoản của bạn!');
-    } catch (err) {
-      showToast(err.message || 'Lỗi khi lưu chuyến đi');
-    }
+    requestSavePlan(newTripPayload, 'cart');
   };
 
-  const handleSaveGeneratedPlan = async (generatedPlan) => {
-    if (!generatedPlan) return;
-    try {
-      const savedTrip = await savePlanApi(generatedPlan);
-      setTrips((currentTrips) => [savedTrip, ...currentTrips]);
-      showToast('Đã lưu lịch trình tối ưu vào Chuyến đi của tôi!');
-    } catch (err) {
-      showToast(err.message || 'Lỗi khi lưu lịch trình');
-    }
+  const handleSavePlanSuccess = (savedTrip) => {
+    setTrips((currentTrips) => [savedTrip, ...currentTrips]);
+    if (savePlanSource === 'cart') setCartItems([]);
+    setPlanToSave(null);
+    showToast('Lưu lịch trình thành công!', 'success', {
+      label: 'Xem chuyến đi',
+      onClick: () => navigate(`/my-trips/${encodeURIComponent(savedTrip.id)}`)
+    });
+  };
+
+  const handleSaveGeneratedPlan = (generatedPlan) => {
+    requestSavePlan(generatedPlan, 'planner');
+  };
+
+  const handleUpdateSavedPlan = async (planId, changes) => {
+    const updatedPlan = await updatePlan(planId, changes);
+    setTrips((currentTrips) => currentTrips.map((trip) => (
+      String(trip.id) === String(updatedPlan.id) ? updatedPlan : trip
+    )));
+    return updatedPlan;
   };
 
   const deleteTrip = async (tripId) => {
     try {
-      await deletePlanApi(tripId);
+      await deletePlan(tripId);
       setTrips((currentTrips) => currentTrips.filter((trip) => String(trip.id) !== String(tripId)));
       showToast('Đã xóa chuyến đi thành công.');
     } catch (err) {
@@ -426,7 +435,7 @@ export default function App() {
     const trip = trips.find((item) => String(item.id) === String(tripId));
     requestConfirmation({
       title: 'Xóa chuyến đi này?',
-      message: `Lịch trình "${trip?.name || 'Chuyến đi'}" sẽ bị xóa khỏi tài khoản và không thể khôi phục.`,
+      message: `Lịch trình "${trip?.title || trip?.name || 'Chuyến đi'}" sẽ bị xóa khỏi tài khoản và không thể khôi phục.`,
       confirmLabel: 'Xóa chuyến đi',
       onConfirm: () => deleteTrip(tripId)
     });
@@ -440,7 +449,7 @@ export default function App() {
       message: `Bạn sắp xóa ${savedTrips.length} chuyến đi đã lưu khỏi tài khoản. Hành động này không thể hoàn tác.`,
       confirmLabel: 'Xóa tất cả',
       onConfirm: async () => {
-        const results = await Promise.allSettled(savedTrips.map((trip) => deletePlanApi(trip.id)));
+        const results = await Promise.allSettled(savedTrips.map((trip) => deletePlan(trip.id)));
         const failedIds = new Set(
           results.flatMap((result, index) => result.status === 'rejected' ? [String(savedTrips[index].id)] : [])
         );
@@ -738,8 +747,10 @@ export default function App() {
               setAuthTab(tab);
               setIsAuthModalOpen(true);
             }}
-            onViewTrip={(trip) => setSelectedTripDetail(trip)}
+            onViewTrip={(trip) => navigate(`/my-trips/${encodeURIComponent(trip.id)}`)}
             onDeleteTrip={handleDeleteTrip}
+            onRenameTrip={(tripId, title) => handleUpdateSavedPlan(tripId, { title })}
+            onToggleTripShare={(tripId, is_public) => handleUpdateSavedPlan(tripId, { is_public })}
             onClearAllTrips={handleClearAllTrips}
             onNavigate={handleNavigate}
             />
@@ -791,10 +802,17 @@ export default function App() {
         )}
 
         {location.pathname.startsWith('/my-trips/') && (
-          <PlanRouteView />
+          <ProtectedRoute user={user} isLoading={isAuthHydrating}>
+            <PlanDetailPage
+              planId={getPathSegment(location.pathname, '/my-trips/')}
+              onPlanDeleted={(planId) => {
+                setTrips((currentTrips) => currentTrips.filter((trip) => String(trip.id) !== String(planId)));
+              }}
+            />
+          </ProtectedRoute>
         )}
         {location.pathname.startsWith('/share/') && (
-          <PlanRouteView shared />
+          <PlanDetailPage shared shareToken={getPathSegment(location.pathname, '/share/')} />
         )}
       </main>
 
@@ -821,15 +839,11 @@ export default function App() {
         onClearTrip={handleClearCart}
       />
 
-      <TripDetailModal
-        isOpen={!!selectedTripDetail}
-        onClose={() => setSelectedTripDetail(null)}
-        trip={selectedTripDetail}
-        onCopyShareLink={(trip) => {
-          navigator.clipboard?.writeText(window.location.origin + '#share=' + (trip.shareToken || trip.id));
-          showToast('Đã sao chép liên kết chia sẻ!');
-        }}
-        onDeleteTrip={handleDeleteTrip}
+      <SavePlanModal
+        isOpen={isSavePlanModalOpen}
+        onClose={() => setIsSavePlanModalOpen(false)}
+        currentPlan={planToSave}
+        onSuccess={handleSavePlanSuccess}
       />
 
       <AdminPlaceModal

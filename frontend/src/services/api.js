@@ -29,15 +29,45 @@ function getCityKey(cityValue) {
 function normalizeSavedPlan(plan) {
   const cityKey = getCityKey(plan.city);
   const cityConfig = CITIES[cityKey];
+  const planData = plan.planData || plan.plan_data || null;
+  const title = plan.title || plan.planTitle || plan.name || 'Chuyến đi không tên';
+  const totalDays = Number(
+    plan.totalDays
+    ?? plan.total_days
+    ?? plan.daysCount
+    ?? plan.days?.length
+    ?? planData?.days?.length
+    ?? 0
+  );
+  const totalBudget = Number(plan.totalBudget ?? plan.total_budget ?? 0);
+  const actualCost = Number(
+    plan.actualCost
+    ?? plan.actual_cost
+    ?? plan.totalCost
+    ?? plan.total_budget
+    ?? 0
+  );
+  const isPublic = plan.is_public ?? plan.isPublic ?? false;
+
   return {
     ...plan,
-    name: plan.name || plan.title,
+    title,
+    name: title,
+    planTitle: title,
     city: cityKey,
     cityName: plan.cityName || cityConfig?.name || plan.city,
-    daysCount: Number(plan.daysCount ?? plan.total_days ?? plan.totalDays ?? 0),
-    totalCost: Number(plan.totalCost ?? plan.actual_cost ?? plan.actualCost ?? plan.total_budget ?? 0),
+    totalDays,
+    daysCount: totalDays,
+    totalBudget,
+    actualCost,
+    totalCost: actualCost,
     createdAt: plan.createdAt || plan.created_at,
-    shareToken: plan.shareToken || plan.share_token
+    isPublic,
+    is_public: isPublic,
+    shareToken: plan.share_token ?? plan.shareToken ?? null,
+    strategyUsed: plan.strategyUsed || plan.strategy_used,
+    planData,
+    days: Array.isArray(plan.days) ? plan.days : (planData?.days || [])
   };
 }
 
@@ -629,49 +659,65 @@ export async function swapPlaceApi(payload) {
 /**
  * Lưu lịch trình chính thức vào saved_plans (POST /api/v1/plans)
  */
-export async function savePlanApi(planPayload) {
+export async function createPlan(planPayload) {
   if (!planPayload || typeof planPayload !== 'object' || Array.isArray(planPayload)) {
-    throw new Error('Dữ liệu lịch trình (planData) không được để trống');
+    throw new Error('Dữ liệu lịch trình không hợp lệ.');
   }
 
-  const hasPlanData = Object.prototype.hasOwnProperty.call(planPayload, 'planData');
-  const hasSnakePlanData = Object.prototype.hasOwnProperty.call(planPayload, 'plan_data');
-  const planData = hasPlanData
-    ? planPayload.planData
-    : hasSnakePlanData
-      ? planPayload.plan_data
-      : planPayload;
-  if (!planData || typeof planData !== 'object' || Array.isArray(planData)) {
-    throw new Error('Dữ liệu lịch trình (planData) không được để trống');
+  const planData = planPayload.planData || planPayload.plan_data || planPayload;
+  if (!planData || typeof planData !== 'object' || Array.isArray(planData)
+    || !Array.isArray(planData.days) || planData.days.length === 0) {
+    throw new Error('Lịch trình phải có ít nhất một ngày.');
   }
 
-  const planTitle = planPayload.title || planPayload.planTitle || planPayload.name
-    || planData.title || planData.name;
-  const days = Array.isArray(planData.days) ? planData.days : [];
-  const cityValue = planPayload.city ?? planData.city;
-  const city = CITIES[cityValue]?.api || cityValue || 'Da Nang';
-  const totalDays = planPayload.totalDays
+  const cityValue = planPayload.city ?? planData.city ?? 'danang';
+  const cityKey = getCityKey(cityValue);
+  const cityConfig = CITIES[cityKey];
+  const days = planData.days;
+  const totalDays = Number(
+    planPayload.totalDays
     ?? planPayload.total_days
     ?? planData.totalDays
     ?? planData.total_days
     ?? planData.daysCount
-    ?? (days.length || 2);
-  const totalBudget = planPayload.totalBudget
+    ?? days.length
+  );
+  const totalBudget = Number(
+    planPayload.totalBudget
     ?? planPayload.total_budget
     ?? planData.totalBudget
     ?? planData.total_budget
     ?? planData.budget
-    ?? 0;
-  const actualCost = planPayload.actualCost
+    ?? 0
+  );
+  const actualCost = Number(
+    planPayload.actualCost
     ?? planPayload.actual_cost
     ?? planData.actualCost
     ?? planData.actual_cost
     ?? planData.totalCost
     ?? planPayload.totalCost
-    ?? days.reduce((sum, day) => sum + Number(day.totalCost ?? day.totalEstimatedCost ?? 0), 0);
+    ?? days.reduce((sum, day) => sum + Number(day.totalCost ?? day.totalEstimatedCost ?? 0), 0)
+  );
+  const defaultTitle = `Khám phá ${cityConfig?.name || cityValue} ${totalDays} ngày`;
+  const title = String(
+    planPayload.title || planPayload.planTitle || planPayload.name || planData.title || planData.name || defaultTitle
+  ).trim();
+  const isPublic = planPayload.is_public ?? planPayload.isPublic ?? false;
+
+  if (!title || title.length > 200) throw new Error('Tên chuyến đi phải từ 1 đến 200 ký tự.');
+  if (!Number.isInteger(totalDays) || totalDays < 1 || totalDays > 30) {
+    throw new Error('Thời lượng chuyến đi phải từ 1 đến 30 ngày.');
+  }
+  if (!Number.isFinite(totalBudget) || totalBudget < 0
+    || !Number.isFinite(actualCost) || actualCost < 0) {
+    throw new Error('Ngân sách và chi phí phải là số hợp lệ không âm.');
+  }
+  if (typeof isPublic !== 'boolean') throw new Error('Chế độ chia sẻ không hợp lệ.');
+
   const requestPayload = {
-    title: planTitle,
-    city,
+    title,
+    city: cityConfig?.api || cityValue,
     totalDays,
     totalBudget,
     actualCost,
@@ -680,74 +726,93 @@ export async function savePlanApi(planPayload) {
       || planData.strategyUsed
       || planData.strategy_used
       || 'DIRECT_JSON',
-    status: planPayload.status,
-    is_public: planPayload.is_public ?? planPayload.isPublic ?? false,
-    shareToken: planPayload.shareToken ?? planPayload.share_token,
+    is_public: isPublic,
     planData
   };
-
-  const savedPlan = await safeFetch(
-    `${API_BASE}/plans`,
-    {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(requestPayload)
-    }
-  );
-  return savedPlan && typeof savedPlan === 'object' ? normalizeSavedPlan(savedPlan) : savedPlan;
+  const savedPlan = await safeFetch(`${API_BASE}/plans`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(requestPayload)
+  });
+  return normalizeSavedPlan(savedPlan);
 }
 
 /**
  * Lấy danh sách lịch trình đã lưu của người dùng (GET /api/v1/plans)
  */
-export async function getMyPlansApi() {
-  const plans = await safeFetch(
-    `${API_BASE}/plans`,
-    {
-      method: 'GET',
-      headers: getAuthHeaders()
-    }
-  );
-  return Array.isArray(plans) ? plans.map(normalizeSavedPlan) : [];
+export async function getMyPlans() {
+  const plans = await safeFetch(`${API_BASE}/plans`, {
+    method: 'GET',
+    headers: getAuthHeaders()
+  });
+  if (!Array.isArray(plans)) throw new Error('Dữ liệu chuyến đi trả về không hợp lệ.');
+  return plans.map(normalizeSavedPlan);
 }
 
 /**
  * Xem chi tiết 1 lịch trình đã lưu (GET /api/v1/plans/:planId)
  */
-export async function getPlanByIdApi(planId) {
-  return safeFetch(
-    `${API_BASE}/plans/${planId}`,
-    {
-      method: 'GET',
-      headers: getAuthHeaders()
+export async function getPlanById(planId) {
+  const plan = await safeFetch(`${API_BASE}/plans/${encodeURIComponent(planId)}`, {
+    method: 'GET',
+    headers: getAuthHeaders()
+  });
+  return normalizeSavedPlan(plan);
+}
+
+/**
+ * Cập nhật các trường được hỗ trợ bởi PATCH /api/v1/plans/:planId.
+ */
+export async function updatePlan(planId, changes) {
+  if (!changes || typeof changes !== 'object' || Array.isArray(changes)) {
+    throw new Error('Dữ liệu cập nhật không hợp lệ.');
+  }
+  const requestPayload = {};
+  if (Object.prototype.hasOwnProperty.call(changes, 'title')) {
+    if (typeof changes.title !== 'string' || !changes.title.trim() || changes.title.trim().length > 200) {
+      throw new Error('Tên chuyến đi phải từ 1 đến 200 ký tự.');
     }
-  );
+    requestPayload.title = changes.title.trim();
+  }
+  if (Object.prototype.hasOwnProperty.call(changes, 'status')) {
+    if (!['DRAFT', 'VALIDATING', 'COMPLETED', 'FAILED'].includes(changes.status)) {
+      throw new Error('Trạng thái chuyến đi không hợp lệ.');
+    }
+    requestPayload.status = changes.status;
+  }
+  if (Object.prototype.hasOwnProperty.call(changes, 'is_public')) {
+    if (typeof changes.is_public !== 'boolean') throw new Error('Chế độ chia sẻ không hợp lệ.');
+    requestPayload.is_public = changes.is_public;
+  }
+  if (!Object.keys(requestPayload).length) throw new Error('Không có dữ liệu hợp lệ để cập nhật.');
+
+  const plan = await safeFetch(`${API_BASE}/plans/${encodeURIComponent(planId)}`, {
+    method: 'PATCH',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(requestPayload)
+  });
+  return normalizeSavedPlan(plan);
 }
 
 /**
  * Xóa lịch trình đã lưu (DELETE /api/v1/plans/:planId)
  */
-export async function deletePlanApi(planId) {
-  return safeFetch(
-    `${API_BASE}/plans/${planId}`,
-    {
-      method: 'DELETE',
-      headers: getAuthHeaders()
-    }
-  );
+export async function deletePlan(planId) {
+  return safeFetch(`${API_BASE}/plans/${encodeURIComponent(planId)}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders()
+  });
 }
 
 /**
  * Xem lịch trình công khai qua liên kết chia sẻ (GET /api/v1/plans/share/:shareToken)
  */
-export async function getSharedPlanApi(shareToken) {
-  return safeFetch(
-    `${API_BASE}/plans/share/${shareToken}`,
-    {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    }
-  );
+export async function getSharedPlan(shareToken) {
+  const plan = await safeFetch(`${API_BASE}/plans/share/${encodeURIComponent(shareToken)}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  return normalizeSavedPlan(plan);
 }
 
 /* ==========================================================================

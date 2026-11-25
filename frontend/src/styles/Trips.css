@@ -148,6 +148,32 @@
   background: var(--gz-color-danger-soft);
 }
 
+.tcard-visibility {
+  color: var(--gz-color-ink-secondary);
+}
+
+.tcard-visibility.is-public {
+  color: var(--gz-color-primary-pressed);
+}
+
+.tcard-actions .trip-card-icon {
+  width: 36px;
+  min-width: 36px;
+  justify-content: center;
+  padding: 6px;
+  border-color: var(--gz-color-line-strong);
+  color: var(--gz-color-ink-secondary);
+}
+
+.tcard-skeleton {
+  min-height: 214px;
+  border: 1px solid var(--gz-color-line);
+  border-radius: var(--gz-radius-lg);
+  background: linear-gradient(100deg, #f1f5f9 20%, #fafaf8 42%, #f1f5f9 64%);
+  background-size: 220% 100%;
+  animation: gz-skeleton 1.35s ease-in-out infinite;
+}
+
 .gz-tempty {
   text-align: center;
   padding: 60px 20px;

@@ -97,6 +97,9 @@ export async function filterCandidatePlaces(request) {
   const days = Number(request?.days) || 2;
   const totalBudget = Number(request?.totalBudget) || 1500000;
   const preferences = Array.isArray(request?.preferences) ? request.preferences : [];
+  const mustVisitSet = new Set(
+    Array.isArray(request?.mustVisitIds) ? request.mustVisitIds.map(Number) : []
+  );
 
   logger.info(`[Planner] Lọc địa điểm ứng viên cho thành phố: ${city} (${days} ngày, ngân sách: ${totalBudget.toLocaleString('vi-VN')}đ)`);
 
@@ -107,8 +110,9 @@ export async function filterCandidatePlaces(request) {
   // 2. Lấy danh sách thô từ Database (hoặc JSON local nếu DB chưa có thành phố này)
   let initialPlaces = await fetchCityPlacesSafe(city, preferences);
 
-  // 3. RÀNG BUỘC 1: Lọc theo ngân sách, rating và thời lượng tham quan khả thi
+  // 3. RÀNG BUỘC 1: Lọc theo ngân sách, rating và thời lượng tham quan khả thi (luôn giữ Must-Visit)
   let filteredPlaces = initialPlaces.filter(place => {
+    if (mustVisitSet.has(Number(place.id))) return true;
     const cost = place.estimatedCost || 0;
     const rating = place.rating || 4.0;
     const duration = place.duration || 60;
@@ -121,6 +125,21 @@ export async function filterCandidatePlaces(request) {
     if (rating < 3.0 || duration > 360) return false;
     return true;
   });
+
+  // Đảm bảo các địa điểm khách đã chọn vào Chuyến đi (mustVisitIds) luôn có mặt kể cả khi khác tags
+  const existingIdsBeforeFallback = new Set(filteredPlaces.map(p => Number(p.id)));
+  if (mustVisitSet.size > 0) {
+    const missingMustVisit = Array.from(mustVisitSet).some(id => !existingIdsBeforeFallback.has(id));
+    if (missingMustVisit) {
+      const allPlacesInCity = await fetchCityPlacesSafe(city, []);
+      for (const place of allPlacesInCity) {
+        if (mustVisitSet.has(Number(place.id)) && !existingIdsBeforeFallback.has(Number(place.id))) {
+          filteredPlaces.unshift(place);
+          existingIdsBeforeFallback.add(Number(place.id));
+        }
+      }
+    }
+  }
 
   // 4. RÀNG BUỘC 2: Kiểm tra Đa dạng Phân vùng (Zone Diversity)
   const presentZoneIds = new Set(filteredPlaces.map(p => p.zoneId));

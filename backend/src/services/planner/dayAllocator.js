@@ -3,7 +3,9 @@ import { calculateDistanceKm } from './zoneGrouper.js';
 import { validateDaySchedule } from './timeSlotScheduler.js';
 
 /**
- * Chọn ra bộ 4 điểm cho một ngày dựa trên điểm đã điều chỉnh thời tiết + điểm phạt xung đột (nếu có)
+ * Chọn ra bộ địa điểm cho một ngày:
+ * - Ưu tiên tuyệt đối các địa điểm Must-Visit (khách tự thêm vào Chuyến đi).
+ * - Siết bán kính cụm cứng (<= 8 km) và suy giảm mũ theo khoảng cách để không đi lòng vòng.
  */
 function selectDayCandidateSet(
   weatherScored,
@@ -14,52 +16,86 @@ function selectDayCandidateSet(
   maxDailyMinutes,
   maxPlacesPerDay = 6
 ) {
-  const getEffectiveScore = place =>
-    (place.weatherAdjustedScore ?? place.totalScore ?? 0) + (penaltiesForDay.get(place.id) || 0);
+  const getEffectiveScore = place => {
+    if (place.isMustVisit) {
+      // Must-Visit luôn giữ ưu tiên cao nhất (chỉ trừ nhẹ nếu bị phạt trực tiếp khi kẹt giờ)
+      return 2.0 + (penaltiesForDay.get(place.id) || 0);
+    }
+    return (place.weatherAdjustedScore ?? place.totalScore ?? 0) + (penaltiesForDay.get(place.id) || 0);
+  };
 
   const dayUsed = new Set();
 
-  // 1. Chọn điểm Mỏ Neo (Anchor) phù hợp nhất chưa đi
-  const anchorCandidates = weatherScored.filter(
-    p => !usedPlaceIds.has(p.id) && ((p.estimatedCost || 0) === 0 || (p.estimatedCost || 0) <= dailyCap)
+  // 1. Chọn điểm Mỏ Neo (Anchor):
+  // Nếu còn điểm Must-Visit chưa đi -> bắt buộc chọn làm Mỏ Neo của ngày (bất chấp dailyCap)
+  const unvisitedMustVisits = weatherScored.filter(
+    p => !usedPlaceIds.has(p.id) && p.isMustVisit
   );
-  const allAvailable = weatherScored.filter(p => !usedPlaceIds.has(p.id));
-  const anchorPool = anchorCandidates.length > 0 ? [...anchorCandidates] : [...allAvailable];
 
-  if (anchorPool.length === 0) {
-    return { selectedPlaces: [], totalCost: 0, totalMinutes: 0 };
+  let anchor = null;
+  if (unvisitedMustVisits.length > 0) {
+    unvisitedMustVisits.sort((a, b) => getEffectiveScore(b) - getEffectiveScore(a));
+    anchor = unvisitedMustVisits[0];
+  } else {
+    const anchorCandidates = weatherScored.filter(
+      p => !usedPlaceIds.has(p.id) && ((p.estimatedCost || 0) === 0 || (p.estimatedCost || 0) <= dailyCap)
+    );
+    const allAvailable = weatherScored.filter(p => !usedPlaceIds.has(p.id));
+    const anchorPool = anchorCandidates.length > 0 ? [...anchorCandidates] : [...allAvailable];
+
+    if (anchorPool.length === 0) {
+      return { selectedPlaces: [], totalCost: 0, totalMinutes: 0 };
+    }
+
+    anchorPool.sort((a, b) => {
+      const bonusA = usedPrimaryZoneIds.has(a.zoneId) ? 0 : 0.04;
+      const bonusB = usedPrimaryZoneIds.has(b.zoneId) ? 0 : 0.04;
+      return (getEffectiveScore(b) + bonusB) - (getEffectiveScore(a) + bonusA);
+    });
+    anchor = anchorPool[0];
   }
 
-  anchorPool.sort((a, b) => {
-    const bonusA = usedPrimaryZoneIds.has(a.zoneId) ? 0 : 0.04;
-    const bonusB = usedPrimaryZoneIds.has(b.zoneId) ? 0 : 0.04;
-    return (getEffectiveScore(b) + bonusB) - (getEffectiveScore(a) + bonusA);
-  });
-
-  const anchor = anchorPool[0];
   const selectedPlaces = [anchor];
   dayUsed.add(anchor.id);
 
   let currentDayMinutes = anchor.duration || 60;
   let currentDayCost = anchor.estimatedCost || 0;
 
-  // 2. Nhặt thêm tối đa (maxPlacesPerDay - 1) địa điểm quanh tâm dựa trên Điểm chất lượng + Khoảng cách GPS
+  // 2. Nhặt thêm các địa điểm quanh tâm Anchor:
+  // - Ưu tiên các điểm Must-Visit khác nằm gần (<= 10 km)
+  // - Các điểm gợi ý khác: siết bán kính cứng <= 8 km để lộ trình gọn, không đi lòng vòng
   while (selectedPlaces.length < maxPlacesPerDay) {
-    const remainingCandidates = weatherScored.filter(p => {
+    const baseRemaining = weatherScored.filter(p => {
       if (usedPlaceIds.has(p.id) || dayUsed.has(p.id)) return false;
       const cost = p.estimatedCost || 0;
       const duration = p.duration || 60;
       const fitsTime = currentDayMinutes + duration + 15 <= maxDailyMinutes;
-      const fitsBudget = cost === 0 || currentDayCost + cost <= dailyCap;
+      const fitsBudget = p.isMustVisit || cost === 0 || currentDayCost + cost <= dailyCap;
       return fitsTime && fitsBudget;
     });
 
-    if (remainingCandidates.length === 0) break;
+    if (baseRemaining.length === 0) break;
+
+    // Lọc theo bán kính cứng 8 km (trừ khi là điểm Must-Visit trong vòng 10 km)
+    const within8Km = baseRemaining.filter(p => {
+      const dist = calculateDistanceKm(anchor.latitude, anchor.longitude, p.latitude, p.longitude);
+      return p.isMustVisit ? dist <= 10.0 : dist <= 8.0;
+    });
+
+    let candidatePool = within8Km;
+    // Nếu trong 8 km không còn điểm nào và ngày mới chỉ có 1 điểm đơn lẻ -> nới tối đa 15 km
+    if (candidatePool.length === 0 && selectedPlaces.length < 2) {
+      candidatePool = baseRemaining.filter(
+        p => calculateDistanceKm(anchor.latitude, anchor.longitude, p.latitude, p.longitude) <= 15.0
+      );
+    }
+
+    if (candidatePool.length === 0) break;
 
     let bestPlace = null;
     let bestPickScore = -Infinity;
 
-    for (const candidate of remainingCandidates) {
+    for (const candidate of candidatePool) {
       const distKm = calculateDistanceKm(
         anchor.latitude,
         anchor.longitude,
@@ -67,19 +103,13 @@ function selectDayCandidateSet(
         candidate.longitude
       );
 
-      let proximityScore = 0;
-      if (distKm <= 5) {
-        proximityScore = 1 - distKm / 10; // 0.5 -> 1.0
-      } else if (distKm <= 10) {
-        proximityScore = Math.max(0, 0.5 - (distKm - 5) / 10); // 0.0 -> 0.5
-      } else {
-        proximityScore = -0.3;
-      }
-
+      // Hàm suy giảm mũ theo khoảng cách: 1km->0.78, 3km->0.47, 8km->0.13
+      const proximityScore = Math.exp(-0.25 * distKm);
       const sameZoneBonus = candidate.zoneId === anchor.zoneId ? 0.05 : 0;
+
       const pickScore =
-        getEffectiveScore(candidate) * 0.7 +
-        proximityScore * 0.3 +
+        getEffectiveScore(candidate) * 0.6 +
+        proximityScore * 0.4 +
         sameZoneBonus;
 
       if (pickScore > bestPickScore) {
@@ -104,9 +134,8 @@ function selectDayCandidateSet(
 }
 
 /**
- * Bước 4: Phân bổ địa điểm cho từng ngày theo Cụm Tọa độ GPS, Thời tiết và Ngân sách Cân bằng
- * Tích hợp Vòng lặp Phản hồi (Feedback Loop với Bước 5):
- * - Nếu bộ điểm chọn ra bị kẹt giờ mở/đóng cửa ở Bước 5, tự động cộng Penalty cho điểm gây hỏng và chọn lại (tối đa 2 lần thử lại).
+ * Bước 4: Phân bổ địa điểm cho từng ngày theo Cụm Tọa độ GPS (bán kính 8km), Thời tiết và Ngân sách Cân bằng
+ * Tích hợp Vòng lặp Phản hồi 2 cấp với Bước 5 & Ưu tiên Must-Visit từ Giỏ chuyến đi.
  *
  * @param {Map<number, any> | any[]} zoneMapOrPlaces
  * @param {number} totalDays
@@ -148,7 +177,11 @@ export function allocateDays(
   for (let day = 1; day <= days; day++) {
     const remainingDays = days - day + 1;
     const dailyTarget = remainingBudget / remainingDays;
-    const dailyCap = dailyTarget * 1.2;
+    // Ngày cuối cùng khóa chặt trần = remainingBudget để tổng cả chuyến KHÔNG BAO GIỜ vượt totalBudget
+    const dailyCap =
+      remainingDays === 1
+        ? remainingBudget
+        : Math.min(remainingBudget, dailyTarget * 1.2);
 
     const weatherOfDay = dailyWeather[day - 1] || {
       dayNumber: day,
@@ -175,9 +208,7 @@ export function allocateDays(
     // Chấm điểm theo thời tiết của ngày hôm đó (1 lần duy nhất cho ngày)
     const weatherScored = applyWeatherAdjustment(availablePlaces, weatherOfDay.condition);
 
-    // Vòng lặp Phản hồi 2 cấp (Iterative Feedback Loop với Bước 5):
-    // - Lần 0 -> Lần 1: Thử tối đa 6 điểm; nếu kẹt giờ thì cộng Penalty (-0.6) để thay điểm khác.
-    // - Lần 2: Nếu vẫn kẹt giờ, tự động rút bớt 1 điểm (giảm maxPlacesForAttempt) để chắc chắn khớp khung giờ.
+    // Vòng lặp Phản hồi 2 cấp (Feedback Loop với Bước 5)
     const penaltiesForDay = new Map();
     const MAX_RETRIES = 2;
     let currentMaxPlaces = 6;
@@ -199,16 +230,24 @@ export function allocateDays(
 
       const check = validateDaySchedule(pick.selectedPlaces, startTime, endTime);
       if (check.valid || !check.culpritPlaceId) {
-        break; // Lộ trình hợp lệ hoàn toàn!
+        break;
       }
 
-      // Cộng Penalty (-0.6) cho điểm gây xung đột
+      // Bảo vệ điểm Must-Visit: nếu culprit là Must-Visit nhưng trong ngày vẫn còn điểm thường -> phạt điểm thường cuối cùng
+      const culpritObj = pick.selectedPlaces.find(p => p.id === check.culpritPlaceId);
+      let targetPenalizeId = check.culpritPlaceId;
+      if (culpritObj?.isMustVisit) {
+        const nonMustVisits = pick.selectedPlaces.filter(p => !p.isMustVisit);
+        if (nonMustVisits.length > 0) {
+          targetPenalizeId = nonMustVisits[nonMustVisits.length - 1].id;
+        }
+      }
+
       penaltiesForDay.set(
-        check.culpritPlaceId,
-        (penaltiesForDay.get(check.culpritPlaceId) || 0) - 0.6
+        targetPenalizeId,
+        (penaltiesForDay.get(targetPenalizeId) || 0) - 0.6
       );
 
-      // Ở lần thử cuối (attempt >= 1), rút bớt 1 điểm so với số điểm hiện có để giải phóng quỹ thời gian
       if (attempt >= 1 && pick.selectedPlaces.length > 3) {
         currentMaxPlaces = pick.selectedPlaces.length - 1;
       }

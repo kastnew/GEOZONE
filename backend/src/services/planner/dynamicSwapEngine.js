@@ -3,89 +3,159 @@ import { scorePlaces } from './placeScorer.js';
 import { calculateDistanceKm } from './zoneGrouper.js';
 import { logger } from '../../utils/logger.js';
 
+function timeToMinutes(timeStr, fallbackMins) {
+  if (!timeStr || typeof timeStr !== 'string' || !timeStr.includes(':')) {
+    return fallbackMins;
+  }
+  const [h, m] = timeStr.split(':').map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return fallbackMins;
+  return h * 60 + m;
+}
+
+/**
+ * Kiểm tra địa điểm có mở cửa phù hợp với slotStartTime không
+ */
+function isOpenAtSlot(place, slotStartTime) {
+  if (!slotStartTime) return true;
+  const startMins = timeToMinutes(slotStartTime, -1);
+  if (startMins < 0) return true;
+
+  const openMins = timeToMinutes(place.openingTime, 0);
+  const closeMins = timeToMinutes(place.closingTime, 24 * 60);
+  const duration = Number(place.duration) || 60;
+
+  // Phải mở cửa (cho phép sớm tối đa 30p) và đủ thời gian trải nghiệm trước khi đóng cửa
+  return startMins >= openMins - 30 && startMins + Math.min(duration, 60) <= closeMins;
+}
+
 /**
  * Xử lý tính năng Hoán đổi động (Dynamic Swap):
- * - Không giới hạn hay ưu tiên cứng theo Zone.
- * - Tìm địa điểm thay thế chưa có trong lịch trình, vừa ngân sách và nằm gần tọa độ điểm cũ (bán kính <= 5 km).
- * - Chấm điểm bằng scorePlaces mới (Sở thích + Rating + Chi phí - Chống lặp loại) kết hợp độ gần GPS.
+ * - Không giới hạn cứng theo Zone.
+ * - Kiểm tra chặt: Không trùng lịch trình + Chi phí <= remainingBudget + Giờ mở/đóng cửa + Thời lượng hợp lý.
+ * - Ưu tiên khoảng cách GPS gần điểm cũ (<= 5 km, mở rộng <= 10 km hoặc toàn thành phố nếu thiếu).
+ * - Chấm điểm bằng scorePlaces mới (Sở thích + Rating + Chi phí - Chống lặp loại) + proximityBonus.
+ * - Hỗ trợ returnMultiple=true để trả về Top 8 gợi ý cho Popup Swap trên Web.
  *
  * @param {Object} request
  * @param {number} request.currentPlaceId
- * @param {number} request.dayNumber
- * @param {number[]} request.excludedPlaceIds
+ * @param {string} [request.city]
+ * @param {number} [request.dayNumber]
+ * @param {number[]} [request.excludedPlaceIds]
  * @param {number} [request.targetZoneId]
- * @param {number} request.remainingBudget
- * @param {string[]} request.userPreferences
+ * @param {number} [request.remainingBudget]
+ * @param {string} [request.slotStartTime]
+ * @param {number} [request.maxDurationAllowed]
+ * @param {string[]} [request.userPreferences]
+ * @param {boolean} [request.returnMultiple]
  */
 export async function executeDynamicSwap(request) {
-  const excludedIds = Array.from(new Set([...(request.excludedPlaceIds || []), request.currentPlaceId]));
-  const maxCost = Number(request.remainingBudget) || 500000;
+  const excludedIds = Array.from(
+    new Set([...(request.excludedPlaceIds || []).map(Number), Number(request.currentPlaceId)])
+  );
+  const maxCost = request.remainingBudget !== undefined ? Number(request.remainingBudget) : 500000;
+  const maxDuration = request.maxDurationAllowed ? Number(request.maxDurationAllowed) : null;
+  const slotStartTime = request.slotStartTime || null;
   const prefs = Array.isArray(request.userPreferences) ? request.userPreferences : [];
 
-  logger.info(`[SwapEngine] Tìm điểm thay thế theo tọa độ gần cho placeId=${request.currentPlaceId}`);
+  logger.info(`[SwapEngine] Tìm gợi ý thay thế cho placeId=${request.currentPlaceId} (ngân sách <= ${maxCost}đ, giờ=${slotStartTime || 'bất kỳ'})`);
 
   const currentPlace = await placeService.getPlaceById(request.currentPlaceId);
-  const city = currentPlace?.city || 'Da Nang';
+  const city = request.city || currentPlace?.city || 'Da Nang';
   const allCityPlaces = await placeService.findCandidates(city, []);
 
-  // Lọc ứng viên chưa đi và vừa ngân sách
-  const eligiblePlaces = allCityPlaces.filter(
-    p => !excludedIds.includes(p.id) && (p.estimatedCost || 0) <= maxCost
+  // 1. Lọc cứng theo điều kiện: Chưa xuất hiện trong lịch trình & Chi phí <= ngân sách cho phép
+  const budgetAndUniquePool = allCityPlaces.filter(
+    p => !excludedIds.includes(p.id) && (Number(p.estimatedCost) || 0) <= maxCost
   );
 
-  let candidates = eligiblePlaces;
+  if (budgetAndUniquePool.length === 0) {
+    logger.warn('[SwapEngine] Không tìm thấy địa điểm nào thỏa mãn ngân sách và không trùng');
+    return request.returnMultiple ? { bestMatch: null, suggestions: [] } : null;
+  }
 
-  // Nếu điểm cũ có tọa độ GPS hợp lệ, ưu tiên lọc trong bán kính <= 5 km (không phân biệt Zone)
+  // 2. Lọc theo Thời gian (Giờ mở/đóng cửa tại slotStartTime + Thời lượng <= maxDuration)
+  let timeFilteredPool = budgetAndUniquePool.filter(p => {
+    const openOk = isOpenAtSlot(p, slotStartTime);
+    const durOk = maxDuration ? (Number(p.duration) || 60) <= maxDuration + 30 : true;
+    return openOk && durOk;
+  });
+
+  // Fallback nhẹ nếu lọc thời gian quá chặt làm rỗng danh sách
+  if (timeFilteredPool.length === 0) {
+    timeFilteredPool = budgetAndUniquePool.filter(p => isOpenAtSlot(p, slotStartTime));
+  }
+  if (timeFilteredPool.length === 0) {
+    timeFilteredPool = budgetAndUniquePool;
+  }
+
+  // 3. Ưu tiên theo khoảng cách GPS gần điểm cũ (5km -> 10km -> toàn thành phố để đủ gợi ý)
+  let candidates = timeFilteredPool;
   if (currentPlace && currentPlace.latitude && currentPlace.longitude) {
-    const nearby = eligiblePlaces.filter(p => {
-      const dist = calculateDistanceKm(
-        currentPlace.latitude,
-        currentPlace.longitude,
-        p.latitude,
-        p.longitude
+    const within5Km = timeFilteredPool.filter(
+      p => calculateDistanceKm(currentPlace.latitude, currentPlace.longitude, p.latitude, p.longitude) <= 5.0
+    );
+    if (within5Km.length >= 3 || (!request.returnMultiple && within5Km.length > 0)) {
+      candidates = within5Km;
+    } else {
+      const within10Km = timeFilteredPool.filter(
+        p => calculateDistanceKm(currentPlace.latitude, currentPlace.longitude, p.latitude, p.longitude) <= 10.0
       );
-      return dist <= 5.0;
-    });
-
-    if (nearby.length > 0) {
-      candidates = nearby;
+      if (within10Km.length > 0) {
+        candidates = within10Km;
+      }
     }
   }
 
-  if (candidates.length === 0) {
-    logger.warn('[SwapEngine] Không tìm thấy địa điểm thay thế phù hợp với ngân sách');
-    return null;
-  }
-
-  // Chấm điểm bằng công thức mới + cộng điểm gần GPS nhẹ để ưu tiên điểm thuận đường
+  // 4. Chấm điểm bằng công thức mới (Sở thích + Rating + Chi phí - Phạt lặp loại) + Độ gần GPS
   const scoredCandidates = scorePlaces(candidates, prefs).map(p => {
-    const dist = currentPlace
-      ? calculateDistanceKm(currentPlace.latitude, currentPlace.longitude, p.latitude, p.longitude)
-      : 3.0;
+    const dist =
+      currentPlace && currentPlace.latitude && currentPlace.longitude
+        ? calculateDistanceKm(currentPlace.latitude, currentPlace.longitude, p.latitude, p.longitude)
+        : 3.0;
     const proximityBonus = dist <= 5 ? (1 - dist / 5) * 0.15 : 0;
     return {
       ...p,
       swapScore: Number((p.totalScore + proximityBonus).toFixed(4)),
-      distFromOld: dist
+      distanceKm: dist
     };
   });
 
   scoredCandidates.sort((a, b) => b.swapScore - a.swapScore);
-  const bestCandidate = scoredCandidates[0];
 
-  return {
-    placeId: bestCandidate.id,
-    placeName: bestCandidate.name,
-    zoneId: bestCandidate.zoneId,
-    zoneName: bestCandidate.zoneName || `Zone ${bestCandidate.zoneId}`,
+  const mapToSwapItem = candidate => ({
+    id: candidate.id,
+    placeId: candidate.id,
+    name: candidate.name,
+    placeName: candidate.name,
+    zoneId: candidate.zoneId,
+    zoneCode: candidate.zoneCode,
+    zoneName: candidate.zoneName || `Zone ${candidate.zoneId}`,
     timeSlot: 'Đã cập nhật',
-    startTime: '08:00',
+    startTime: slotStartTime || '08:00',
     endTime: '09:30',
-    duration: bestCandidate.duration,
-    estimatedCost: bestCandidate.estimatedCost,
-    travelTimeFromPrev: Math.max(10, Math.round((bestCandidate.distFromOld / 25) * 60) + 5),
-    latitude: bestCandidate.latitude,
-    longitude: bestCandidate.longitude,
-    aiDescription: `Địa điểm thay thế lý tưởng: ${bestCandidate.name} (đánh giá ${bestCandidate.rating || 4.5}★, cách điểm cũ ~${bestCandidate.distFromOld} km).`
-  };
+    duration: candidate.duration,
+    estimatedCost: candidate.estimatedCost,
+    rating: candidate.rating || 4.5,
+    distanceKm: candidate.distanceKm,
+    swapScore: candidate.swapScore,
+    openingTime: candidate.openingTime,
+    closingTime: candidate.closingTime,
+    travelTimeFromPrev: Math.max(10, Math.round((candidate.distanceKm / 25) * 60) + 5),
+    latitude: candidate.latitude,
+    longitude: candidate.longitude,
+    tags: candidate.tags,
+    aiDescription: `Địa điểm thay thế lý tưởng: ${candidate.name} (đánh giá ${candidate.rating || 4.5}★, cách điểm cũ ~${candidate.distanceKm} km).`
+  });
+
+  const mappedSuggestions = scoredCandidates.slice(0, 8).map(mapToSwapItem);
+  const bestMatch = mappedSuggestions[0] || null;
+
+  if (request.returnMultiple) {
+    return {
+      bestMatch,
+      suggestions: mappedSuggestions
+    };
+  }
+
+  return bestMatch;
 }

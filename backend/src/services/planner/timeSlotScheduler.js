@@ -68,6 +68,52 @@ function calculateTimeWindowPenalty(place, arrivalMins) {
 }
 
 /**
+ * Chèn thời gian nghỉ trưa (+90p / 1h30p bắt buộc để ngủ nghỉ) và nghỉ/ăn tối (+90p / 1h30p):
+ * - Nghỉ trưa: Ngay sau khi địa điểm cuối cùng của buổi sáng kết thúc (<= 12:30),
+ *   luôn chèn khoảng trống 90 phút nghỉ trưa (kể cả khi điểm sáng/chiều là quán ăn).
+ * - Nghỉ tối: Chèn 90 phút nghỉ ăn tối khi chuyển sang ca tối (17:00 - 19:00) nếu điểm tiếp theo không phải quán ăn.
+ */
+function applyMealBreak(prevFinishMins, travelMins, candidate, hasLunchBreak, hasDinnerBreak) {
+  const tags = Array.isArray(candidate.tags) ? candidate.tags.map(t => String(t).toLowerCase()) : [];
+  const isFood = tags.includes('food');
+  const duration = Number(candidate.duration) || 60;
+  const rawArrival = prevFinishMins + travelMins;
+
+  // 1. Nghỉ trưa bắt buộc 90 phút (1 tiếng 30p):
+  // - Khi điểm trước kết thúc trong khoảng 11:00 - 12:30 (là điểm cuối buổi sáng)
+  // - Hoặc điểm trước kết thúc sớm hơn 11:00 nhưng nếu đi tiếp điểm sau sẽ lấn quá 12:30
+  if (!hasLunchBreak) {
+    const endedInLunchWindow = prevFinishMins >= 11 * 60 && prevFinishMins <= 12 * 60 + 30;
+    const wouldCrossNoon = prevFinishMins < 11 * 60 && rawArrival + duration > 12 * 60 + 30;
+    if (endedInLunchWindow || wouldCrossNoon) {
+      return {
+        adjustedMins: rawArrival + 90,
+        breakMinutes: 90,
+        nextHasLunch: true,
+        nextHasDinner: hasDinnerBreak
+      };
+    }
+  }
+
+  // 2. Nghỉ & ăn tối 90 phút (1 tiếng 30p) khi bước vào khung 17:00 - 19:00
+  if (!hasDinnerBreak && !isFood && rawArrival >= 17 * 60 && rawArrival <= 19 * 60) {
+    return {
+      adjustedMins: rawArrival + 90,
+      breakMinutes: 90,
+      nextHasLunch: hasLunchBreak,
+      nextHasDinner: true
+    };
+  }
+
+  return {
+    adjustedMins: rawArrival,
+    breakMinutes: 0,
+    nextHasLunch: hasLunchBreak,
+    nextHasDinner: hasDinnerBreak
+  };
+}
+
+/**
  * Thuật toán Sinh Hoán Vị có Cắt tỉa nhánh (Backtracking with Pruning) cho N <= 7 điểm/ngày
  * Tìm thứ tự đi sao cho:
  * 1. Tổng quãng đường di chuyển (km) ngắn nhất
@@ -83,12 +129,10 @@ function findOptimalOrderByPermutation(places, startMins, endMins, strictTimeWin
   const used = new Array(n).fill(false);
   const currentOrder = [];
 
-  function backtrack(currentMins, totalDist, totalPenalty, lastPlace) {
+  function backtrack(currentMins, totalDist, totalPenalty, lastPlace, hasLunch, hasDinner) {
     // Cắt tỉa nhánh nếu chi phí hiện tại đã tệ hơn phương án tốt nhất
     const currentScore = totalDist + totalPenalty;
     if (bestOrder && currentScore >= bestCost && totalPenalty >= 0) {
-      // Vẫn có thể được thưởng âm từ các điểm food/nightlife phía sau nếu chưa đi hết,
-      // nhưng nếu totalDist đơn thuần đã vượt quá xa thì cắt sớm
       if (totalDist - 12 >= bestCost) return;
     }
 
@@ -110,13 +154,21 @@ function findOptimalOrderByPermutation(places, startMins, endMins, strictTimeWin
       const travelMins = lastPlace ? estimateTravelMinutes(dist) : 0;
 
       let arrivalMins = currentMins + travelMins;
+      let nextHasLunch = hasLunch;
+      let nextHasDinner = hasDinner;
+
+      if (lastPlace) {
+        const meal = applyMealBreak(currentMins, travelMins, candidate, hasLunch, hasDinner);
+        arrivalMins = meal.adjustedMins;
+        nextHasLunch = meal.nextHasLunch;
+        nextHasDinner = meal.nextHasDinner;
+      }
+
       const openMins = timeToMinutes(candidate.openingTime, 6 * 60);
       const closeMins = timeToMinutes(candidate.closingTime, 23 * 60);
       const duration = candidate.duration || 60;
 
       // Nếu đến sớm hơn giờ mở cửa: đợi đến giờ mở cửa
-      // Ở chế độ strict: chỉ cắt tỉa nếu là điểm ban ngày nhưng phải đợi quá lâu (> 2 tiếng)
-      // Còn điểm buổi tối (mở từ 16:00 trở đi) được phép có khoảng nghỉ chiều trước khi vào ca tối
       if (arrivalMins < openMins) {
         if (strictTimeWindow && openMins < 16 * 60 && openMins - arrivalMins > 120) {
           continue;
@@ -142,7 +194,9 @@ function findOptimalOrderByPermutation(places, startMins, endMins, strictTimeWin
         finishMins,
         totalDist + dist,
         totalPenalty + timePenalty + zoneSwitchPenalty,
-        candidate
+        candidate,
+        nextHasLunch,
+        nextHasDinner
       );
 
       currentOrder.pop();
@@ -150,7 +204,7 @@ function findOptimalOrderByPermutation(places, startMins, endMins, strictTimeWin
     }
   }
 
-  backtrack(startMins, 0, 0, null);
+  backtrack(startMins, 0, 0, null, false, false);
   return bestOrder;
 }
 
@@ -265,6 +319,8 @@ export function scheduleTimeSlots(dayBundles, startTime = '08:00', endTime = '21
     }
 
     let currentMins = startMins;
+    let hasLunchBreak = false;
+    let hasDinnerBreak = false;
     const activities = [];
     let dayTotalCost = 0;
     let dayTotalDuration = 0;
@@ -278,6 +334,15 @@ export function scheduleTimeSlots(dayBundles, startTime = '08:00', endTime = '21
       const travelTime = index === 0 ? 0 : estimateTravelMinutes(distKm);
 
       currentMins += travelTime;
+
+      let breakMinutes = 0;
+      if (index > 0) {
+        const meal = applyMealBreak(currentMins - travelTime, travelTime, place, hasLunchBreak, hasDinnerBreak);
+        currentMins = meal.adjustedMins;
+        breakMinutes = meal.breakMinutes;
+        hasLunchBreak = meal.nextHasLunch;
+        hasDinnerBreak = meal.nextHasDinner;
+      }
 
       // Nếu đến trước giờ mở cửa của địa điểm, đợi đến lúc mở cửa để không xếp sai giờ
       const openMins = timeToMinutes(place.openingTime, 0);
@@ -304,13 +369,14 @@ export function scheduleTimeSlots(dayBundles, startTime = '08:00', endTime = '21
         duration,
         estimatedCost: place.estimatedCost || 0,
         travelTimeFromPrev: travelTime,
+        breakBeforeMin: breakMinutes,
         distanceFromPrevKm: distKm,
         latitude: place.latitude,
         longitude: place.longitude
       });
 
       dayTotalCost += place.estimatedCost || 0;
-      dayTotalDuration += duration + travelTime;
+      dayTotalDuration += duration + travelTime + breakMinutes;
       dayTotalDistanceKm += distKm;
     });
 

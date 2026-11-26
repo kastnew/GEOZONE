@@ -63,7 +63,8 @@
 export function scorePlaces(
   places,
   userPreferences = [],
-  weights = { wPreference: 0.5, wRating: 0.3, wCost: 0.2 }
+  weights = { wPreference: 0.5, wRating: 0.3, wCost: 0.2 },
+  options = {}
 ) {
   if (!Array.isArray(places) || places.length === 0) {
     return [];
@@ -75,12 +76,22 @@ export function scorePlaces(
   const wRating = weights.wRating ?? weights.wPopularity ?? 0.3;
   const wCost = weights.wCost ?? 0.2;
 
-  const maxCost = Math.max(...places.map(p => Number(p.estimatedCost) || 0), 100000);
+  const dailyBudget = Number(options.dailyBudget) || 0;
+  const mustVisitSet = new Set(
+    Array.isArray(options.mustVisitIds) ? options.mustVisitIds.map(Number) : []
+  );
 
-  // Pha 1: Tính baseScore với rating thay cho popularity
+  // Mức tiền trung bình kỳ vọng cho 1 địa điểm:
+  // Nếu có dailyBudget thì lấy dailyBudget / 4; ngược lại lấy trung bình cộng giá vé của tập địa điểm
+  const sumCost = places.reduce((acc, p) => acc + (Number(p.estimatedCost) || 0), 0);
+  const avgDatasetCost = places.length > 0 ? sumCost / places.length : 100000;
+  const avgPlaceBudget = dailyBudget > 0 ? dailyBudget / 4 : Math.max(avgDatasetCost, 100000);
+
+  // Pha 1: Tính baseScore với rating thay cho popularity & costScore ngưỡng trung bình
   const baseScoredPlaces = places.map(place => {
     const tags = Array.isArray(place.tags) ? place.tags : [];
     const estimatedCost = Number(place.estimatedCost) || 0;
+    const isMustVisit = mustVisitSet.has(Number(place.id));
 
     // 1. Điểm sở thích: Tỷ lệ tag trùng với preferences của người dùng
     const matchedTags = tags.filter(t => prefs.includes(t));
@@ -92,8 +103,10 @@ export function scorePlaces(
     const rawRating = Number(place.rating) || 4.5;
     const ratingScore = Math.min(Math.max(rawRating / 5.0, 0), 1);
 
-    // 3. Điểm chi phí: Chi phí càng thấp thì điểm càng cao
-    const costScore = 1 - Math.min(estimatedCost / maxCost, 1);
+    // 3. Điểm chi phí theo ngưỡng trung bình:
+    // - Nếu chi phí <= mức trung bình 1 địa điểm (avgPlaceBudget): cộng chung 1 mức (costScore = 1.0), không thiên vị 0đ
+    // - Nếu chi phí > mức trung bình: không cộng điểm (costScore = 0.0)
+    const costScore = estimatedCost <= avgPlaceBudget ? 1.0 : 0.0;
 
     const baseScore =
       wPreference * preferenceScore +
@@ -102,6 +115,7 @@ export function scorePlaces(
 
     return {
       ...place,
+      isMustVisit,
       preferenceScore,
       ratingScore,
       costScore,
@@ -135,7 +149,10 @@ export function scorePlaces(
     zoneTypeCounts.set(zoneKey, typeCountInZone + 1);
     globalTypeCounts.set(primaryType, globalCount + 1);
 
-    const totalScore = Math.max(0, Number((place.baseScore - diversityPenalty).toFixed(4)));
+    // Điểm cuối cùng: các địa điểm Must-Visit do khách chọn vào giỏ luôn được gán điểm tối đa (2.0)
+    const totalScore = place.isMustVisit
+      ? 2.0
+      : Math.max(0, Number((place.baseScore - diversityPenalty).toFixed(4)));
 
     return {
       ...place,

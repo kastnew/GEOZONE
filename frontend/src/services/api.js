@@ -548,6 +548,7 @@ export async function generateItineraryApi(payload) {
     days: Number(payload.days) || 2,
     totalBudget: Number(payload.budget ?? payload.totalBudget) || 1500000,
     preferences: payload.tags || payload.preferences || [],
+    mustVisitIds: Array.isArray(payload.mustVisitIds) ? payload.mustVisitIds : [],
     skipAi: true
   };
 
@@ -613,6 +614,37 @@ export async function generateItineraryApi(payload) {
     totalCost: rawResult.actualCost ?? rawResult.totalCost ?? 0,
     days: normalizedDays
   };
+}
+
+/**
+ * Lấy danh sách Top gợi ý thay thế thông minh từ Backend dynamicSwapEngine.js
+ * (POST /api/v1/ai/swap-place với returnMultiple: true)
+ */
+export async function getSwapSuggestionsApi(payload) {
+  const cityKey = getCityKey(payload.city || 'hue');
+  const cityConfig = CITIES[cityKey] || CITIES.hue;
+
+  const backendPayload = {
+    currentPlaceId: Number(payload.currentPlaceId),
+    city: cityConfig.api || payload.city,
+    dayNumber: Number(payload.dayNumber) || 1,
+    excludedPlaceIds: payload.excludedPlaceIds || [],
+    remainingBudget: payload.remainingBudget !== undefined ? Number(payload.remainingBudget) : 500000,
+    slotStartTime: payload.slotStartTime,
+    maxDurationAllowed: payload.maxDurationAllowed,
+    userPreferences: payload.userPreferences || [],
+    returnMultiple: true
+  };
+
+  return safeFetch(
+    `${API_BASE}/ai/swap-place`,
+    {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(backendPayload)
+    },
+    () => ({ bestMatch: null, suggestions: [] })
+  );
 }
 
 /**

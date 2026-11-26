@@ -9,7 +9,7 @@ import PlannerSidebar from '../components/planner/PlannerSidebar';
 import PlannerResults from '../components/planner/PlannerResults';
 import SwapModal from '../components/planner/SwapModal';
 import { CITIES, getCityZones } from '../data/mockData';
-import { generateItineraryApi, getPlacesApi, swapPlaceApi } from '../services/api';
+import { generateItineraryApi, getPlacesApi, swapPlaceApi, getSwapSuggestionsApi } from '../services/api';
 
 function getDisplayZoneCode(code) {
   return String(code || '').replace(/^(?:HUE|NINHBINH)-/i, '');
@@ -71,6 +71,8 @@ export default function ExplorePage({
     place: null
   });
   const [isSwapping, setIsSwapping] = useState(false);
+  const [swapSuggestions, setSwapSuggestions] = useState([]);
+  const [isLoadingSwapSuggestions, setIsLoadingSwapSuggestions] = useState(false);
 
   const cityZones = getCityZones(selectedCity);
   const cityConfig = CITIES[selectedCity] || CITIES.hue;
@@ -191,6 +193,17 @@ export default function ExplorePage({
     }
   };
 
+  // Lọc các địa điểm trong Chuyến đi (cartItems) thuộc thành phố đang chọn để ép phải có trong lịch trình
+  const cityCartItems = cartItems.filter((item) => {
+    const itemCity = String(item.city || '').trim().toLowerCase();
+    return (
+      !itemCity ||
+      itemCity === selectedCity.toLowerCase() ||
+      itemCity === String(cityConfig.api || '').toLowerCase() ||
+      cityPlaces.some((cp) => cp.id === item.id)
+    );
+  });
+
   // Generate Plan via Service Layer
   const handleGeneratePlan = async () => {
     setIsPlanning(true);
@@ -199,7 +212,8 @@ export default function ExplorePage({
         city: selectedCity,
         days: daysCount,
         budget,
-        tags: selectedPreferences
+        tags: selectedPreferences,
+        mustVisitIds: cityCartItems.map((p) => Number(p.id)).filter(Number.isFinite)
       });
       onGeneratedPlanChange(planResult);
       showToast('Đã tạo và tối ưu lịch trình thành công!');
@@ -210,19 +224,78 @@ export default function ExplorePage({
     }
   };
 
-  // Open Swap Modal
-  const handleOpenSwapModal = (dayIndex, placeIndex, place) => {
+  // Open Swap Modal & gọi trực tiếp Backend dynamicSwapEngine.js để lấy Top gợi ý chuẩn
+  const handleOpenSwapModal = async (dayIndex, placeIndex, place) => {
     setSwapState({
       isOpen: true,
       dayIndex,
       placeIndex,
       place
     });
+    setSwapSuggestions([]);
+    setIsLoadingSwapSuggestions(true);
+
+    try {
+      const allPlannedIds = (generatedPlan?.days || []).flatMap((d) =>
+        (d.places || []).map((p) => Number(p.id ?? p.placeId))
+      );
+      const totalB = Number(generatedPlan?.totalBudget ?? budget) || 1000000;
+      const curCost = (generatedPlan?.days || []).reduce(
+        (sum, d) => sum + (d.places || []).reduce((s, p) => s + Number(p.estimatedCost ?? p.cost ?? 0), 0),
+        0
+      );
+      const oldCost = Number(place.estimatedCost ?? place.cost ?? 0);
+      const maxSwapBudget = Math.max(0, totalB - (curCost - oldCost));
+
+      const targetDay = generatedPlan?.days?.[dayIndex];
+      const dayMinutes = (targetDay?.places || []).reduce(
+        (s, p) => s + (Number(p.duration) || 60) + (Number(p.travelTimeFromPrev) || 0),
+        0
+      );
+      const maxDur = (Number(place.duration) || 60) + Math.max(0, 480 - dayMinutes);
+      const slotStart = place.startTime || (place.time ? String(place.time).split('-')[0].trim() : undefined);
+
+      const res = await getSwapSuggestionsApi({
+        currentPlaceId: place.id ?? place.placeId,
+        city: selectedCity,
+        dayNumber: dayIndex + 1,
+        excludedPlaceIds: allPlannedIds,
+        remainingBudget: maxSwapBudget,
+        slotStartTime: slotStart,
+        maxDurationAllowed: maxDur,
+        userPreferences: selectedPreferences
+      });
+
+      if (res && Array.isArray(res.suggestions) && res.suggestions.length > 0) {
+        setSwapSuggestions(res.suggestions);
+      } else {
+        setSwapSuggestions([]);
+      }
+    } catch {
+      setSwapSuggestions([]);
+    } finally {
+      setIsLoadingSwapSuggestions(false);
+    }
   };
+
+  // Tính ngân sách tối đa cho phép đối với địa điểm thay thế (không làm tổng chi phí vượt ngân sách)
+  const tripTotalBudget = Number(generatedPlan?.totalBudget ?? budget) || 1000000;
+  const currentTripCost = (generatedPlan?.days || []).reduce(
+    (sum, d) => sum + (d.places || []).reduce((s, p) => s + Number(p.estimatedCost ?? p.cost ?? 0), 0),
+    0
+  );
+  const oldPlaceCost = Number(swapState.place?.estimatedCost ?? swapState.place?.cost ?? 0);
+  const maxAllowedSwapCost = Math.max(0, tripTotalBudget - (currentTripCost - oldPlaceCost));
 
   // Confirm Swap Place
   const handleConfirmSwap = async (newPlace) => {
     if (!generatedPlan || !swapState.place) return;
+    const newCost = Number(newPlace.estimatedCost ?? newPlace.cost ?? 0);
+    if (newCost > maxAllowedSwapCost) {
+      showToast(`Không thể đổi: "${newPlace.name}" sẽ làm tổng chi phí vượt ngân sách!`);
+      return;
+    }
+
     setIsSwapping(true);
     try {
       await swapPlaceApi({
@@ -230,7 +303,9 @@ export default function ExplorePage({
         newPlaceId: newPlace.id,
         dayNumber: swapState.dayIndex + 1,
         zoneCode: swapState.place.zoneDbCode || swapState.place.zoneCode,
-        city: selectedCity
+        city: selectedCity,
+        excludedPlaceIds: Array.from(plannedPlaceIds),
+        remainingBudget: maxAllowedSwapCost
       });
 
       // Update local state immutably
@@ -246,14 +321,16 @@ export default function ExplorePage({
         return {
           ...day,
           places: updatedPlaces,
-          totalCost: updatedPlaces.reduce((sum, p) => sum + (p.estimatedCost || 0), 0)
+          totalCost: updatedPlaces.reduce((sum, p) => sum + Number(p.estimatedCost ?? p.cost ?? 0), 0)
         };
       });
 
+      const newTotalCost = updatedDays.reduce((sum, d) => sum + d.totalCost, 0);
       const updatedPlan = {
         ...generatedPlan,
         days: updatedDays,
-        totalCost: updatedDays.reduce((sum, d) => sum + d.totalCost, 0)
+        totalCost: newTotalCost,
+        actualCost: newTotalCost
       };
 
       onGeneratedPlanChange(updatedPlan);
@@ -291,10 +368,17 @@ export default function ExplorePage({
     return Number((R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))).toFixed(2));
   };
 
-  // Danh sách địa điểm thay thế: loại bỏ toàn bộ điểm đã có trong lịch trình, sắp xếp theo độ gần GPS
+  // Danh sách địa điểm thay thế: không trùng lịch trình, vừa ngân sách còn lại, sắp xếp theo độ gần GPS
   const availableAlternatives = swapState.place
     ? cityPlaces
-        .filter((p) => !plannedPlaceIds.has(p.id) && p.id !== (swapState.place.id ?? swapState.place.placeId))
+        .filter((p) => {
+          const pCost = Number(p.estimatedCost ?? p.cost ?? 0);
+          return (
+            !plannedPlaceIds.has(p.id) &&
+            p.id !== (swapState.place.id ?? swapState.place.placeId) &&
+            pCost <= maxAllowedSwapCost
+          );
+        })
         .map((p) => ({
           ...p,
           distanceKm: calcDistKm(swapState.place.latitude, swapState.place.longitude, p.latitude, p.longitude)
@@ -402,6 +486,7 @@ export default function ExplorePage({
           onClearPreferences={() => setSelectedPreferences([])}
           onSubmit={handleGeneratePlan}
           isLoading={isPlanning}
+          pinnedCount={cityCartItems.length}
         />
 
         <PlannerResults
@@ -419,9 +504,10 @@ export default function ExplorePage({
         onClose={() => setSwapState({ isOpen: false, dayIndex: 0, placeIndex: 0, place: null })}
         currentPlace={swapState.place}
         dayNumber={swapState.dayIndex + 1}
-        availableAlternatives={availableAlternatives}
+        availableAlternatives={swapSuggestions.length > 0 ? swapSuggestions : availableAlternatives}
         onConfirmSwap={handleConfirmSwap}
         isLoading={isSwapping}
+        isLoadingSuggestions={isLoadingSwapSuggestions}
       />
 
       {/* Mobile View Toggle */}

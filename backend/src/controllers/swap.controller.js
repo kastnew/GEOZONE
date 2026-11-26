@@ -5,25 +5,30 @@ export class SwapController {
     try {
       const swapReq = {
         currentPlaceId: Number(req.body.currentPlaceId),
-        dayNumber: Number(req.body.dayNumber),
+        city: req.body.city,
+        dayNumber: Number(req.body.dayNumber) || 1,
         excludedPlaceIds: req.body.excludedPlaceIds || [],
-        targetZoneId: Number(req.body.targetZoneId),
-        remainingBudget: Number(req.body.remainingBudget) || 500000,
-        userPreferences: req.body.userPreferences || []
+        targetZoneId: req.body.targetZoneId ? Number(req.body.targetZoneId) : undefined,
+        remainingBudget: req.body.remainingBudget !== undefined ? Number(req.body.remainingBudget) : 500000,
+        slotStartTime: req.body.slotStartTime || undefined,
+        maxDurationAllowed: req.body.maxDurationAllowed ? Number(req.body.maxDurationAllowed) : undefined,
+        userPreferences: req.body.userPreferences || [],
+        returnMultiple: req.body.returnMultiple === true
       };
 
-      const swappedActivity = await executeDynamicSwap(swapReq);
+      const result = await executeDynamicSwap(swapReq);
 
-      if (!swappedActivity) {
-        return res.status(404).json({
-          success: false,
-          message: 'Không tìm thấy địa điểm thay thế khả dĩ trong cùng Zone.'
+      if (!result || (swapReq.returnMultiple && result.suggestions.length === 0)) {
+        return res.status(swapReq.returnMultiple ? 200 : 404).json({
+          success: swapReq.returnMultiple,
+          data: swapReq.returnMultiple ? { bestMatch: null, suggestions: [] } : undefined,
+          message: 'Không tìm thấy địa điểm thay thế phù hợp với ngân sách và khung giờ.'
         });
       }
 
       return res.status(200).json({
         success: true,
-        data: swappedActivity
+        data: result
       });
     } catch (error) {
       next(error);

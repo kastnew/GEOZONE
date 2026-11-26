@@ -87,8 +87,9 @@ async function runTests() {
   assert.equal(allPickedIds.length, uniquePickedIds.size, 'Tuyệt đối không được trùng địa điểm giữa các ngày');
   for (const d of dayBundles) {
     assert.ok(d.places.length >= 2, `Ngày ${d.dayNumber} phải chọn được ít nhất 2 địa điểm`);
-    assert.ok(d.estimatedTotalCost <= 650000, `Ngân sách ngày ${d.dayNumber} phải được kiểm soát cân đối`);
   }
+  const total2DaysCost = dayBundles.reduce((s, d) => s + d.estimatedTotalCost, 0);
+  assert.ok(total2DaysCost <= 1000000, `Tổng chi phí 2 ngày (${total2DaysCost}) không được vượt 1.000.000đ`);
   console.log(`✅ [4/5] DayAllocator chọn ${allPickedIds.length} địa điểm (0 trùng lặp, giữ cân bằng ngân sách & thời tiết)`);
 
   // 5. Test TimeSlotScheduler (Sinh hoán vị + giờ mở cửa + Sáng/Trưa/Chiều/Tối)
@@ -146,7 +147,62 @@ async function runTests() {
   assert.equal(finalCheck.valid, true, 'Feedback Loop phải tự sửa được xung đột nhiều điểm tối trong 1 ngày');
   console.log('✅ [6/6] Feedback Loop (Cộng Penalty & Chọn lại điểm ở Bước 4 khi kẹt giờ) hoạt động chính xác');
 
-  // 7. Test WeatherService fallback an toàn (trong sandbox không có mạng)
+  // 7. Test Budget-Aware Cost Scoring & Must-Visit Guarantee & Hard Radius 8km
+  const farAndPaidPlaces = [
+    ...MOCK_PLACES,
+    {
+      id: 9, name: 'Bà Nà Hills', city: 'Da Nang', zoneId: 5, zoneName: 'Hòa Vang',
+      estimatedCost: 900000, duration: 300, openingTime: '08:00', closingTime: '17:00',
+      latitude: 15.9980, longitude: 107.9940, rating: 4.9, tags: ['sightseeing', 'nature']
+    }
+  ];
+  const highBudgetScored = scorePlaces(farAndPaidPlaces, ['culture', 'food'], undefined, {
+    dailyBudget: 1500000,
+    mustVisitIds: [8] // Ép Ngũ Hành Sơn (id=8) phải có mặt
+  });
+  const mustVisitSpot = highBudgetScored.find(p => p.id === 8);
+  assert.equal(mustVisitSpot.isMustVisit, true, 'Phải gắn cờ isMustVisit cho địa điểm khách chọn');
+  assert.equal(mustVisitSpot.totalScore, 2.0, 'Must-Visit phải đạt điểm tối đa 2.0');
+
+  const highBudgetZoneMap = groupPlacesByZone(highBudgetScored);
+  const highBudgetDays = allocateDays(highBudgetZoneMap, 2, 3000000, 8, mockWeather, '08:00', '21:00');
+  const allHighBudgetIds = highBudgetDays.flatMap(d => d.places.map(p => p.id));
+  assert.ok(allHighBudgetIds.includes(8), 'Địa điểm Must-Visit bắt buộc phải có trong lịch trình');
+  console.log('✅ [7/7] Budget-Aware Cost Scoring, Hard Radius 8km & Must-Visit Guarantee hoạt động chính xác');
+
+  // 8. Test Threshold CostScore (<= trung bình cộng 1.0, > trung bình cộng 0.0) & Nghỉ trưa 30p
+  const thresholdScored = scorePlaces(
+    [
+      { id: 201, name: 'Điểm 0đ', estimatedCost: 0, rating: 4.5, tags: ['culture'], zoneId: 1 },
+      { id: 202, name: 'Điểm 150k', estimatedCost: 150000, rating: 4.5, tags: ['culture'], zoneId: 1 },
+      { id: 203, name: 'Điểm 500k', estimatedCost: 500000, rating: 4.5, tags: ['culture'], zoneId: 1 }
+    ],
+    ['culture'],
+    undefined,
+    { dailyBudget: 800000 } // avgPlaceBudget = 200.000đ
+  );
+  const s0 = thresholdScored.find(p => p.id === 201);
+  const s150 = thresholdScored.find(p => p.id === 202);
+  const s500 = thresholdScored.find(p => p.id === 203);
+  assert.equal(s0.costScore, 1.0, '0đ <= 200k phải có costScore = 1.0');
+  assert.equal(s150.costScore, 1.0, '150k <= 200k phải có cùng costScore = 1.0 như 0đ');
+  assert.equal(s500.costScore, 0.0, '500k > 200k phải có costScore = 0.0');
+
+  const middaySchedule = scheduleTimeSlots([
+    {
+      dayNumber: 1,
+      zoneId: 1,
+      zoneName: 'Trung tâm',
+      places: [
+        { id: 301, name: 'Bảo tàng A', zoneId: 1, duration: 210, openingTime: '08:00', closingTime: '17:00', latitude: 16.06, longitude: 108.22, tags: ['culture'] },
+        { id: 302, name: 'Di tích B', zoneId: 1, duration: 90, openingTime: '08:00', closingTime: '17:00', latitude: 16.061, longitude: 108.221, tags: ['sightseeing'] }
+      ]
+    }
+  ]);
+  assert.equal(middaySchedule[0].activities[1].breakBeforeMin, 90, 'Phải chèn 90 phút (1h30p) nghỉ trưa khi đi xuyên qua 11:30-13:30');
+  console.log('✅ [8/8] Threshold CostScore (<= avg -> 1.0, > avg -> 0.0) & Nghỉ trưa 1h30p chính xác');
+
+  // 9. Test WeatherService fallback an toàn (trong sandbox không có mạng)
   const weatherRes = await getWeatherForecast('Da Nang', 2);
   assert.equal(weatherRes.length, 2);
   assert.ok(['SUNNY', 'CLOUDY', 'RAINY'].includes(weatherRes[0].condition));

@@ -285,6 +285,7 @@ export default function PlannerResults({
                           {place.time && ' · '}
                           {place.zoneName} · {formatDuration(place.duration || 60)}
                           {place.travelTimeFromPrev > 0 && ` · Di chuyển ~${place.travelTimeFromPrev}p (${place.distanceFromPrevKm || 0} km)`}
+                          {place.breakBeforeMin > 0 && ` · Nghỉ ngơi ${place.breakBeforeMin}p`}
                         </small>
                       </div>
 

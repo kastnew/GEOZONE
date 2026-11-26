@@ -9,7 +9,8 @@ export default function SwapModal({
   dayNumber = 1,
   availableAlternatives = [],
   onConfirmSwap = () => {},
-  isLoading = false
+  isLoading = false,
+  isLoadingSuggestions = false
 }) {
   const [selectedAlternative, setSelectedAlternative] = useState(null);
 
@@ -74,7 +75,11 @@ export default function SwapModal({
             Gợi ý địa điểm thay thế gần đây (không trùng lịch trình):
           </h4>
 
-          {availableAlternatives.length > 0 ? (
+          {isLoadingSuggestions ? (
+            <p style={{ color: '#64748b', fontSize: '13.5px', textAlign: 'center', padding: '24px 0' }}>
+              Đang tìm kiếm gợi ý phù hợp nhất theo ngân sách, khung giờ & tọa độ...
+            </p>
+          ) : availableAlternatives.length > 0 ? (
             <div style={{ display: 'grid', gap: '8px' }}>
               {availableAlternatives.map((alt) => {
                 const isSelected = selectedAlternative && selectedAlternative.id === alt.id;
@@ -99,6 +104,7 @@ export default function SwapModal({
                     </div>
                     <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
                       {alt.zoneName} · {formatDuration(alt.duration || 60)}
+                      {alt.rating ? ` · ★ ${alt.rating}` : ''}
                       {alt.distanceKm !== undefined && alt.distanceKm < 90 && ` · Cách ~${alt.distanceKm} km`}
                     </div>
                   </div>

@@ -35,7 +35,8 @@ export class PlanController {
         startTime: req.body.startTime || '08:00',
         endTime: req.body.endTime || '21:00',
         enableRag: req.body.enableRag !== undefined ? req.body.enableRag : ENV.ENABLE_RAG,
-        skipAi: req.body.skipAi === true
+        skipAi: req.body.skipAi === true,
+        mustVisitIds: Array.isArray(req.body.mustVisitIds) ? req.body.mustVisitIds.map(Number).filter(Number.isFinite) : []
       };
 
       logger.info(`[PlanController] Bắt đầu lập lịch cho: ${tripRequest.city}, ${tripRequest.days} ngày, RAG: ${tripRequest.enableRag}`);
@@ -46,8 +47,16 @@ export class PlanController {
       // Bước 1: Lọc ứng viên
       const candidates = await filterCandidatePlaces(tripRequest);
 
-      // Bước 2: Chấm điểm (Sở thích + Rating + Chi phí - Phạt trùng loại)
-      const scoredCandidates = scorePlaces(candidates, tripRequest.preferences);
+      // Bước 2: Chấm điểm (Sở thích + Rating + Chi phí thích ứng ngân sách - Phạt trùng loại + Must-Visit)
+      const scoredCandidates = scorePlaces(
+        candidates,
+        tripRequest.preferences,
+        undefined,
+        {
+          dailyBudget: tripRequest.totalBudget / Math.max(tripRequest.days, 1),
+          mustVisitIds: tripRequest.mustVisitIds
+        }
+      );
 
       // Bước 3: Chuẩn hóa tọa độ và phân nhóm Zone
       const zoneClusters = groupPlacesByZone(scoredCandidates);

@@ -12,7 +12,8 @@ export default function PlannerSidebar({
   onTogglePreference = () => {},
   onClearPreferences = () => {},
   onSubmit = () => {},
-  isLoading = false
+  isLoading = false,
+  pinnedCount = 0
 }) {
   const [validationError, setValidationError] = useState('');
   const [isShaking, setIsShaking] = useState(false);
@@ -134,6 +135,22 @@ export default function PlannerSidebar({
           </button>
         )}
       </div>
+
+      {pinnedCount > 0 && (
+        <div
+          style={{
+            background: '#eff6ff',
+            border: '1px solid #bfdbfe',
+            color: '#1d4ed8',
+            borderRadius: '10px',
+            padding: '10px 12px',
+            fontSize: '12.5px',
+            fontWeight: 600
+          }}
+        >
+          📌 Đang ưu tiên <b>{pinnedCount} địa điểm</b> bạn đã chọn trong Chuyến đi
+        </div>
+      )}
 
       <button
         type="button"
